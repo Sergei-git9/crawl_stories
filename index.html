@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CRAWL.STORIES — интерактивные чат-истории</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div id="mainApp">
+    <header>
+      <div class="header-content">
+        <a href="index.html" class="logo">
+          <h1>💬 CRAWL.STORIES</h1>
+        </a>
+        <nav class="main-nav" id="mainNav"></nav>
+        <div class="header-controls">
+          <button id="btnAdmin" class="btn-admin">⚙️ Админ</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-section">
+        <div class="hero-content">
+          <h1 class="hero-title">Чат-истории</h1>
+          <p class="hero-subtitle">
+            Погрузись в уникальные истории, рассказанные через переписку в мессенджере
+          </p>
+        </div>
+      </section>
+
+      <section class="stories-section">
+        <div class="section-header">
+          <h2 id="currentCategoryTitle">Все истории</h2>
+          <div class="stories-count" id="storiesCount">0 историй</div>
+        </div>
+        <div id="storiesList" class="stories-grid"></div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-content">
+        <p class="footer-text">CRAWL.STORIES — платформа для интерактивных чат-историй</p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="assets/js/firebase.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

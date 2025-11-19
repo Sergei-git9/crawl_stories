@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Читалка — CRAWL.STORIES</title>
+  <link rel="stylesheet" href="assets/css/reader.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="header-left">
+        <button class="back-btn" id="btnBack">←</button>
+        <div class="chat-info">
+          <h1 id="chatTitle">Загрузка...</h1>
+          <div class="status" id="chatStatus">подключение...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <div>Загрузка истории...</div>
+      </div>
+    </div>
+
+    <div class="chat-controls">
+      <button class="control-btn" id="btnPlayPause">⏸️</button>
+      <button class="control-btn" id="btnPrev">⏮️</button>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <div class="progress-text" id="progressText">0%</div>
+      <button class="control-btn" id="btnNext">⏭️</button>
+      <button class="control-btn" id="btnSpeed">1x</button>
+    </div>
+  </div>
+
+  <script src="assets/js/firebase.js"></script>
+  <script src="assets/js/reader.js"></script>
+</body>
+</html>

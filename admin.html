@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Админ-панель CRAWL.STORIES</title>
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h2>🔐 Вход в админ-панель</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Пароль администратора</label>
+          <input type="password" id="adminPassword" required>
+        </div>
+        <button type="submit">Войти в админку</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminInterface" class="admin-interface">
+    <header>
+      <div class="header-content">
+        <h1>⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES</h1>
+        <div>
+          <button id="btnRefresh" class="btn btn-secondary">🔄 Обновить</button>
+          <button id="btnLogout" class="btn btn-secondary">🚪 Выйти</button>
+          <button id="btnBackToSite" class="btn">🌐 На сайт</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="stories">📚 Все истории</button>
+      <button class="tab" data-tab="constructor">🛠️ Конструктор историй</button>
+      <button class="tab" data-tab="schedule">📅 График публикаций</button>
+      <button id="btnNewStory" class="btn">+ Новая история</button>
+    </div>
+
+    <div id="storiesTab" class="tab-content active">
+      <div id="storiesList" class="stories-grid"></div>
+    </div>
+
+    <div id="constructorTab" class="tab-content">
+      <div class="constructor-layout">
+        <div class="characters-panel">
+          <div class="panel-header">
+            <h3 class="panel-title">👥 Персонажи</h3>
+            <button class="btn btn-success btn-small" id="btnAddCharacter">+ Добавить</button>
+          </div>
+          <div class="character-list" id="characterList"></div>
+        </div>
+
+        <div class="chat-preview">
+          <div class="preview-header">
+            <h3>💬 Предпросмотр чата</h3>
+          </div>
+          <div class="preview-messages" id="previewMessages">
+            <div class="message-preview system">
+              <div class="message-bubble-preview">Начало истории...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="messages-editor">
+          <div class="panel-header">
+            <h3 class="panel-title">💭 Сообщения</h3>
+            <button class="btn btn-info btn-small" id="btnAddMessage">+ Сообщение</button>
+          </div>
+          
+          <div class="message-list" id="messageList">
+            <div class="drop-zone" id="dropZone">
+              Перетащите сообщения сюда для изменения порядка
+            </div>
+          </div>
+
+          <div class="message-form" id="messageForm" style="display: none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Тип сообщения</label>
+                <select id="messageType">
+                  <option value="text">💬 Текст</option>
+                  <option value="thought">🤔 Мысль</option>
+                  <option value="system">⚙️ Системное</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Персонаж</label>
+                <select id="messageCharacter">
+                  <option value="">Выберите персонажа</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Текст сообщения</label>
+              <textarea id="messageContent" rows="4"></textarea>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Задержка (мс)</label>
+                <input type="number" id="messageDelay" value="2000">
+              </div>
+              <div class="form-group">
+                <label>Порядок</label>
+                <input type="number" id="messageOrder" value="1">
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn" id="btnSaveMessage">💾 Сохранить</button>
+              <button type="button" class="btn btn-secondary" id="btnCancelMessage">❌ Отмена</button>
+              <button type="button" class="btn btn-danger" id="btnDeleteMessage">🗑️ Удалить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="scheduleTab" class="tab-content">
+      <div id="scheduleList" class="schedule-timeline"></div>
+    </div>
+  </div>
+
+  <script src="assets/js/firebase.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>

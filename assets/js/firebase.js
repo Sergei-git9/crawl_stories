@@ -1,0 +1,13 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
+  authDomain: "crawl-stories.firebaseapp.com",
+  projectId: "crawl-stories",
+  storageBucket: "crawl-stories.firebasestorage.app",
+  messagingSenderId: "886479757650",
+  appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
+  measurementId: "G-SGC2HF0455"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+console.log('🔥 Firebase инициализирован');
