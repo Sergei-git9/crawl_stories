@@ -4,6 +4,26 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CRAWL.STORIES — интерактивные чат-истории</title>
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  
+  <script>
+    // Firebase конфигурация
+    const firebaseConfig = {
+      apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
+      authDomain: "crawl-stories.firebaseapp.com",
+      projectId: "crawl-stories",
+      storageBucket: "crawl-stories.firebasestorage.app",
+      messagingSenderId: "886479757650",
+      appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
+      measurementId: "G-SGC2HF0455"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+  
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -46,7 +66,6 @@
     </footer>
   </div>
 
-  <script src="assets/js/firebase.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>
