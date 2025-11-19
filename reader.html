@@ -4,20 +4,684 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Читалка — CRAWL.STORIES</title>
-  <link rel="stylesheet" href="assets/css/reader.css">
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
+      authDomain: "crawl-stories.firebaseapp.com",
+      projectId: "crawl-stories",
+      storageBucket: "crawl-stories.firebasestorage.app",
+      messagingSenderId: "886479757650",
+      appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
+      measurementId: "G-SGC2HF0455"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+  
+  <style>
+    :root {
+      --bg-primary: #0e1621;
+      --bg-secondary: #17212b;
+      --bg-chat: #17212b;
+      --bg-message-user: #2b5278;
+      --bg-message-other: #182533;
+      --bg-message-system: #78582b;
+      --bg-message-thought: #2b5278;
+      --text-primary: #ffffff;
+      --text-secondary: #7f8c8d;
+      --text-message: #e1e1e1;
+      --text-time: #7f8c8d;
+      --accent-primary: #FFE81F;
+      --accent-secondary: #5288c1;
+      --border-light: rgba(255,255,255,0.1);
+      --shadow-light: 0 2px 5px rgba(0,0,0,0.3);
+      --font-mono: "Courier New", monospace;
+      --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-system);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* CHAT LAYOUT */
+    .chat-container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-chat);
+      transition: all 0.3s ease;
+    }
+
+    .chat-container.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1000;
+    }
+
+    /* CHAT HEADER */
+    .chat-header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-light);
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .header-left { 
+      display: flex; 
+      align-items: center; 
+      gap: 15px; 
+      flex: 1;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--accent-secondary);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 5px;
+      transition: transform 0.2s;
+    }
+
+    .back-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .chat-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .chat-info h1 {
+      font-size: 16px;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chapter-status {
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-available { color: #4caf50; }
+    .status-soon { color: #ff9800; }
+
+    .header-right { 
+      display: flex; 
+      gap: 10px; 
+      flex-shrink: 0;
+    }
+
+    .header-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 5px;
+      transition: all 0.3s;
+      border-radius: 5px;
+    }
+
+    .header-btn:hover { 
+      color: var(--accent-secondary); 
+      background: rgba(255,255,255,0.05);
+    }
+
+    .header-btn.active { 
+      color: var(--accent-primary); 
+    }
+
+    /* CHAT MESSAGES */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+
+    .chat-messages::-webkit-scrollbar { 
+      width: 6px; 
+    }
+
+    .chat-messages::-webkit-scrollbar-track { 
+      background: transparent; 
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb { 
+      background: var(--border-light); 
+      border-radius: 3px; 
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover { 
+      background: var(--text-secondary); 
+    }
+
+    /* MESSAGE BUBBLES */
+    .message { 
+      max-width: 70%; 
+      display: flex; 
+      flex-direction: column; 
+      animation: messageAppear 0.3s ease-out; 
+    }
+
+    .message.user { align-self: flex-end; }
+    .message.other { align-self: flex-start; }
+    .message.system { 
+      align-self: center; 
+      max-width: 90%; 
+    }
+    .message.thought { align-self: flex-end; }
+
+    .message-bubble {
+      padding: 12px 16px;
+      border-radius: 18px;
+      position: relative;
+      word-wrap: break-word;
+      line-height: 1.4;
+      transition: transform 0.2s;
+    }
+
+    .message.user .message-bubble { 
+      background: var(--bg-message-user); 
+      border-bottom-right-radius: 6px; 
+      color: var(--text-message); 
+    }
+
+    .message.other .message-bubble { 
+      background: var(--bg-message-other); 
+      border-bottom-left-radius: 6px; 
+      color: var(--text-message); 
+    }
+
+    .message.system .message-bubble { 
+      background: var(--bg-message-system); 
+      border-radius: 12px; 
+      color: var(--text-message); 
+      text-align: center; 
+      font-style: italic; 
+    }
+
+    .message.thought .message-bubble { 
+      background: var(--bg-message-thought); 
+      border: 1px dashed var(--accent-secondary); 
+      border-radius: 18px; 
+      color: var(--text-message); 
+      font-style: italic; 
+    }
+
+    .message.new .message-bubble {
+      animation: newMessage 0.5s ease-out;
+    }
+
+    .message-content { 
+      font-size: 14px; 
+      line-height: 1.4; 
+    }
+
+    .message-time { 
+      font-size: 11px; 
+      color: var(--text-time); 
+      margin-top: 4px; 
+      text-align: right; 
+      opacity: 0.7; 
+    }
+
+    .message.system .message-time { 
+      text-align: center; 
+    }
+
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+      margin-right: 8px;
+      flex-shrink: 0;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .message-with-avatar { 
+      display: flex; 
+      align-items: flex-end; 
+    }
+
+    .message.user .message-with-avatar { 
+      flex-direction: row-reverse; 
+    }
+
+    .message.user .message-avatar { 
+      margin-right: 0; 
+      margin-left: 8px; 
+    }
+
+    /* TYPING INDICATOR */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--bg-message-other);
+      border-radius: 18px;
+      border-bottom-left-radius: 6px;
+      max-width: 70px;
+      align-self: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .typing-dot { 
+      width: 6px; 
+      height: 6px; 
+      background: var(--text-secondary); 
+      border-radius: 50%; 
+      animation: typing 1.4s infinite ease-in-out; 
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    /* PROGRESS AND CONTROLS */
+    .progress-section {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-light);
+      padding: 15px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--border-light);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-primary);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .chat-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 8px;
+      transition: all 0.3s;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-btn:hover { 
+      color: var(--accent-secondary); 
+      background: rgba(255,255,255,0.05);
+    }
+
+    .control-btn.active { 
+      color: var(--accent-primary); 
+    }
+
+    .control-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .jump-controls {
+      display: flex;
+      gap: 5px;
+      margin-left: auto;
+    }
+
+    /* CHAPTER NAVIGATION */
+    .chapter-nav {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 90;
+    }
+
+    .chapter-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
+      color: var(--text-primary);
+      padding: 10px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .chapter-btn:hover {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+    }
+
+    .chapter-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* LOADING AND ERROR STATES */
+    .loading-state, .error-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      flex-direction: column;
+      gap: 20px;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 40px;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-light);
+      border-top: 3px solid var(--accent-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .error-state .error-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    .retry-btn {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    /* SETTINGS PANEL */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 300px;
+      height: 100%;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border-light);
+      padding: 20px;
+      transition: right 0.3s ease;
+      z-index: 200;
+      overflow-y: auto;
+    }
+
+    .settings-panel.active {
+      right: 0;
+    }
+
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .settings-group {
+      margin-bottom: 20px;
+    }
+
+    .settings-group h3 {
+      color: var(--accent-primary);
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .setting-label {
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border-light);
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--accent-primary);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+
+    /* ANIMATIONS */
+    @keyframes messageAppear { 
+      from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      } 
+    }
+
+    @keyframes newMessage {
+      0% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes typing { 
+      0%, 60%, 100% { 
+        transform: scale(1); 
+        opacity: 0.5; 
+      }
+      30% { 
+        transform: scale(1.2); 
+        opacity: 1; 
+      } 
+    }
+
+    @keyframes spin { 
+      0% { transform: rotate(0deg); } 
+      100% { transform: rotate(360deg); } 
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .message { max-width: 85%; }
+      .chat-header { padding: 12px 15px; }
+      .chat-messages { padding: 15px; }
+      .progress-section { padding: 12px 15px; }
+      .message-bubble { padding: 10px 14px; }
+      
+      .header-right {
+        gap: 5px;
+      }
+      
+      .chapter-nav {
+        bottom: 80px;
+        right: 10px;
+      }
+      
+      .settings-panel {
+        width: 100%;
+        right: -100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .chat-controls {
+        justify-content: center;
+      }
+      
+      .jump-controls {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+      }
+    }
+
+    /* FULLSCREEN STYLES */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .chat-container {
+        height: 100vh;
+      }
+      
+      .chat-header {
+        padding: 10px 15px;
+      }
+      
+      .chat-messages {
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="chat-container">
+  <div class="chat-container" id="chatContainer">
+    <!-- CHAT HEADER -->
     <div class="chat-header">
       <div class="header-left">
         <button class="back-btn" id="btnBack">←</button>
         <div class="chat-info">
           <h1 id="chatTitle">Загрузка...</h1>
-          <div class="status" id="chatStatus">подключение...</div>
+          <div class="chapter-status" id="chapterStatus">
+            <span class="status-available">●</span> Загрузка...
+          </div>
         </div>
+      </div>
+      <div class="header-right">
+        <button class="header-btn" id="btnSound" title="Звук уведомлений">🔔</button>
+        <button class="header-btn" id="btnFullscreen" title="Полноэкранный режим">⛶</button>
+        <button class="header-btn" id="btnSettings" title="Настройки">⚙️</button>
       </div>
     </div>
 
+    <!-- CHAT MESSAGES -->
     <div class="chat-messages" id="chatMessages">
       <div class="loading-state">
         <div class="loading-spinner"></div>
@@ -25,19 +689,686 @@
       </div>
     </div>
 
-    <div class="chat-controls">
-      <button class="control-btn" id="btnPlayPause">⏸️</button>
-      <button class="control-btn" id="btnPrev">⏮️</button>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    <!-- PROGRESS AND CONTROLS -->
+    <div class="progress-section">
+      <div class="progress-info">
+        <span id="progressText">Сообщение 0 из 0</span>
+        <span id="chapterInfo">Глава 1</span>
       </div>
-      <div class="progress-text" id="progressText">0%</div>
-      <button class="control-btn" id="btnNext">⏭️</button>
-      <button class="control-btn" id="btnSpeed">1x</button>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="chat-controls">
+        <button class="control-btn" id="btnPlayPause" title="Пауза/Продолжить">⏸️</button>
+        <button class="control-btn" id="btnPrev" title="Предыдущее сообщение">⏮️</button>
+        <button class="control-btn" id="btnNext" title="Следующее сообщение">⏭️</button>
+        <button class="control-btn" id="btnSpeed" title="Скорость воспроизведения">1x</button>
+        
+        <div class="jump-controls">
+          <button class="control-btn" id="btnJumpStart" title="К началу">⏪</button>
+          <button class="control-btn" id="btnJumpEnd" title="К концу">⏩</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAPTER NAVIGATION -->
+    <div class="chapter-nav" id="chapterNav" style="display: none;">
+      <button class="chapter-btn" id="btnPrevChapter">← Предыдущая глава</button>
+      <button class="chapter-btn" id="btnNextChapter">Следующая глава →</button>
+      <button class="chapter-btn" id="btnChaptersList">📚 Список глав</button>
+    </div>
+
+    <!-- SETTINGS PANEL -->
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-header">
+        <h2>Настройки</h2>
+        <button class="header-btn" id="btnCloseSettings">✕</button>
+      </div>
+      
+      <div class="settings-group">
+        <h3>Воспроизведение</h3>
+        <div class="setting-item">
+          <span class="setting-label">Автопроигрывание</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleAutoplay" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Звук уведомлений</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleSound" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="settings-group">
+        <h3>Внешний вид</h3>
+        <div class="setting-item">
+          <span class="setting-label">Темная тема</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleDarkTheme" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Компактный режим</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleCompactMode">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="settings-group">
+        <h3>Сезонная тема</h3>
+        <select id="themeSelector" style="width: 100%; padding: 8px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-light); border-radius: 5px;">
+          <option value="default">Стандартная</option>
+          <option value="newyear">Новый Год ❄️</option>
+          <option value="halloween">Хэллоуин 🎃</option>
+          <option value="valentine">День Влюбленных 💖</option>
+          <option value="scary">Страшная неделя 👻</option>
+        </select>
+      </div>
     </div>
   </div>
 
-  <script src="assets/js/firebase.js"></script>
-  <script src="assets/js/reader.js"></script>
+  <script>
+    class ChatReader {
+      constructor() {
+        this.story = null;
+        this.chapters = [];
+        this.currentChapter = null;
+        this.messages = [];
+        this.characters = [];
+        this.currentMessageIndex = 0;
+        this.isPlaying = false;
+        this.playSpeed = 1;
+        this.autoPlayDelay = 2000;
+        this.currentTimeout = null;
+        this.soundEnabled = true;
+        this.progress = {};
+        
+        // Звук уведомления
+        this.notificationSound = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
+        
+        this.init();
+      }
+
+      async init() {
+        await this.loadStoryData();
+        this.setupEventListeners();
+        this.loadProgress();
+        this.startAutoPlay();
+      }
+
+      async loadStoryData() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const storyId = urlParams.get('story');
+        
+        if (!storyId) {
+          this.showError('История не найдена в URL');
+          return;
+        }
+
+        try {
+          // Загружаем основную информацию о истории
+          const storyDoc = await db.collection('stories').doc(storyId).get();
+          if (!storyDoc.exists) {
+            this.showError('История не найдена в базе данных');
+            return;
+          }
+
+          this.story = { id: storyDoc.id, ...storyDoc.data() };
+          document.getElementById('chatTitle').textContent = this.story.title;
+
+          // Загружаем главы
+          const chaptersSnapshot = await db.collection('story_chapters')
+            .where('storyId', '==', storyId)
+            .orderBy('chapterNumber')
+            .get();
+          
+          this.chapters = chaptersSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+
+          if (this.chapters.length === 0) {
+            this.showError('В истории нет глав');
+            return;
+          }
+
+          // Загружаем персонажей
+          const charactersSnapshot = await db.collection('story_characters')
+            .where('storyId', '==', storyId)
+            .get();
+          
+          this.characters = charactersSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+
+          // Устанавливаем первую главу
+          this.currentChapter = this.chapters[0];
+          await this.loadChapterMessages(this.currentChapter.id);
+          
+          this.updateChapterInfo();
+          this.updateChapterNavigation();
+
+        } catch (error) {
+          console.error('Ошибка загрузки:', error);
+          this.showError('Ошибка загрузки истории: ' + error.message);
+        }
+      }
+
+      async loadChapterMessages(chapterId) {
+        try {
+          this.showLoading();
+          
+          const messagesSnapshot = await db.collection('chat_messages')
+            .where('chapterId', '==', chapterId)
+            .orderBy('order')
+            .get();
+          
+          this.messages = messagesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+
+          if (this.messages.length === 0) {
+            this.showError('В главе нет сообщений');
+            return;
+          }
+
+          this.currentMessageIndex = 0;
+          this.renderMessages();
+          this.updateProgress();
+
+        } catch (error) {
+          console.error('Ошибка загрузки сообщений:', error);
+          this.showError('Ошибка загрузки сообщений');
+        }
+      }
+
+      startAutoPlay() {
+        if (!document.getElementById('toggleAutoplay').checked) return;
+        
+        this.isPlaying = true;
+        document.getElementById('btnPlayPause').textContent = '⏸️';
+        this.playNextMessage();
+      }
+
+      playNextMessage() {
+        if (!this.isPlaying || this.currentMessageIndex >= this.messages.length) {
+          this.isPlaying = false;
+          document.getElementById('btnPlayPause').textContent = '▶️';
+          
+          // Проверяем, есть ли следующая глава
+          if (this.currentMessageIndex >= this.messages.length) {
+            this.handleChapterComplete();
+          }
+          return;
+        }
+
+        const message = this.messages[this.currentMessageIndex];
+        this.displayMessage(message);
+        this.currentMessageIndex++;
+
+        // Сохраняем прогресс
+        this.saveProgress();
+
+        // Обновляем прогресс
+        this.updateProgress();
+
+        // Воспроизводим звук
+        if (this.soundEnabled && this.currentMessageIndex > 1) {
+          this.playNotificationSound();
+        }
+
+        // Следующее сообщение с задержкой
+        const delay = (message.delay || this.autoPlayDelay) / this.playSpeed;
+        this.currentTimeout = setTimeout(() => this.playNextMessage(), delay);
+      }
+
+      displayMessage(message) {
+        const messagesContainer = document.getElementById('chatMessages');
+        
+        const messageElement = this.createMessageElement(message);
+        messagesContainer.appendChild(messageElement);
+        
+        // Плавная прокрутка к последнему сообщению
+        messagesContainer.scrollTo({
+          top: messagesContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+
+      createMessageElement(message) {
+        const messageDiv = document.createElement('div');
+        
+        // Определяем тип сообщения и класс
+        let messageType = 'other';
+        let messageClass = 'message other';
+        let avatar = null;
+        let avatarStyle = '';
+
+        if (message.type === 'system') {
+          messageType = 'system';
+          messageClass = 'message system';
+        } else if (message.type === 'thought') {
+          messageType = 'thought';
+          messageClass = 'message thought';
+        } else if (message.characterId) {
+          const character = this.characters.find(c => c.id === message.characterId);
+          if (character) {
+            avatar = character.name.charAt(0).toUpperCase();
+            messageClass = 'message other';
+            if (character.avatar) {
+              avatarStyle = `background-image: url('${character.avatar}');`;
+            } else if (character.color) {
+              avatarStyle = `background-color: ${character.color};`;
+            }
+          }
+        }
+
+        // Если это сообщение от пользователя
+        if (message.isUser) {
+          messageType = 'user';
+          messageClass = 'message user';
+          avatar = 'Т';
+        }
+
+        messageDiv.className = messageClass + ' new';
+
+        let messageHTML = '';
+        
+        if (avatar && messageType !== 'system') {
+          messageHTML = `
+            <div class="message-with-avatar">
+              <div class="message-avatar" style="${avatarStyle}">${avatarStyle ? '' : avatar}</div>
+              <div class="message-bubble">
+                <div class="message-content">${this.formatMessageContent(message.content)}</div>
+                <div class="message-time">${this.getCurrentTime()}</div>
+              </div>
+            </div>
+          `;
+        } else {
+          messageHTML = `
+            <div class="message-bubble">
+              <div class="message-content">${this.formatMessageContent(message.content)}</div>
+              ${messageType !== 'system' ? `<div class="message-time">${this.getCurrentTime()}</div>` : ''}
+            </div>
+          `;
+        }
+
+        messageDiv.innerHTML = messageHTML;
+        
+        // Убираем класс анимации после завершения
+        setTimeout(() => {
+          messageDiv.classList.remove('new');
+        }, 500);
+        
+        return messageDiv;
+      }
+
+      formatMessageContent(content) {
+        // Обработка переносов строк и базовое форматирование
+        return content
+          .replace(/\n/g, '<br>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>');
+      }
+
+      getCurrentTime() {
+        const now = new Date();
+        return now.getHours().toString().padStart(2, '0') + ':' + 
+               now.getMinutes().toString().padStart(2, '0');
+      }
+
+      renderMessages() {
+        const messagesContainer = document.getElementById('chatMessages');
+        messagesContainer.innerHTML = '';
+
+        // Показываем только сообщения до текущего индекса
+        for (let i = 0; i < this.currentMessageIndex; i++) {
+          const message = this.messages[i];
+          const messageElement = this.createMessageElement(message);
+          messagesContainer.appendChild(messageElement);
+        }
+
+        // Прокрутка к последнему сообщению
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      updateProgress() {
+        const progress = (this.currentMessageIndex / this.messages.length) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+        document.getElementById('progressText').textContent = 
+          `Сообщение ${this.currentMessageIndex} из ${this.messages.length}`;
+      }
+
+      updateChapterInfo() {
+        if (!this.currentChapter) return;
+        
+        document.getElementById('chapterInfo').textContent = 
+          `Глава ${this.currentChapter.chapterNumber}`;
+        
+        const statusElement = document.getElementById('chapterStatus');
+        statusElement.innerHTML = `
+          <span class="status-available">●</span> Глава доступна
+        `;
+      }
+
+      updateChapterNavigation() {
+        const currentIndex = this.chapters.findIndex(ch => ch.id === this.currentChapter.id);
+        const hasPrevChapter = currentIndex > 0;
+        const hasNextChapter = currentIndex < this.chapters.length - 1;
+        
+        document.getElementById('btnPrevChapter').disabled = !hasPrevChapter;
+        document.getElementById('btnNextChapter').disabled = !hasNextChapter;
+        
+        // Показываем навигацию только если есть куда переходить
+        document.getElementById('chapterNav').style.display = 
+          (hasPrevChapter || hasNextChapter) ? 'flex' : 'none';
+      }
+
+      async handleChapterComplete() {
+        const currentIndex = this.chapters.findIndex(ch => ch.id === this.currentChapter.id);
+        const hasNextChapter = currentIndex < this.chapters.length - 1;
+        
+        if (hasNextChapter) {
+          // Показываем уведомление о следующей главе
+          this.showSystemMessage('Глава завершена. Готовы перейти к следующей?');
+          document.getElementById('btnNextChapter').style.background = 'var(--accent-primary)';
+          document.getElementById('btnNextChapter').style.color = 'var(--bg-primary)';
+        } else {
+          this.showSystemMessage('История завершена! Спасибо за прочтение.');
+        }
+      }
+
+      showSystemMessage(text) {
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message system';
+        messageElement.innerHTML = `
+          <div class="message-bubble">${text}</div>
+        `;
+        messagesContainer.appendChild(messageElement);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      // ПРОГРЕСС И СОХРАНЕНИЕ
+      saveProgress() {
+        if (!this.story || !this.currentChapter) return;
+        
+        const progress = {
+          storyId: this.story.id,
+          chapterId: this.currentChapter.id,
+          messageIndex: this.currentMessageIndex,
+          timestamp: new Date().getTime()
+        };
+        
+        localStorage.setItem(`progress_${this.story.id}`, JSON.stringify(progress));
+      }
+
+      loadProgress() {
+        if (!this.story) return;
+        
+        const saved = localStorage.getItem(`progress_${this.story.id}`);
+        if (saved) {
+          this.progress = JSON.parse(saved);
+          
+          // Если прогресс есть для текущей главы, восстанавливаем
+          if (this.currentChapter && this.progress.chapterId === this.currentChapter.id) {
+            this.currentMessageIndex = Math.min(this.progress.messageIndex, this.messages.length - 1);
+            this.renderMessages();
+            this.updateProgress();
+          }
+        }
+      }
+
+      // ЗВУКИ
+      playNotificationSound() {
+        if (!this.soundEnabled) return;
+        
+        try {
+          this.notificationSound.currentTime = 0;
+          this.notificationSound.play().catch(e => console.log('Sound play failed:', e));
+        } catch (error) {
+          console.log('Sound error:', error);
+        }
+      }
+
+      // NAVIGATION
+      jumpToMessage(index) {
+        if (index < 0 || index >= this.messages.length) return;
+        
+        if (this.currentTimeout) {
+          clearTimeout(this.currentTimeout);
+        }
+        
+        this.currentMessageIndex = index;
+        this.renderMessages();
+        this.updateProgress();
+        this.saveProgress();
+        
+        if (this.isPlaying) {
+          this.playNextMessage();
+        }
+      }
+
+      async switchChapter(chapterIndex) {
+        if (chapterIndex < 0 || chapterIndex >= this.chapters.length) return;
+        
+        if (this.currentTimeout) {
+          clearTimeout(this.currentTimeout);
+        }
+        
+        this.isPlaying = false;
+        this.currentChapter = this.chapters[chapterIndex];
+        await this.loadChapterMessages(this.currentChapter.id);
+        this.updateChapterInfo();
+        this.updateChapterNavigation();
+        this.saveProgress();
+        
+        // Перезапускаем автопроигрывание если включено
+        if (document.getElementById('toggleAutoplay').checked) {
+          setTimeout(() => this.startAutoPlay(), 1000);
+        }
+      }
+
+      // EVENT HANDLERS
+      setupEventListeners() {
+        // Навигация
+        document.getElementById('btnBack').addEventListener('click', () => {
+          window.history.back();
+        });
+
+        // Управление воспроизведением
+        document.getElementById('btnPlayPause').addEventListener('click', () => {
+          this.togglePlayPause();
+        });
+
+        document.getElementById('btnPrev').addEventListener('click', () => {
+          this.jumpToMessage(Math.max(0, this.currentMessageIndex - 1));
+        });
+
+        document.getElementById('btnNext').addEventListener('click', () => {
+          this.jumpToMessage(Math.min(this.messages.length - 1, this.currentMessageIndex + 1));
+        });
+
+        document.getElementById('btnSpeed').addEventListener('click', () => {
+          this.changeSpeed();
+        });
+
+        document.getElementById('btnJumpStart').addEventListener('click', () => {
+          this.jumpToMessage(0);
+        });
+
+        document.getElementById('btnJumpEnd').addEventListener('click', () => {
+          this.jumpToMessage(this.messages.length - 1);
+        });
+
+        // Навигация по главам
+        document.getElementById('btnPrevChapter').addEventListener('click', () => {
+          const currentIndex = this.chapters.findIndex(ch => ch.id === this.currentChapter.id);
+          this.switchChapter(currentIndex - 1);
+        });
+
+        document.getElementById('btnNextChapter').addEventListener('click', () => {
+          const currentIndex = this.chapters.findIndex(ch => ch.id === this.currentChapter.id);
+          this.switchChapter(currentIndex + 1);
+        });
+
+        document.getElementById('btnChaptersList').addEventListener('click', () => {
+          this.showChaptersList();
+        });
+
+        // Настройки
+        document.getElementById('btnSound').addEventListener('click', () => {
+          this.toggleSound();
+        });
+
+        document.getElementById('btnFullscreen').addEventListener('click', () => {
+          this.toggleFullscreen();
+        });
+
+        document.getElementById('btnSettings').addEventListener('click', () => {
+          this.toggleSettings();
+        });
+
+        document.getElementById('btnCloseSettings').addEventListener('click', () => {
+          this.toggleSettings();
+        });
+
+        // Настройки звука
+        document.getElementById('toggleSound').addEventListener('change', (e) => {
+          this.soundEnabled = e.target.checked;
+          document.getElementById('btnSound').classList.toggle('active', this.soundEnabled);
+        });
+
+        // Клавиатурные shortcuts
+        document.addEventListener('keydown', (e) => {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            this.togglePlayPause();
+          } else if (e.code === 'ArrowLeft') {
+            this.jumpToMessage(Math.max(0, this.currentMessageIndex - 1));
+          } else if (e.code === 'ArrowRight') {
+            this.jumpToMessage(Math.min(this.messages.length - 1, this.currentMessageIndex + 1));
+          } else if (e.code === 'Escape') {
+            this.toggleSettings();
+          }
+        });
+
+        // Обработка изменения размера окна
+        window.addEventListener('resize', () => {
+          this.handleResize();
+        });
+      }
+
+      togglePlayPause() {
+        this.isPlaying = !this.isPlaying;
+        
+        if (this.isPlaying) {
+          document.getElementById('btnPlayPause').textContent = '⏸️';
+          this.playNextMessage();
+        } else {
+          document.getElementById('btnPlayPause').textContent = '▶️';
+          if (this.currentTimeout) {
+            clearTimeout(this.currentTimeout);
+          }
+        }
+      }
+
+      changeSpeed() {
+        const speeds = [0.5, 1, 1.5, 2];
+        const currentIndex = speeds.indexOf(this.playSpeed);
+        this.playSpeed = speeds[(currentIndex + 1) % speeds.length];
+        document.getElementById('btnSpeed').textContent = this.playSpeed + 'x';
+      }
+
+      toggleSound() {
+        this.soundEnabled = !this.soundEnabled;
+        document.getElementById('btnSound').classList.toggle('active', this.soundEnabled);
+        document.getElementById('toggleSound').checked = this.soundEnabled;
+      }
+
+      toggleFullscreen() {
+        const container = document.getElementById('chatContainer');
+        
+        if (!document.fullscreenElement) {
+          container.requestFullscreen().catch(err => {
+            console.log('Fullscreen error:', err);
+          });
+          container.classList.add('fullscreen');
+        } else {
+          document.exitFullscreen();
+          container.classList.remove('fullscreen');
+        }
+      }
+
+      toggleSettings() {
+        const panel = document.getElementById('settingsPanel');
+        panel.classList.toggle('active');
+      }
+
+      handleResize() {
+        // Адаптация под разные размеры экрана
+        const messagesContainer = document.getElementById('chatMessages');
+        if (messagesContainer) {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+      }
+
+      showChaptersList() {
+        const chapterList = this.chapters.map((chapter, index) => 
+          `${index + 1}. ${chapter.title}`
+        ).join('\n');
+        
+        alert(`Доступные главы:\n\n${chapterList}`);
+      }
+
+      // UTILITIES
+      showLoading() {
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = `
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <div>Загрузка сообщений...</div>
+          </div>
+        `;
+      }
+
+      showError(message) {
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = `
+          <div class="error-state">
+            <div class="error-icon">❌</div>
+            <h3>Ошибка загрузки</h3>
+            <p>${message}</p>
+            <button class="retry-btn" onclick="location.reload()">Попробовать снова</button>
+          </div>
+        `;
+        document.getElementById('chapterStatus').innerHTML = `
+          <span style="color: #ff4444;">●</span> Ошибка загрузки
+        `;
+      }
+    }
+
+    // Запускаем читалку когда DOM загружен
+    document.addEventListener('DOMContentLoaded', () => {
+      window.chatReader = new ChatReader();
+    });
+
+    // Обработка выхода из полноэкранного режима
+    document.addEventListener('fullscreenchange', () => {
+      const container = document.getElementById('chatContainer');
+      if (!document.fullscreenElement) {
+        container.classList.remove('fullscreen');
+      }
+    });
+  </script>
 </body>
 </html>
