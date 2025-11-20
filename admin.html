@@ -874,8 +874,11 @@
       <div class="color-option" data-color="#9c27b0" style="background-color: #9c27b0"></div>
       <div class="color-option" data-color="#00bcd4" style="background-color: #00bcd4"></div>
       <div class="color-option" data-color="#8bc34a" style="background-color: #8bc34a"></div>
+      <!-- custom swatch for arbitrary colors -->
+      <div class="color-option custom" data-color="#000000" style="background-color: #000000; display: none;"></div>
     </div>
     <input type="hidden" id="characterColor" value="#6366f1">
+    <input type="color" id="characterColorPicker" value="#6366f1" title="Выбрать цвет" style="margin-left:10px; vertical-align: middle;">
   </div>
 </div>
             <div class="form-actions">
@@ -1122,6 +1125,10 @@
          this.selectColor(color);
   }
 }); 
+        // Цветовой picker для произвольных цветов
+        document.getElementById('characterColorPicker')?.addEventListener('input', (e) => {
+          this.selectColor(e.target.value);
+        });
       }
 
       handleLogin() {
@@ -1667,10 +1674,28 @@
   const selectedOption = document.querySelector(`.color-option[data-color="${color}"]`);
   if (selectedOption) {
     selectedOption.classList.add('selected');
+    // если был кастомный swatch, скрываем его
+    const custom = document.querySelector('.color-option.custom');
+    if (custom) { custom.style.display = 'none'; }
+  } else {
+    // показать/обновить кастомный swatch
+    let custom = document.querySelector('.color-option.custom');
+    if (!custom) {
+      custom = document.createElement('div');
+      custom.className = 'color-option custom';
+      document.querySelector('.color-options').appendChild(custom);
+    }
+    custom.dataset.color = color;
+    custom.style.backgroundColor = color;
+    custom.style.display = 'inline-block';
+    custom.classList.add('selected');
   }
-  
-  // Устанавливаем значение в скрытое поле
-  document.getElementById('characterColor').value = color;
+
+  // Устанавливаем значение в скрытое поле и синхронизируем picker
+  const hidden = document.getElementById('characterColor');
+  if (hidden) hidden.value = color;
+  const picker = document.getElementById('characterColorPicker');
+  if (picker) picker.value = color;
 }
       
       async saveCharacter() {
