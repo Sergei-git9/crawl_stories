@@ -24,7 +24,440 @@
     const db = firebase.firestore();
   </script>
   
-  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    /* CRAWL.STORIES - ОСНОВНЫЕ СТИЛИ */
+    :root {
+      --bg-primary: #020205;
+      --bg-secondary: #0b0b0f;
+      --bg-card: #0b0b0f;
+      --accent-primary: #FFE81F;
+      --accent-secondary: #6366f1;
+      --text-primary: #ffffff;
+      --text-secondary: #9aa0a6;
+      --text-muted: #7f8c8d;
+      --chat-border: rgba(255,255,255,0.1);
+      --transition-smooth: all 0.3s ease;
+      --font-mono: "Courier New", monospace;
+      --header-height: 70px;
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      height: var(--header-height);
+      border-bottom: 1px solid var(--chat-border);
+      background: linear-gradient(180deg, rgba(2,2,5,0.95), transparent);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      width: 100%;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo h1 {
+      margin: 0;
+      font-size: 20px;
+      color: var(--accent-primary);
+      letter-spacing: 1px;
+    }
+
+    .main-nav {
+      display: flex;
+      gap: 15px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .nav-btn.active {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .nav-btn:hover {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .btn-admin {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    /* HERO SECTION */
+    .hero-section {
+      padding: 80px 20px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--bg-primary), var(--bg-secondary));
+      border-bottom: 1px solid var(--chat-border);
+    }
+
+    .hero-content {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .hero-title {
+      font-size: clamp(32px, 5vw, 48px);
+      color: var(--accent-primary);
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(16px, 3vw, 18px);
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* STORIES SECTION */
+    .stories-section {
+      padding: 60px 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      color: var(--accent-primary);
+      font-size: 28px;
+    }
+
+    .stories-count {
+      color: var(--text-secondary);
+      font-size: 16px;
+    }
+
+    .stories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 25px;
+    }
+
+    .story-card {
+      background: linear-gradient(180deg, var(--bg-card), #07070a);
+      border-radius: 15px;
+      padding: 25px;
+      border: 1px solid var(--chat-border);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .story-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255,232,31,0.3);
+      box-shadow: 0 10px 30px rgba(255,232,31,0.1);
+    }
+
+    .story-card.scheduled {
+      border-color: #ffc107;
+      background: linear-gradient(180deg, #0b0b0f, #1a1a1f);
+    }
+
+    .story-card.soon {
+      border-color: #9e9e9e;
+      background: linear-gradient(180deg, #0b0b0f, #15151a);
+    }
+
+    .story-card.blocked {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .story-card.blocked:hover {
+      transform: none;
+      border-color: var(--chat-border);
+      box-shadow: none;
+    }
+
+    .story-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+
+    .story-title {
+      margin: 0;
+      color: var(--accent-primary);
+      font-size: 20px;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .story-badge {
+      background: rgba(255,232,31,0.1);
+      color: var(--accent-primary);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+      white-space: nowrap;
+    }
+
+    .story-badge.scheduled {
+      background: rgba(255, 193, 7, 0.1);
+      color: #ffc107;
+    }
+
+    .story-badge.soon {
+      background: rgba(158, 158, 158, 0.1);
+      color: #9e9e9e;
+    }
+
+    .story-badge.chat {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--accent-secondary);
+    }
+
+    .story-desc {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .story-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .story-stats {
+      display: flex;
+      gap: 15px;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-published {
+      background: #00c853;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .status-scheduled {
+      background: rgba(255, 193, 7, 0.1);
+      color: #ffc107;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .status-soon {
+      background: rgba(158, 158, 158, 0.1);
+      color: #9e9e9e;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .blocked-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(2,2,5,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .story-card.blocked:hover .blocked-overlay {
+      opacity: 1;
+    }
+
+    .blocked-message {
+      text-align: center;
+      padding: 20px;
+      color: var(--accent-primary);
+    }
+
+    .blocked-message h4 {
+      margin: 0 0 10px 0;
+      color: var(--accent-primary);
+    }
+
+    .blocked-message p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--chat-border);
+      padding: 40px 20px;
+      text-align: center;
+      margin-top: 60px;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-text {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    /* АДАПТИВНОСТЬ */
+    @media (max-width: 768px) {
+      :root { 
+        --header-height: 60px; 
+      }
+      
+      .header-content { 
+        padding: 0 15px; 
+        flex-wrap: wrap; 
+        gap: 10px; 
+      }
+      
+      .logo h1 { 
+        font-size: 16px; 
+      }
+      
+      .main-nav { 
+        gap: 8px; 
+        overflow-x: auto; 
+        padding: 10px 0; 
+        justify-content: flex-start; 
+      }
+      
+      .nav-btn { 
+        padding: 6px 12px; 
+        font-size: 12px; 
+        flex-shrink: 0; 
+      }
+      
+      .btn-admin { 
+        padding: 6px 12px; 
+        font-size: 12px; 
+      }
+      
+      .hero-section { 
+        padding: 60px 15px; 
+      }
+      
+      .stories-section { 
+        padding: 40px 15px; 
+      }
+      
+      .stories-grid { 
+        grid-template-columns: 1fr; 
+      }
+      
+      .section-header { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 10px; 
+      }
+      
+      .story-header { 
+        flex-direction: column; 
+        gap: 10px; 
+      }
+      
+      .story-badge { 
+        margin-left: 0; 
+        align-self: flex-start; 
+      }
+      
+      .story-meta { 
+        flex-direction: column; 
+        gap: 10px; 
+        align-items: flex-start; 
+      }
+      
+      .story-stats { 
+        width: 100%; 
+        justify-content: space-between; 
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="mainApp">
@@ -66,6 +499,278 @@
     </footer>
   </div>
 
-  <script src="assets/js/app.js"></script>
+  <script>
+    class PublicApp {
+      constructor() {
+        this.stories = [];
+        this.categories = {};
+        this.currentCategory = 'all';
+        this.init();
+      }
+
+      initCategories() {
+        this.categories = {
+          'all': '📚 Все истории',
+          'published': '🚀 Опубликовано',
+          'scheduled': '⏰ Ожидание', 
+          'soon': '🕐 Скоро',
+          'fantasy': '🧙 Фэнтези',
+          'sci-fi': '🚀 Научная фантастика', 
+          'horror': '👻 Хоррор',
+          'adventure': '🗺️ Приключения',
+          'mystery': '🕵️ Мистика',
+          'chat': '💬 Чат-истории'
+        };
+      }
+
+      renderCategoryFilters() {
+        const nav = document.getElementById('mainNav');
+        if (!nav) return;
+
+        nav.innerHTML = Object.keys(this.categories).map(category => `
+          <button class="nav-btn ${this.currentCategory === category ? 'active' : ''}" 
+                  data-category="${category}">
+            ${this.categories[category]}
+          </button>
+        `).join('');
+
+        const categoryTitle = document.getElementById('currentCategoryTitle');
+        if (categoryTitle) {
+          categoryTitle.textContent = this.categories[this.currentCategory];
+        }
+
+        nav.querySelectorAll('.nav-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            this.currentCategory = e.target.dataset.category;
+            this.renderCategoryFilters();
+            this.renderContent();
+          });
+        });
+      }
+
+      async init() {
+        await this.loadPublicData();
+        this.initCategories();
+        this.renderCategoryFilters();
+        this.setupEventListeners();
+        console.log('💬 Публичный сайт запущен');
+      }
+
+      async loadPublicData() {
+        try {
+          console.log('🔄 Загрузка данных...');
+          const storiesSnapshot = await db.collection('stories').get();
+          
+          this.stories = storiesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })).filter(story => {
+            if (story.isPublic === false) return false;
+            
+            if (story.publishDate) {
+              const publishDate = story.publishDate?.toDate ? story.publishDate.toDate() : new Date(story.publishDate);
+              const now = new Date();
+              
+              if (publishDate <= now && !story.published) {
+                console.log(`🔄 Автопубликация истории: ${story.title}`);
+                this.autoPublishStory(doc.id);
+                story.published = true;
+              }
+            }
+            
+            return true;
+          });
+
+          console.log('✅ Загружено историй:', this.stories.length);
+          this.renderContent();
+
+        } catch (error) {
+          console.error('❌ Ошибка загрузки данных:', error);
+          this.showError('Не удалось загрузить истории');
+        }
+      }
+
+      async autoPublishStory(storyId) {
+        try {
+          await db.collection('stories').doc(storyId).update({
+            published: true,
+            publishDate: null,
+            updatedAt: new Date()
+          });
+          console.log(`✅ История ${storyId} автоматически опубликована`);
+        } catch (error) {
+          console.error('❌ Ошибка автопубликации:', error);
+        }
+      }
+
+      renderContent() {
+        const container = document.getElementById('storiesList');
+        if (!container) return;
+        container.innerHTML = this.renderStories();
+      }
+
+      renderStories() {
+        let filteredStories = this.stories;
+        
+        if (this.currentCategory === 'published') {
+          filteredStories = this.stories.filter(story => story.published === true);
+        } else if (this.currentCategory === 'scheduled') {
+          filteredStories = this.stories.filter(story => 
+            story.publishDate && new Date(story.publishDate) > new Date()
+          );
+        } else if (this.currentCategory === 'soon') {
+          filteredStories = this.stories.filter(story => 
+            !story.published && !story.publishDate
+          );
+        } else if (this.currentCategory === 'chat') {
+          filteredStories = this.stories.filter(story => 
+            story.format === 'chat' || story.isChat === true
+          );
+        } else if (this.currentCategory !== 'all') {
+          filteredStories = this.stories.filter(story => 
+            story.category === this.currentCategory
+          );
+        }
+
+        this.updateStoriesCount(filteredStories.length);
+
+        if (filteredStories.length === 0) {
+          return `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+              <div style="font-size: 64px; margin-bottom: 20px;">📝</div>
+              <h3 style="margin-bottom: 10px; color: var(--text-secondary);">Пока здесь пусто</h3>
+              <p>Истории появятся скоро...</p>
+            </div>
+          `;
+        }
+
+        return filteredStories.map(story => {
+          const isScheduled = story.publishDate && new Date(story.publishDate) > new Date();
+          const isSoon = !story.published && !story.publishDate;
+          const isPublished = story.published === true;
+          const isChat = story.format === 'chat' || story.isChat === true;
+          
+          const isBlocked = !isPublished;
+
+          return `
+            <div class="story-card ${isScheduled ? 'scheduled' : ''} ${isSoon ? 'soon' : ''} ${isBlocked ? 'blocked' : ''}" 
+                 data-story-id="${story.id}">
+              <div class="story-header">
+                <h3 class="story-title">${story.title || 'Без названия'}</h3>
+                <div>
+                  ${story.episode ? `<span class="story-badge">Эпизод ${story.episode}</span>` : ''}
+                  ${isChat ? `<span class="story-badge chat">💬 Чат</span>` : ''}
+                  <span class="story-badge ${isScheduled ? 'scheduled' : ''} ${isSoon ? 'soon' : ''}">
+                    ${this.getCategoryName(story.category, story.customCategory)}
+                  </span>
+                </div>
+              </div>
+              <p class="story-desc">${story.description || 'Описание отсутствует'}</p>
+              
+              <div class="story-meta">
+                <div class="story-stats">
+                  ${story.chaptersCount ? `<div class="stat">📖 ${story.chaptersCount} глав</div>` : ''}
+                  ${story.messagesCount ? `<div class="stat">💬 ${story.messagesCount} сообщений</div>` : ''}
+                  ${story.duration ? `<div class="stat">⏱️ ${story.duration} мин</div>` : ''}
+                </div>
+                <span class="${isScheduled ? 'status-scheduled' : isSoon ? 'status-soon' : 'status-published'}">
+                  ${isScheduled ? '⏰ Ожидание' : isSoon ? '🕐 Скоро' : '✅ Опубликовано'}
+                </span>
+              </div>
+              
+              ${isBlocked ? `
+                <div class="blocked-overlay">
+                  <div class="blocked-message">
+                    <h4>⏳ Еще не доступно</h4>
+                    <p>Ожидайте выхода, а пока можете посмотреть другие наши истории</p>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      getCategoryName(category, customCategory) {
+        const categories = {
+          'fantasy': '🧙 Фэнтези',
+          'sci-fi': '🚀 Научная фантастика', 
+          'horror': '👻 Хоррор',
+          'adventure': '🗺️ Приключения',
+          'mystery': '🕵️ Мистика',
+          'chat': '💬 Чат-истории'
+        };
+        return customCategory || categories[category] || category;
+      }
+
+      updateStoriesCount(count) {
+        const countElement = document.getElementById('storiesCount');
+        if (countElement) {
+          const word = this.getStoriesWord(count);
+          countElement.textContent = `${count} ${word}`;
+        }
+      }
+
+      getStoriesWord(count) {
+        if (count % 10 === 1 && count % 100 !== 11) return 'история';
+        if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'истории';
+        return 'историй';
+      }
+
+      setupEventListeners() {
+        document.getElementById('btnAdmin')?.addEventListener('click', () => {
+          window.open('admin.html', '_blank');
+        });
+
+        document.addEventListener('click', (e) => {
+          const storyCard = e.target.closest('.story-card');
+          if (storyCard && !storyCard.classList.contains('blocked')) {
+            const storyId = storyCard.dataset.storyId;
+            if (storyId) {
+              this.openStory(storyId);
+            }
+          } else if (storyCard && storyCard.classList.contains('blocked')) {
+            this.showBlockedMessage();
+          }
+        });
+      }
+
+      openStory(storyId) {
+        const story = this.stories.find(s => s.id === storyId);
+        if (!story) {
+          console.warn('История не найдена:', storyId);
+          return;
+        }
+
+        if (!story.published) {
+          this.showBlockedMessage();
+          return;
+        }
+
+        window.open(`reader.html?story=${storyId}`, '_blank');
+      }
+
+      showBlockedMessage() {
+        alert('Ой! Данный эпизод еще не доступен, ожидайте выхода, а пока можете посмотреть другие наши истории и эпизоды.');
+      }
+
+      showError(message) {
+        const container = document.getElementById('storiesList');
+        if (container) {
+          container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #ff6b6b;">
+              <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+              <h3 style="margin-bottom: 10px;">Ошибка загрузки</h3>
+              <p>${message}</p>
+            </div>
+          `;
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.app = new PublicApp();
+    });
+  </script>
 </body>
 </html>

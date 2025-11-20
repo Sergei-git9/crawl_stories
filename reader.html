@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
   
   <script>
+    // Firebase конфигурация
     const firebaseConfig = {
       apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
       authDomain: "crawl-stories.firebaseapp.com",
@@ -19,6 +20,7 @@
       appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
       measurementId: "G-SGC2HF0455"
     };
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
@@ -472,101 +474,6 @@
       margin-top: 20px;
     }
 
-    /* SETTINGS PANEL */
-    .settings-panel {
-      position: fixed;
-      top: 0;
-      right: -300px;
-      width: 300px;
-      height: 100%;
-      background: var(--bg-secondary);
-      border-left: 1px solid var(--border-light);
-      padding: 20px;
-      transition: right 0.3s ease;
-      z-index: 200;
-      overflow-y: auto;
-    }
-
-    .settings-panel.active {
-      right: 0;
-    }
-
-    .settings-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border-light);
-    }
-
-    .settings-group {
-      margin-bottom: 20px;
-    }
-
-    .settings-group h3 {
-      color: var(--accent-primary);
-      margin-bottom: 10px;
-      font-size: 16px;
-    }
-
-    .setting-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .setting-label {
-      color: var(--text-primary);
-      font-size: 14px;
-    }
-
-    .toggle-switch {
-      position: relative;
-      width: 50px;
-      height: 24px;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--border-light);
-      transition: .4s;
-      border-radius: 24px;
-    }
-
-    .toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-
-    input:checked + .toggle-slider {
-      background-color: var(--accent-primary);
-    }
-
-    input:checked + .toggle-slider:before {
-      transform: translateX(26px);
-    }
-
     /* ANIMATIONS */
     @keyframes messageAppear { 
       from { 
@@ -625,11 +532,6 @@
         bottom: 80px;
         right: 10px;
       }
-      
-      .settings-panel {
-        width: 100%;
-        right: -100%;
-      }
     }
 
     @media (max-width: 480px) {
@@ -642,21 +544,6 @@
         width: 100%;
         justify-content: center;
         margin-top: 10px;
-      }
-    }
-
-    /* FULLSCREEN STYLES */
-    @media (orientation: landscape) and (max-height: 500px) {
-      .chat-container {
-        height: 100vh;
-      }
-      
-      .chat-header {
-        padding: 10px 15px;
-      }
-      
-      .chat-messages {
-        padding: 10px;
       }
     }
   </style>
@@ -677,7 +564,6 @@
       <div class="header-right">
         <button class="header-btn" id="btnSound" title="Звук уведомлений">🔔</button>
         <button class="header-btn" id="btnFullscreen" title="Полноэкранный режим">⛶</button>
-        <button class="header-btn" id="btnSettings" title="Настройки">⚙️</button>
       </div>
     </div>
 
@@ -715,62 +601,6 @@
     <div class="chapter-nav" id="chapterNav" style="display: none;">
       <button class="chapter-btn" id="btnPrevChapter">← Предыдущая глава</button>
       <button class="chapter-btn" id="btnNextChapter">Следующая глава →</button>
-      <button class="chapter-btn" id="btnChaptersList">📚 Список глав</button>
-    </div>
-
-    <!-- SETTINGS PANEL -->
-    <div class="settings-panel" id="settingsPanel">
-      <div class="settings-header">
-        <h2>Настройки</h2>
-        <button class="header-btn" id="btnCloseSettings">✕</button>
-      </div>
-      
-      <div class="settings-group">
-        <h3>Воспроизведение</h3>
-        <div class="setting-item">
-          <span class="setting-label">Автопроигрывание</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggleAutoplay" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="setting-item">
-          <span class="setting-label">Звук уведомлений</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggleSound" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-      
-      <div class="settings-group">
-        <h3>Внешний вид</h3>
-        <div class="setting-item">
-          <span class="setting-label">Темная тема</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggleDarkTheme" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="setting-item">
-          <span class="setting-label">Компактный режим</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggleCompactMode">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-      
-      <div class="settings-group">
-        <h3>Сезонная тема</h3>
-        <select id="themeSelector" style="width: 100%; padding: 8px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-light); border-radius: 5px;">
-          <option value="default">Стандартная</option>
-          <option value="newyear">Новый Год ❄️</option>
-          <option value="halloween">Хэллоуин 🎃</option>
-          <option value="valentine">День Влюбленных 💖</option>
-          <option value="scary">Страшная неделя 👻</option>
-        </select>
-      </div>
     </div>
   </div>
 
@@ -789,9 +619,6 @@
         this.currentTimeout = null;
         this.soundEnabled = true;
         this.progress = {};
-        
-        // Звук уведомления
-        this.notificationSound = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
         
         this.init();
       }
@@ -892,8 +719,6 @@
       }
 
       startAutoPlay() {
-        if (!document.getElementById('toggleAutoplay').checked) return;
-        
         this.isPlaying = true;
         document.getElementById('btnPlayPause').textContent = '⏸️';
         this.playNextMessage();
@@ -920,11 +745,6 @@
 
         // Обновляем прогресс
         this.updateProgress();
-
-        // Воспроизводим звук
-        if (this.soundEnabled && this.currentMessageIndex > 1) {
-          this.playNotificationSound();
-        }
 
         // Следующее сообщение с задержкой
         const delay = (message.delay || this.autoPlayDelay) / this.playSpeed;
@@ -964,9 +784,7 @@
           if (character) {
             avatar = character.name.charAt(0).toUpperCase();
             messageClass = 'message other';
-            if (character.avatar) {
-              avatarStyle = `background-image: url('${character.avatar}');`;
-            } else if (character.color) {
+            if (character.color) {
               avatarStyle = `background-color: ${character.color};`;
             }
           }
@@ -1128,18 +946,6 @@
         }
       }
 
-      // ЗВУКИ
-      playNotificationSound() {
-        if (!this.soundEnabled) return;
-        
-        try {
-          this.notificationSound.currentTime = 0;
-          this.notificationSound.play().catch(e => console.log('Sound play failed:', e));
-        } catch (error) {
-          console.log('Sound error:', error);
-        }
-      }
-
       // NAVIGATION
       jumpToMessage(index) {
         if (index < 0 || index >= this.messages.length) return;
@@ -1172,10 +978,8 @@
         this.updateChapterNavigation();
         this.saveProgress();
         
-        // Перезапускаем автопроигрывание если включено
-        if (document.getElementById('toggleAutoplay').checked) {
-          setTimeout(() => this.startAutoPlay(), 1000);
-        }
+        // Перезапускаем автопроигрывание
+        setTimeout(() => this.startAutoPlay(), 1000);
       }
 
       // EVENT HANDLERS
@@ -1221,10 +1025,6 @@
           this.switchChapter(currentIndex + 1);
         });
 
-        document.getElementById('btnChaptersList').addEventListener('click', () => {
-          this.showChaptersList();
-        });
-
         // Настройки
         document.getElementById('btnSound').addEventListener('click', () => {
           this.toggleSound();
@@ -1232,20 +1032,6 @@
 
         document.getElementById('btnFullscreen').addEventListener('click', () => {
           this.toggleFullscreen();
-        });
-
-        document.getElementById('btnSettings').addEventListener('click', () => {
-          this.toggleSettings();
-        });
-
-        document.getElementById('btnCloseSettings').addEventListener('click', () => {
-          this.toggleSettings();
-        });
-
-        // Настройки звука
-        document.getElementById('toggleSound').addEventListener('change', (e) => {
-          this.soundEnabled = e.target.checked;
-          document.getElementById('btnSound').classList.toggle('active', this.soundEnabled);
         });
 
         // Клавиатурные shortcuts
@@ -1257,8 +1043,6 @@
             this.jumpToMessage(Math.max(0, this.currentMessageIndex - 1));
           } else if (e.code === 'ArrowRight') {
             this.jumpToMessage(Math.min(this.messages.length - 1, this.currentMessageIndex + 1));
-          } else if (e.code === 'Escape') {
-            this.toggleSettings();
           }
         });
 
@@ -1292,7 +1076,6 @@
       toggleSound() {
         this.soundEnabled = !this.soundEnabled;
         document.getElementById('btnSound').classList.toggle('active', this.soundEnabled);
-        document.getElementById('toggleSound').checked = this.soundEnabled;
       }
 
       toggleFullscreen() {
@@ -1309,25 +1092,12 @@
         }
       }
 
-      toggleSettings() {
-        const panel = document.getElementById('settingsPanel');
-        panel.classList.toggle('active');
-      }
-
       handleResize() {
         // Адаптация под разные размеры экрана
         const messagesContainer = document.getElementById('chatMessages');
         if (messagesContainer) {
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-      }
-
-      showChaptersList() {
-        const chapterList = this.chapters.map((chapter, index) => 
-          `${index + 1}. ${chapter.title}`
-        ).join('\n');
-        
-        alert(`Доступные главы:\n\n${chapterList}`);
       }
 
       // UTILITIES
