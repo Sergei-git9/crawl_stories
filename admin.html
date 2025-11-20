@@ -1142,9 +1142,24 @@
           tab.classList.remove('active');
         });
 
-        // Показать выбранный таб
-        document.getElementById(tabName + 'Tab').classList.add('active');
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        // Нормализуем имя таба для поиска id (например, 'new-story' -> 'newStory')
+        const normalize = (name) => name.replace(/-([a-z])/g, (m, c) => c.toUpperCase());
+        const normalized = normalize(tabName);
+
+        // Показать выбранный таб (защищаемся от null)
+        const contentElement = document.getElementById(tabName + 'Tab') || document.getElementById(normalized + 'Tab');
+        if (contentElement) {
+          contentElement.classList.add('active');
+        } else {
+          console.warn('switchTab: не найден контейнер для таба', tabName);
+        }
+
+        const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+        if (tabButton) {
+          tabButton.classList.add('active');
+        } else {
+          console.warn('switchTab: не найдена кнопка таба', tabName);
+        }
 
         if (tabName === 'schedule') {
           this.renderSchedule();
