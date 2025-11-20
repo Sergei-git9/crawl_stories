@@ -737,6 +737,58 @@
       font-size: 48px;
       margin-bottom: 20px;
     }
+
+          /* COLOR PICKER STYLES */
+    .color-picker {
+      margin-top: 10px;
+    }
+
+    .color-options {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .color-option {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .color-option:hover {
+      transform: scale(1.1);
+      border-color: var(--text-primary);
+    }
+
+    .color-option.selected {
+      border-color: var(--accent-primary);
+      transform: scale(1.1);
+      box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-primary);
+    }
+
+    .color-option.selected::after {
+      content: "✓";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    /* Для светлых цветов меняем цвет галочки */
+    .color-option[data-color="#FFE81F"].selected::after,
+    .color-option[data-color="#8bc34a"].selected::after {
+      color: var(--bg-primary);
+    }
+    
   </style>
 </head>
 <body>
@@ -806,9 +858,21 @@
               <textarea id="characterBio" rows="3"></textarea>
             </div>
             <div class="form-group">
-              <label>Цвет аватара</label>
-              <input type="color" id="characterColor" value="#6366f1">
-            </div>
+  <label>Цвет аватара</label>
+  <div class="color-picker">
+    <div class="color-options">
+      <div class="color-option selected" data-color="#6366f1" style="background-color: #6366f1"></div>
+      <div class="color-option" data-color="#FFE81F" style="background-color: #FFE81F"></div>
+      <div class="color-option" data-color="#4caf50" style="background-color: #4caf50"></div>
+      <div class="color-option" data-color="#ff9800" style="background-color: #ff9800"></div>
+      <div class="color-option" data-color="#e91e63" style="background-color: #e91e63"></div>
+      <div class="color-option" data-color="#9c27b0" style="background-color: #9c27b0"></div>
+      <div class="color-option" data-color="#00bcd4" style="background-color: #00bcd4"></div>
+      <div class="color-option" data-color="#8bc34a" style="background-color: #8bc34a"></div>
+    </div>
+    <input type="hidden" id="characterColor" value="#6366f1">
+  </div>
+</div>
             <div class="form-actions">
               <button type="button" class="btn" id="btnSaveCharacter">💾 Сохранить</button>
               <button type="button" class="btn btn-secondary" id="btnCancelCharacter">❌ Отмена</button>
@@ -1041,6 +1105,14 @@
         document.getElementById('btnClearSchedule').addEventListener('click', () => {
           this.clearSchedule();
         });
+     
+         // Обработчики для выбора цвета
+         document.addEventListener('click', (e) => {
+         if (e.target.classList.contains('color-option')) {
+         const color = e.target.dataset.color;
+         this.selectColor(color);
+  }
+}); 
       }
 
       handleLogin() {
@@ -1137,7 +1209,7 @@
                   `<button class="btn btn-success btn-small" onclick="adminPanel.toggleVisibility('${story.id}', true)">👁️ Показать</button>` :
                   `<button class="btn btn-secondary btn-small" onclick="adminPanel.toggleVisibility('${story.id}', false)">👻 Скрыть</button>`
                 }
-                <button class="btn btn-info btn-small" onclick="adminPanel.openConstructor('${story.id}')">🛠️ Конструктор</button>
+                <button class="btn btn-info btn-small" onclick="adminPanel.safeOpenConstructor('${story.id}')">🛠️ Конструктор</button>
               </div>
             </div>
           `;
@@ -1287,6 +1359,15 @@
         }
       }
 
+     // Добавляем метод для безопасного перехода в конструктор
+       safeOpenConstructor(storyId) {
+        if (!storyId) {
+         alert('❌ ID истории не указан');
+         return;
+           }
+         this.openConstructor(storyId);
+         }
+      
       async loadConstructorData(storyId) {
         if (!storyId) return;
 
@@ -1498,30 +1579,54 @@
       }
 
       // УПРАВЛЕНИЕ ПЕРСОНАЖАМИ
-      showCharacterForm(characterId = null) {
-        this.currentEditingCharacter = characterId;
-        const form = document.getElementById('characterForm');
-        form.style.display = 'block';
+        showCharacterForm(characterId = null) {
+  // Проверяем, что история выбрана
+  if (!this.currentStory) {
+    alert('❌ Сначала выберите историю для редактирования');
+    return;
+  }
 
-        if (characterId) {
-          const character = this.characters.find(c => c.id === characterId);
-          if (character) {
-            document.getElementById('characterName').value = character.name;
-            document.getElementById('characterBio').value = character.bio || '';
-            document.getElementById('characterColor').value = character.color || '#6366f1';
-          }
-        } else {
-          document.getElementById('characterName').value = '';
-          document.getElementById('characterBio').value = '';
-          document.getElementById('characterColor').value = '#6366f1';
-        }
-      }
+  this.currentEditingCharacter = characterId;
+  const form = document.getElementById('characterForm');
+  form.style.display = 'block';
 
+  if (characterId) {
+    const character = this.characters.find(c => c.id === characterId);
+    if (character) {
+      document.getElementById('characterName').value = character.name;
+      document.getElementById('characterBio').value = character.bio || '';
+      // Устанавливаем цвет через метод selectColor
+      this.selectColor(character.color || '#6366f1');
+    }
+  } else {
+    document.getElementById('characterName').value = '';
+    document.getElementById('characterBio').value = '';
+    // Сбрасываем к цвету по умолчанию
+    this.selectColor('#6366f1');
+  }
+}
+ 
       hideCharacterForm() {
         document.getElementById('characterForm').style.display = 'none';
         this.currentEditingCharacter = null;
       }
 
+       selectColor(color) {
+  // Убираем выделение со всех цветов
+  document.querySelectorAll('.color-option').forEach(option => {
+    option.classList.remove('selected');
+  });
+  
+  // Выделяем выбранный цвет
+  const selectedOption = document.querySelector(`.color-option[data-color="${color}"]`);
+  if (selectedOption) {
+    selectedOption.classList.add('selected');
+  }
+  
+  // Устанавливаем значение в скрытое поле
+  document.getElementById('characterColor').value = color;
+}
+      
       async saveCharacter() {
         const name = document.getElementById('characterName').value;
         const bio = document.getElementById('characterBio').value;
@@ -1586,9 +1691,16 @@
 
       // УПРАВЛЕНИЕ СООБЩЕНИЯМИ
       showMessageForm(messageId = null) {
-        this.currentEditingMessage = messageId;
-        const form = document.getElementById('messageForm');
-        form.style.display = 'block';
+        // Проверяем, что история выбрана
+          if (!this.currentStory) {
+          alert('❌ Сначала выберите историю для редактирования');
+          return;
+             }
+
+          this.currentEditingMessage = messageId;
+          const form = document.getElementById('messageForm');
+          form.style.display = 'block';
+          // ... остальной код без изменений
 
         if (messageId) {
           const message = this.messages.find(m => m.id === messageId);
