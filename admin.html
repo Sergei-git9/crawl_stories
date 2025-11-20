@@ -825,6 +825,11 @@
     </div>
 
     <div id="storiesTab" class="tab-content active">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <button class="btn btn-success" id="btnQuickCreate" style="font-size: 16px; padding: 15px 30px;">
+          🚀 Быстрое создание истории
+        </button>
+      </div>
       <div id="storiesList" class="stories-grid">
         <div class="loading-state">
           <div class="icon">⏳</div>
@@ -1066,6 +1071,10 @@
         document.getElementById('btnCreateStory').addEventListener('click', () => {
           this.createNewStory();
         });
+        // Быстрое создание истории
+        document.getElementById('btnQuickCreate')?.addEventListener('click', () => {
+          this.quickCreateStory();
+        });
 
         // Управление персонажами
         document.getElementById('btnAddCharacter').addEventListener('click', () => {
@@ -1291,6 +1300,36 @@
           
         } catch (error) {
           console.error('❌ Ошибка создания истории:', error);
+          alert('❌ Ошибка создания истории');
+        }
+      }
+
+      async quickCreateStory() {
+        if (!confirm('Создать новую историю с минимальными настройками?')) return;
+
+        try {
+          const now = new Date();
+          const storyData = {
+            title: 'Новая история (быстро)',
+            description: '',
+            category: 'chat',
+            episode: 1,
+            isPublic: false,
+            published: false,
+            createdAt: now,
+            updatedAt: now
+          };
+
+          const docRef = await db.collection('stories').add(storyData);
+          console.log('✅ Быстрая история создана:', docRef.id);
+
+          // Перезагрузим список и откроем конструктор
+          await this.loadData();
+          this.openConstructor(docRef.id);
+          alert('✅ Быстрая история создана и открыта в конструкторе');
+
+        } catch (error) {
+          console.error('❌ Ошибка быстрой публикации:', error);
           alert('❌ Ошибка создания истории');
         }
       }
@@ -1580,12 +1619,6 @@
 
       // УПРАВЛЕНИЕ ПЕРСОНАЖАМИ
         showCharacterForm(characterId = null) {
-  // Проверяем, что история выбрана
-  if (!this.currentStory) {
-    alert('❌ Сначала выберите историю для редактирования');
-    return;
-  }
-
   this.currentEditingCharacter = characterId;
   const form = document.getElementById('characterForm');
   form.style.display = 'block';
@@ -1595,13 +1628,11 @@
     if (character) {
       document.getElementById('characterName').value = character.name;
       document.getElementById('characterBio').value = character.bio || '';
-      // Устанавливаем цвет через метод selectColor
       this.selectColor(character.color || '#6366f1');
     }
   } else {
     document.getElementById('characterName').value = '';
     document.getElementById('characterBio').value = '';
-    // Сбрасываем к цвету по умолчанию
     this.selectColor('#6366f1');
   }
 }
@@ -1628,43 +1659,53 @@
 }
       
       async saveCharacter() {
-        const name = document.getElementById('characterName').value;
-        const bio = document.getElementById('characterBio').value;
-        const color = document.getElementById('characterColor').value;
+  const name = document.getElementById('characterName').value;
+  const bio = document.getElementById('characterBio').value;
+  const color = document.getElementById('characterColor').value;
 
-        if (!name.trim()) {
-          alert('❌ Введите имя персонажа');
-          return;
-        }
+  if (!name.trim()) {
+    alert('❌ Введите имя персонажа');
+    return;
+  }
 
-        try {
-          const characterData = {
-            name: name.trim(),
-            bio: bio.trim(),
-            color: color,
-            storyId: this.currentStory.id,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          };
+  // ЕСЛИ ИСТОРИИ ЕЩЁ НЕТ - СОЗДАЁМ АВТОМАТИЧЕСКИ
+  if (!this.currentStory) {
+    const createStory = confirm('Сначала нужно создать историю. Создать новую историю автоматически?');
+    if (!createStory) return;
+    
+    await this.quickCreateStory();
+    // Если не удалось создать историю, выходим
+    if (!this.currentStory) return;
+  }
 
-          if (this.currentEditingCharacter) {
-            // Обновление существующего персонажа
-            await db.collection('story_characters').doc(this.currentEditingCharacter).update(characterData);
-            console.log('✅ Персонаж обновлен:', this.currentEditingCharacter);
-          } else {
-            // Создание нового персонажа
-            const docRef = await db.collection('story_characters').add(characterData);
-            console.log('✅ Персонаж создан:', docRef.id);
-          }
+  try {
+    const characterData = {
+      name: name.trim(),
+      bio: bio.trim(),
+      color: color,
+      storyId: this.currentStory.id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
 
-          await this.loadConstructorData(this.currentStory.id);
-          this.hideCharacterForm();
-          alert('✅ Персонаж сохранен!');
+    if (this.currentEditingCharacter) {
+      // Обновление существующего персонажа
+      await db.collection('story_characters').doc(this.currentEditingCharacter).update(characterData);
+      console.log('✅ Персонаж обновлен:', this.currentEditingCharacter);
+    } else {
+      // Создание нового персонажа
+      const docRef = await db.collection('story_characters').add(characterData);
+      console.log('✅ Персонаж создан:', docRef.id);
+    }
 
-        } catch (error) {
-          console.error('❌ Ошибка сохранения персонажа:', error);
-          alert('❌ Ошибка сохранения персонажа');
-        }
+    await this.loadConstructorData(this.currentStory.id);
+    this.hideCharacterForm();
+    alert('✅ Персонаж сохранен!');
+
+  } catch (error) {
+    console.error('❌ Ошибка сохранения персонажа:', error);
+    alert('❌ Ошибка сохранения персонажа');
+  }
       }
 
       editCharacter(characterId) {
@@ -1726,47 +1767,56 @@
       }
 
       async saveMessage() {
-        const type = document.getElementById('messageType').value;
-        const characterId = document.getElementById('messageCharacter').value;
-        const content = document.getElementById('messageContent').value;
-        const delay = parseInt(document.getElementById('messageDelay').value);
-        const order = parseInt(document.getElementById('messageOrder').value);
+  const type = document.getElementById('messageType').value;
+  const characterId = document.getElementById('messageCharacter').value;
+  const content = document.getElementById('messageContent').value;
+  const delay = parseInt(document.getElementById('messageDelay').value);
+  const order = parseInt(document.getElementById('messageOrder').value);
 
-        if (!content.trim()) {
-          alert('❌ Введите текст сообщения');
-          return;
-        }
+  if (!content.trim()) {
+    alert('❌ Введите текст сообщения');
+    return;
+  }
 
-        try {
-          const messageData = {
-            type: type,
-            characterId: characterId || null,
-            content: content.trim(),
-            delay: delay,
-            order: order,
-            storyId: this.currentStory.id,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          };
+  // ЕСЛИ ИСТОРИИ ЕЩЁ НЕТ - СОЗДАЁМ АВТОМАТИЧЕСКИ
+  if (!this.currentStory) {
+    const createStory = confirm('Сначала нужно создать историю. Создать новую историю автоматически?');
+    if (!createStory) return;
+    
+    await this.quickCreateStory();
+    if (!this.currentStory) return;
+  }
 
-          if (this.currentEditingMessage) {
-            // Обновление существующего сообщения
-            await db.collection('chat_messages').doc(this.currentEditingMessage).update(messageData);
-            console.log('✅ Сообщение обновлено:', this.currentEditingMessage);
-          } else {
-            // Создание нового сообщения
-            const docRef = await db.collection('chat_messages').add(messageData);
-            console.log('✅ Сообщение создано:', docRef.id);
-          }
+  try {
+    const messageData = {
+      type: type,
+      characterId: characterId || null,
+      content: content.trim(),
+      delay: delay,
+      order: order,
+      storyId: this.currentStory.id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
 
-          await this.loadConstructorData(this.currentStory.id);
-          this.hideMessageForm();
-          alert('✅ Сообщение сохранено!');
+    if (this.currentEditingMessage) {
+      // Обновление существующего сообщения
+      await db.collection('chat_messages').doc(this.currentEditingMessage).update(messageData);
+      console.log('✅ Сообщение обновлено:', this.currentEditingMessage);
+    } else {
+      // Создание нового сообщения
+      const docRef = await db.collection('chat_messages').add(messageData);
+      console.log('✅ Сообщение создано:', docRef.id);
+    }
 
-        } catch (error) {
-          console.error('❌ Ошибка сохранения сообщения:', error);
-          alert('❌ Ошибка сохранения сообщения');
-        }
+    await this.loadConstructorData(this.currentStory.id);
+    this.hideMessageForm();
+    alert('✅ Сообщение сохранено!');
+
+  } catch (error) {
+    console.error('❌ Ошибка сохранения сообщения:', error);
+    alert('❌ Ошибка сохранения сообщения');
+  }
       }
 
       editMessage(messageId) {
