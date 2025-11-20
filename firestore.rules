@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Admins collection: only allow reads to authenticated users, writes only by project owners (use console or server SDK)
+    match /admins/{adminId} {
+      allow read: if request.auth != null;
+      allow write: if false; // manage via console or server-side admin
+    }
+
+    // Public stories: reading allowed to all
+    match /stories/{storyId} {
+      allow read: if true;
+      // Writes (create/update/delete) only by authenticated admins
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Episodes are content of a story
+    match /episodes/{episodeId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Episode messages: visible when parent episode is published or for admins
+    match /episode_messages/{msgId} {
+      allow read: if (get(/databases/$(database)/documents/episodes/$(request.resource.data.episodeId)).data.status == 'published') || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Story-level characters
+    match /story_characters/{charId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Settings: restrict writes to admins, allow read to all (theme info stored here may be public or non-sensitive)
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Default deny for everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isAdmin() {
+      return request.auth != null && (
+        // Prefer UID-based admin mapping
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        // Or email-based mapping
+        exists(/databases/$(database)/documents/admins/$(request.auth.token.email))
+      );
+    }
+  }
+}
