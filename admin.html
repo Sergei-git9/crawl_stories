@@ -1336,8 +1336,8 @@
             description: '',
             category: 'chat',
             episode: 1,
-            isPublic: false,
-            published: false,
+            isPublic: true,
+            published: true,
             createdAt: now,
             updatedAt: now
           };
@@ -1345,10 +1345,48 @@
           const docRef = await db.collection('stories').add(storyData);
           console.log('✅ Быстрая история создана:', docRef.id);
 
+          // Создаем первую главу
+          const chapterData = {
+            storyId: docRef.id,
+            chapterNumber: 1,
+            title: 'Глава 1',
+            description: 'Первая глава истории',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+
+          const chapterRef = await db.collection('story_chapters').add(chapterData);
+          console.log('✅ Глава создана:', chapterRef.id);
+
+          // Создаем персонажей по умолчанию
+          const defaultCharacters = [
+            {
+              name: 'Ты',
+              bio: 'Главный герой',
+              color: '#6366f1',
+              storyId: docRef.id,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            },
+            {
+              name: 'Друг',
+              bio: 'Второстепенный персонаж',
+              color: '#4caf50',
+              storyId: docRef.id,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          ];
+
+          for (const charData of defaultCharacters) {
+            const cRef = await db.collection('story_characters').add(charData);
+            console.log('✅ Персонаж создан:', cRef.id);
+          }
+
           // Перезагрузим список и откроем конструктор
           await this.loadData();
           this.openConstructor(docRef.id);
-          alert('✅ Быстрая история создана и открыта в конструкторе');
+          alert('✅ Быстрая история создана (с главой и персонажами) и открыта в конструкторе');
 
         } catch (error) {
           console.error('❌ Ошибка быстрой публикации:', error);
