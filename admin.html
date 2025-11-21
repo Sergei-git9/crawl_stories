@@ -3136,7 +3136,7 @@
                 const episode = change.doc.data();
                 self.updateStoryEpisodeStats(episode.storyId);
                 if (change.type === 'added' && episode.status === 'published') {
-                  self.notifyNewEpisode(episode);
+                  self.notifyNewEpisode(episode, change.doc.id);
                 }
               }
             });
@@ -3160,11 +3160,15 @@
             const episodes = await db.collection('episodes')
               .where('storyId', '==', storyId)
               .where('status', '==', 'published')
-              .orderBy('episodeNumber', 'asc')
               .get();
 
             const count = episodes.size;
-            const lastDoc = episodes.docs[episodes.docs.length - 1];
+            const sortedDocs = episodes.docs.sort((a, b) => {
+              const aNum = a.data().episodeNumber || 0;
+              const bNum = b.data().episodeNumber || 0;
+              return bNum - aNum;
+            });
+            const lastDoc = sortedDocs[0];
             const lastEpisodeDate = lastDoc?.data()?.publishDate || null;
 
             await db.collection('stories').doc(storyId).update({
@@ -3179,7 +3183,7 @@
           }
         }
 
-        async notifyNewEpisode(episode) {
+        async notifyNewEpisode(episode, episodeId) {
           try {
             const story = await db.collection('stories').doc(episode.storyId).get();
             if (!story.exists) return;
@@ -3190,14 +3194,16 @@
             console.log(message);
 
             // Сохраняем уведомление в БД
-            await db.collection('notifications').add({
-              storyId: episode.storyId,
-              episodeId: episode.id,
-              message: message,
-              type: 'new_episode',
-              createdAt: new Date(),
-              read: false
-            });
+            if (episodeId) {
+              await db.collection('notifications').add({
+                storyId: episode.storyId,
+                episodeId: episodeId,
+                message: message,
+                type: 'new_episode',
+                createdAt: new Date(),
+                read: false
+              });
+            }
 
             // Web Notifications API
             if ('Notification' in window && Notification.permission === 'granted') {
