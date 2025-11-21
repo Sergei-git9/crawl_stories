@@ -798,13 +798,12 @@
 
         let messageHTML = '';
         
-        if (avatar && messageType !== 'system') {
+        if (avatar && messageType !== 'system' && messageType !== 'thought') {
           messageHTML = `
             <div class="message-with-avatar">
               <div class="message-avatar" style="${avatarStyle}">${avatarStyle ? '' : avatar}</div>
               <div class="message-bubble">
                 <div class="message-content">${this.formatMessageContent(message.content)}</div>
-                <div class="message-time">${this.getCurrentTime()}</div>
               </div>
             </div>
           `;
@@ -812,7 +811,6 @@
           messageHTML = `
             <div class="message-bubble">
               <div class="message-content">${this.formatMessageContent(message.content)}</div>
-              ${messageType !== 'system' ? `<div class="message-time">${this.getCurrentTime()}</div>` : ''}
             </div>
           `;
         }
