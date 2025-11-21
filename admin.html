@@ -3174,6 +3174,13 @@
 
         async updateStoryEpisodeStats(storyId) {
           try {
+            // Проверяем существует ли история
+            const storyDoc = await db.collection('stories').doc(storyId).get();
+            if (!storyDoc.exists) {
+              console.log('⚠️ История не найдена:', storyId);
+              return;
+            }
+
             const episodes = await db.collection('episodes')
               .where('storyId', '==', storyId)
               .where('status', '==', 'published')
