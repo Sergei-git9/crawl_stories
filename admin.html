@@ -1499,6 +1499,7 @@
           this.initDragAndDrop();
           this.initTheme();
           this.initAuth();
+          this.startAutoPublishScheduler();
         }
 
         showLoginScreen() {
@@ -2313,6 +2314,7 @@
           }
         }
 
+        
         renderMessages() {
           const container = document.getElementById("messageList");
           if (!container) return;
@@ -3123,6 +3125,113 @@
           }
         }
 
+        }
+
+        // АВТОМАТИЧЕСКИЕ СТАТУСЫ И РАСПИСАНИЕ
+        startAutoPublishScheduler() {
+          setInterval(() => this.checkScheduledEpisodes(), 60000); // Каждую минуту
+        }
+
+        async checkScheduledEpisodes() {
+          try {
+            const now = new Date();
+            const scheduledEpisodes = await db.collection('episodes')
+              .where('publishDate', '<=', now)
+              .where('status', '==', 'scheduled')
+              .get();
+
+            for (const doc of scheduledEpisodes.docs) {
+              const episode = doc.data();
+              // Публикуем эпизод
+              await db.collection('episodes').doc(doc.id).update({
+                status: 'published',
+                publishDate: now,
+                updatedAt: now
+              });
+              console.log('✅ Эпизод автопубликован:', doc.id);
+
+              // Обновляем статус истории
+              await this.updateStoryStatusOnEpisodePublish(episode.storyId, episode.episodeNumber);
+            }
+          } catch (error) {
+            console.error('Ошибка авто-публикации:', error);
+          }
+        }
+
+        async updateStoryStatusOnEpisodePublish(storyId, episodeNumber) {
+          try {
+            const storyDoc = await db.collection('stories').doc(storyId).get();
+            if (!storyDoc.exists) return;
+
+            const story = storyDoc.data();
+            const currentStatus = story.status || 'announced';
+
+            // Если это первый эпизод - меняем статус с "announced" на "new"
+            if (episodeNumber === 1 && currentStatus === 'announced') {
+              await db.collection('stories').doc(storyId).update({
+                status: 'new',
+                updatedAt: new Date(),
+                firstEpisodeDate: new Date()
+              });
+              console.log('✅ История изменена на "Новинка":', storyId);
+            }
+
+            // Если уже 2+ эпизода - меняем "new" на "ongoing"
+            const episodeCount = await db.collection('episodes')
+              .where('storyId', '==', storyId)
+              .where('status', '==', 'published')
+              .get();
+
+            if (episodeCount.size >= 2 && currentStatus === 'new') {
+              await db.collection('stories').doc(storyId).update({
+                status: 'ongoing',
+                updatedAt: new Date()
+              });
+              console.log('✅ История изменена на "Продолжается":', storyId);
+            }
+
+            // Обновляем episodesCount и lastEpisodeDate
+            await db.collection('stories').doc(storyId).update({
+              episodesCount: episodeCount.size,
+              lastEpisodeDate: new Date(),
+              updatedAt: new Date()
+            });
+          } catch (error) {
+            console.error('Ошибка обновления статуса:', error);
+          }
+        }
+
+        async checkAndUnblockAnnouncedStories() {
+          try {
+            const now = new Date();
+            const announcedStories = await db.collection('stories')
+              .where('status', '==', 'announced')
+              .where('firstEpisodeDate', '<=', now)
+              .get();
+
+            for (const doc of announcedStories.docs) {
+              // Проверяем есть ли уже опубликованные эпизоды
+              const episodes = await db.collection('episodes')
+                .where('storyId', '==', doc.id)
+                .where('status', '==', 'published')
+                .get();
+
+              if (episodes.size > 0) {
+                // Меняем статус на "new"
+                await db.collection('stories').doc(doc.id).update({
+                  status: 'new',
+                  updatedAt: new Date()
+                });
+                console.log('✅ Анонс разблокирован:', doc.id);
+              }
+            }
+          } catch (error) {
+            console.error('Ошибка разблокировки анонсов:', error);
+          }
+        }
+
+        getDragAfterElement(container, y) {
+        
         getDragAfterElement(container, y) {
           const draggableElements = [
             ...container.querySelectorAll(
