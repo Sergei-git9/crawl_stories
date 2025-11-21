@@ -1653,6 +1653,10 @@
             this.confirmImport();
           });
 
+          document.getElementById('btnAddEpisodeSlot')?.addEventListener('click', () => {
+            this.addEpisodeSlot();
+          });
+          
           document.getElementById('btnCancelImport')?.addEventListener('click', () => {
             document.getElementById('importPreview').style.display = 'none';
             document.getElementById('importText').value = '';
@@ -3090,6 +3094,44 @@
           const colors = ['#6366f1', '#FFE81F', '#4caf50', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4'];
           return colors[Math.floor(Math.random() * colors.length)];
         }
+
+        showConstructorImportModal() {
+          if (!this.currentStory) {
+            alert('❌ Выбери историю в конструкторе');
+            return;
+          }
+          document.getElementById('importTab')?.click?.() || document.querySelector('[data-tab="import"]')?.click();
+          alert('✅ Откройте вкладку Импорт и выберите формат');
+        }
+
+        addEpisodeSlot() {
+          if (!this.currentStory) {
+            alert('❌ Выбери историю');
+            return;
+          }
+          const container = document.getElementById('episodeInsertPoints');
+          const slotId = 'slot_' + Date.now();
+          const slotHTML = `
+            <div id="${slotId}" style="display: flex; gap: 8px; margin: 8px 0; align-items: center; background: var(--bg-secondary); padding: 8px; border-radius: 4px;">
+              <input type="text" placeholder="Название эпизода" class="episodeSlotTitle" style="flex: 1; padding: 6px;">
+              <button class="btn btn-danger btn-small" onclick="admin.removeEpisodeSlot('${slotId}')">🗑️</button>
+            </div>
+          `;
+          container.innerHTML += slotHTML;
+        }
+
+        removeEpisodeSlot(slotId) {
+          document.getElementById(slotId)?.remove();
+        }
+
+        getEpisodeSlots() {
+          const inputs = document.querySelectorAll('.episodeSlotTitle');
+          return Array.from(inputs).map((input, idx) => ({
+            order: idx + 1,
+            title: input.value || ('Эпизод ' + (idx + 1))
+          }));
+        }
+        
         previewImport() {
           if (!this.currentStory) {
             alert('❌ Выбери историю в конструкторе');
