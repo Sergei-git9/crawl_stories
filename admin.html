@@ -1484,6 +1484,8 @@
           this.currentEditingMessage = null;
           this.currentEditingCharacter = null;
           this.draggedMessage = null;
+          this.importedMessages = [];
+          this.importedCharacters = [];
 
           this.adminPassword = "1111";
           this.currentFilter = "all";
@@ -1612,6 +1614,29 @@
             .addEventListener("click", () => {
               this.deleteMessage();
             });
+
+          // ИМПОРТ ЭПИЗОДОВ
+          document.getElementById('importFile')?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            document.getElementById('importText').value = text;
+          });
+
+          document.getElementById('btnPreviewImport')?.addEventListener('click', () => {
+            this.previewImport();
+          });
+
+          document.getElementById('btnImportMessages')?.addEventListener('click', () => {
+            this.confirmImport();
+          });
+
+          document.getElementById('btnCancelImport')?.addEventListener('click', () => {
+            document.getElementById('importPreview').style.display = 'none';
+            document.getElementById('importText').value = '';
+            this.importedMessages = [];
+            this.importedCharacters = [];
+          });
 
           // График публикаций
           document
@@ -2960,6 +2985,142 @@
               this.draggedMessage = null;
             }
           });
+        }
+
+        parseImportedData() {
+          const format = document.getElementById('importFormat').value;
+          const text = document.getElementById('importText').value.trim();
+          if (!text) { alert('❌ Вставь текст для импорта'); return []; }
+          if (format === 'txt') return this.parseTXT(text);
+          if (format === 'json') return this.parseJSON(text);
+          if (format === 'python') return this.parsePython(text);
+          return [];
+        }
+        parseTXT(text) {
+          const lines = text.split('\n');
+          const messages = [];
+          let currentType = 'text';
+          let currentCharacter = null;
+          const chars = new Set();
+          lines.forEach(line => {
+            line = line.trim();
+            if (line.startsWith('[DIALOGUE]')) { currentType = 'text'; return; }
+            if (line.startsWith('[ACTION]')) { currentType = 'action'; return; }
+            if (line.startsWith('[SYSTEM]')) { currentType = 'system'; return; }
+            if (line.startsWith('[THOUGHT]')) { currentType = 'thought'; return; }
+            if (line.startsWith('[CHARACTER:')) {
+              const match = line.match(/\[CHARACTER:(.+?)\]/);
+              if (match) { currentCharacter = match[1].trim(); chars.add(currentCharacter); }
+              return;
+            }
+            if (line && !line.startsWith('[')) {
+              messages.push({
+                type: currentType, content: line, characterId: currentCharacter,
+                delay: 2000, order: messages.length + 1
+              });
+            }
+          });
+          this.importedCharacters = Array.from(chars).map(name => ({
+            name, color: this.getRandomColor(), bio: 'Импортирован', isLocal: false
+          }));
+          return messages;
+        }
+        parseJSON(text) {
+          try {
+            const data = JSON.parse(text);
+            const messages = (data.messages || data).map((msg, idx) => ({
+              type: msg.type || 'text', content: msg.content || msg.text || '',
+              characterId: msg.character || msg.characterId,
+              delay: msg.delay || 2000, order: idx + 1
+            }));
+            const chars = new Set();
+            messages.forEach(msg => { if (msg.characterId) chars.add(msg.characterId); });
+            this.importedCharacters = Array.from(chars).map(name => ({
+              name, color: this.getRandomColor(), bio: 'Импортирован', isLocal: false
+            }));
+            return messages;
+          } catch (e) { alert('❌ Ошибка JSON: ' + e.message); return []; }
+        }
+        parsePython(text) {
+          const messages = [];
+          const chars = new Set();
+          const regex = /(\w+):\s*"([^"]+)"\s*(?:\|\s*\[(\w+)\])?/g;
+          let match;
+          while ((match = regex.exec(text)) !== null) {
+            const character = match[1];
+            const content = match[2];
+            const type = match[3] || 'text';
+            chars.add(character);
+            messages.push({
+              type, content, characterId: character,
+              delay: 2000, order: messages.length + 1
+            });
+          }
+          this.importedCharacters = Array.from(chars).map(name => ({
+            name, color: this.getRandomColor(), bio: 'Импортирован', isLocal: false
+          }));
+          return messages;
+        }
+        getRandomColor() {
+          const colors = ['#6366f1', '#FFE81F', '#4caf50', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4'];
+          return colors[Math.floor(Math.random() * colors.length)];
+        }
+        previewImport() {
+          if (!this.currentStory) {
+            alert('❌ Выбери историю в конструкторе');
+            return;
+          }
+          this.importedMessages = this.parseImportedData();
+          if (this.importedMessages.length === 0) { alert('❌ Не удалось спарсить'); return; }
+          const preview = document.getElementById('importPreviewMessages');
+          preview.innerHTML = this.importedMessages.slice(0, 10).map(msg => `
+            <div style="padding:8px;margin:5px 0;background:var(--bg-primary);border-radius:4px;">
+              <span style="color:var(--accent-secondary);font-weight:bold;">[${msg.type}]</span>
+              ${msg.characterId ? `<span style="color:var(--accent-primary);">${msg.characterId}:</span>` : ''}
+              <span>${msg.content}</span>
+            </div>
+          `).join('');
+          const charsDiv = document.getElementById('importCharactersToCreate');
+          if (this.importedCharacters.length > 0) {
+            charsDiv.innerHTML = `<strong>Персонажи:</strong><br>` + 
+              this.importedCharacters.map(ch => 
+                `<span style="background:${ch.color};color:#000;padding:2px 6px;border-radius:3px;margin:2px;display:inline-block;">${ch.name}</span>`
+              ).join('');
+          }
+          document.getElementById('importPreview').style.display = 'block';
+        }
+        async confirmImport() {
+          if (!this.currentStory) { alert('❌ Выбери историю'); return; }
+          if (this.importedMessages.length === 0) { alert('❌ Нет сообщений'); return; }
+          try {
+            const charMap = {};
+            for (const ch of this.importedCharacters) {
+              const docRef = await db.collection('story_characters').add({
+                name: ch.name, color: ch.color, bio: ch.bio, storyId: this.currentStory.id,
+                isLocal: ch.isLocal || false, createdAt: new Date(), updatedAt: new Date()
+              });
+              charMap[ch.name] = docRef.id;
+            }
+            if (!this.currentEpisode?.id) { alert('❌ Выбери эпизод'); return; }
+            for (const msg of this.importedMessages) {
+              const charId = msg.characterId ? charMap[msg.characterId] : null;
+              await db.collection('episode_messages').add({
+                episodeId: this.currentEpisode.id, storyId: this.currentStory.id,
+                type: msg.type, content: msg.content, characterId: charId,
+                delay: msg.delay, order: msg.order, createdAt: new Date()
+              });
+            }
+            alert('✅ Импортировано: ' + this.importedMessages.length + ' сообщений');
+            document.getElementById('importText').value = '';
+            document.getElementById('importPreview').style.display = 'none';
+            this.importedMessages = [];
+            this.importedCharacters = [];
+            await this.loadConstructorData(this.currentStory.id);
+            await this.loadEpisodeData(this.currentEpisode.id);
+          } catch (error) {
+            console.error('Ошибка:', error);
+            alert('❌ Ошибка: ' + error.message);
+          }
         }
 
         getDragAfterElement(container, y) {
