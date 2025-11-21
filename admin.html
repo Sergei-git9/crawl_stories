@@ -1873,6 +1873,8 @@
               ...doc.data(),
             }));
 
+            await this.checkAndUnblockAnnouncedStories();
+
             console.log("✅ Загружено историй:", this.stories.length);
             this.renderStories();
           } catch (error) {
