@@ -1500,6 +1500,7 @@
           this.initTheme();
           this.initAuth();
           this.startAutoPublishScheduler();
+          this.startRealtimeListeners();
         }
 
         showLoginScreen() {
@@ -3127,6 +3128,92 @@
           }
         }
 
+        }
+
+        // REAL-TIME СИНХРОНИЗАЦИЯ И УВЕДОМЛЕНИЯ
+        startRealtimeListeners() {
+          // Слушаем изменения эпизодов для обновления episodesCount
+          db.collection('episodes').onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach(async (change) => {
+              if (change.type === 'added' || change.type === 'modified') {
+                const episode = change.doc.data();
+                await this.updateStoryEpisodeStats(episode.storyId);
+                if (change.type === 'added' && episode.status === 'published') {
+                  await this.notifyNewEpisode(episode);
+                }
+              }
+            });
+          });
+
+          // Слушаем изменения историй
+          db.collection('stories').onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+              if (change.type === 'modified') {
+                const story = change.doc.data();
+                console.log('📡 История обновлена:', change.doc.id, story);
+                if (this.currentStory?.id === change.doc.id) {
+                  this.currentStory = { id: change.doc.id, ...story };
+                  this.loadConstructorData(change.doc.id);
+                }
+              }
+            });
+          });
+        }
+
+        async updateStoryEpisodeStats(storyId) {
+          try {
+            const episodes = await db.collection('episodes')
+              .where('storyId', '==', storyId)
+              .where('status', '==', 'published')
+              .orderBy('episodeNumber', 'asc')
+              .get();
+
+            const count = episodes.size;
+            const lastDoc = episodes.docs[episodes.docs.length - 1];
+            const lastEpisodeDate = lastDoc?.data()?.publishDate || null;
+
+            await db.collection('stories').doc(storyId).update({
+              episodesCount: count,
+              lastEpisodeDate: lastEpisodeDate,
+              updatedAt: new Date()
+            });
+
+            console.log('🔄 episodesCount обновлен для', storyId, ':', count);
+          } catch (error) {
+            console.error('Ошибка обновления episodesCount:', error);
+          }
+        }
+
+        async notifyNewEpisode(episode) {
+          try {
+            const story = await db.collection('stories').doc(episode.storyId).get();
+            if (!story.exists) return;
+
+            const storyData = story.data();
+            const message = `🎉 Новый эпизод: "${storyData.title}" - ${episode.title || 'Эпизод ' + episode.episodeNumber}`;
+
+            console.log(message);
+
+            // Сохраняем уведомление в БД
+            await db.collection('notifications').add({
+              storyId: episode.storyId,
+              episodeId: episode.id,
+              message: message,
+              type: 'new_episode',
+              createdAt: new Date(),
+              read: false
+            });
+
+            // Web Notifications API
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('CRAWL.STORIES', {
+                body: message,
+                icon: '📖'
+              });
+            }
+          } catch (error) {
+            console.error('Ошибка отправки уведомления:', error);
+          }
         }
 
         // АВТОМАТИЧЕСКИЕ СТАТУСЫ И РАСПИСАНИЕ
