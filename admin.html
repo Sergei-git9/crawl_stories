@@ -3118,24 +3118,47 @@
           let currentType = 'text';
           let currentCharacter = null;
           const chars = new Set();
+          
           lines.forEach(line => {
             line = line.trim();
+            if (!line) return;
+            
             if (line.startsWith('[DIALOGUE]')) { currentType = 'text'; return; }
             if (line.startsWith('[ACTION]')) { currentType = 'action'; return; }
             if (line.startsWith('[SYSTEM]')) { currentType = 'system'; return; }
             if (line.startsWith('[THOUGHT]')) { currentType = 'thought'; return; }
+            
             if (line.startsWith('[CHARACTER:')) {
               const match = line.match(/\[CHARACTER:(.+?)\]/);
               if (match) { currentCharacter = match[1].trim(); chars.add(currentCharacter); }
               return;
             }
-            if (line && !line.startsWith('[')) {
-              messages.push({
-                type: currentType, content: line, characterId: currentCharacter,
-                delay: 2000, order: messages.length + 1
-              });
+            
+            if (line.startsWith('[')) return;
+            
+            // Если строка содержит двоеточие - это может быть "Персонаж: текст"
+            if (line.includes(':') && !line.startsWith('http')) {
+              const colonIdx = line.indexOf(':');
+              const possibleName = line.substring(0, colonIdx).trim();
+              const possibleContent = line.substring(colonIdx + 1).trim();
+              
+              if (possibleName && possibleContent && possibleName.length < 30) {
+                currentCharacter = possibleName;
+                chars.add(currentCharacter);
+                messages.push({
+                  type: currentType, content: possibleContent, characterId: currentCharacter,
+                  delay: 2000, order: messages.length + 1
+                });
+                return;
+              }
             }
+            
+            messages.push({
+              type: currentType, content: line, characterId: currentCharacter,
+              delay: 2000, order: messages.length + 1
+            });
           });
+          
           this.importedCharacters = Array.from(chars).map(name => ({
             name, color: this.getRandomColor(), bio: 'Импортирован', isLocal: false
           }));
@@ -3272,7 +3295,7 @@
               title: title,
               description: desc,
               category: category,
-              status: 'announced',
+              status: 'draft',
               visibility: 'public',
               episodesCount: 0,
               plannedEpisodes: blocks.length,
