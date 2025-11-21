@@ -3159,23 +3159,11 @@
         async confirmImport() {
           if (!this.currentStory) { alert('❌ Выбери историю'); return; }
           if (this.importedMessages.length === 0) { alert('❌ Нет сообщений'); return; }
-          try {
-            let episodeId = this.currentEpisode?.id;
-            
-            // Если эпизод не выбран, создаём новый
-            if (!episodeId) {
-              const newEpisodeRef = await db.collection('episodes').add({
-                storyId: this.currentStory.id,
-                episodeNumber: (this.currentStory.episodesCount || 0) + 1,
-                title: 'Импортированный эпизод',
-                status: 'draft',
-                createdAt: new Date(),
-                updatedAt: new Date()
-              });
-              episodeId = newEpisodeRef.id;
-              console.log('📥 Создан новый эпизод для импорта:', episodeId);
-            }
 
+          const slots = this.getEpisodeSlots();
+          if (slots.length === 0) { alert('❌ Добавь хотя бы одну точку вставки'); return; }
+
+          try {
             const charMap = {};
             for (const ch of this.importedCharacters) {
               const docRef = await db.collection('story_characters').add({
@@ -3185,22 +3173,40 @@
               charMap[ch.name] = docRef.id;
             }
 
-            for (const msg of this.importedMessages) {
-              const charId = msg.characterId ? charMap[msg.characterId] : null;
-              await db.collection('episode_messages').add({
-                episodeId: episodeId, storyId: this.currentStory.id,
-                type: msg.type, content: msg.content, characterId: charId,
-                delay: msg.delay, order: msg.order, createdAt: new Date()
+            const msgsPerSlot = Math.ceil(this.importedMessages.length / slots.length);
+            let msgIndex = 0;
+
+            for (const slot of slots) {
+              const newEpisodeRef = await db.collection('episodes').add({
+                storyId: this.currentStory.id,
+                episodeNumber: (this.currentStory.episodesCount || 0) + slot.order,
+                title: slot.title,
+                status: 'draft',
+                createdAt: new Date(),
+                updatedAt: new Date()
               });
+              const episodeId = newEpisodeRef.id;
+              console.log('📥 Создан эпизод:', slot.title, episodeId);
+
+              const slotMsgs = this.importedMessages.slice(msgIndex, msgIndex + msgsPerSlot);
+              for (const msg of slotMsgs) {
+                const charId = msg.characterId ? charMap[msg.characterId] : null;
+                await db.collection('episode_messages').add({
+                  episodeId: episodeId, storyId: this.currentStory.id,
+                  type: msg.type, content: msg.content, characterId: charId,
+                  delay: msg.delay, order: msg.order, createdAt: new Date()
+                });
+              }
+              msgIndex += msgsPerSlot;
             }
 
-            alert('✅ Импортировано: ' + this.importedMessages.length + ' сообщений');
+            alert('✅ Импортировано ' + this.importedMessages.length + ' сообщений в ' + slots.length + ' эпизодов');
             document.getElementById('importText').value = '';
             document.getElementById('importPreview').style.display = 'none';
+            document.getElementById('episodeInsertPoints').innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">📝 Эпизоды сюда добавятся автоматически</div>';
             this.importedMessages = [];
             this.importedCharacters = [];
             await this.loadConstructorData(this.currentStory.id);
-            if (episodeId) await this.loadEpisodeData(episodeId);
           } catch (error) {
             console.error('Ошибка:', error);
             alert('❌ Ошибка: ' + error.message);
