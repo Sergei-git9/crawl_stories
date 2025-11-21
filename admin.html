@@ -3098,6 +3098,22 @@
           if (!this.currentStory) { alert('❌ Выбери историю'); return; }
           if (this.importedMessages.length === 0) { alert('❌ Нет сообщений'); return; }
           try {
+            let episodeId = this.currentEpisode?.id;
+            
+            // Если эпизод не выбран, создаём новый
+            if (!episodeId) {
+              const newEpisodeRef = await db.collection('episodes').add({
+                storyId: this.currentStory.id,
+                episodeNumber: (this.currentStory.episodesCount || 0) + 1,
+                title: 'Импортированный эпизод',
+                status: 'draft',
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+              episodeId = newEpisodeRef.id;
+              console.log('📥 Создан новый эпизод для импорта:', episodeId);
+            }
+
             const charMap = {};
             for (const ch of this.importedCharacters) {
               const docRef = await db.collection('story_characters').add({
@@ -3106,22 +3122,23 @@
               });
               charMap[ch.name] = docRef.id;
             }
-            if (!this.currentEpisode?.id) { alert('❌ Выбери эпизод'); return; }
+
             for (const msg of this.importedMessages) {
               const charId = msg.characterId ? charMap[msg.characterId] : null;
               await db.collection('episode_messages').add({
-                episodeId: this.currentEpisode.id, storyId: this.currentStory.id,
+                episodeId: episodeId, storyId: this.currentStory.id,
                 type: msg.type, content: msg.content, characterId: charId,
                 delay: msg.delay, order: msg.order, createdAt: new Date()
               });
             }
+
             alert('✅ Импортировано: ' + this.importedMessages.length + ' сообщений');
             document.getElementById('importText').value = '';
             document.getElementById('importPreview').style.display = 'none';
             this.importedMessages = [];
             this.importedCharacters = [];
             await this.loadConstructorData(this.currentStory.id);
-            await this.loadEpisodeData(this.currentEpisode.id);
+            if (episodeId) await this.loadEpisodeData(episodeId);
           } catch (error) {
             console.error('Ошибка:', error);
             alert('❌ Ошибка: ' + error.message);
@@ -3225,23 +3242,25 @@
         async checkScheduledEpisodes() {
           try {
             const now = new Date();
-            const scheduledEpisodes = await db.collection('episodes')
-              .where('publishDate', '<=', now)
+            const allScheduled = await db.collection('episodes')
               .where('status', '==', 'scheduled')
               .get();
 
-            for (const doc of scheduledEpisodes.docs) {
+            for (const doc of allScheduled.docs) {
               const episode = doc.data();
-              // Публикуем эпизод
-              await db.collection('episodes').doc(doc.id).update({
-                status: 'published',
-                publishDate: now,
-                updatedAt: now
-              });
-              console.log('✅ Эпизод автопубликован:', doc.id);
+              const publishDate = episode.publishDate ? 
+                (episode.publishDate.toDate ? episode.publishDate.toDate() : new Date(episode.publishDate))
+                : null;
 
-              // Обновляем статус истории
-              await this.updateStoryStatusOnEpisodePublish(episode.storyId, episode.episodeNumber);
+              if (publishDate && publishDate <= now) {
+                await db.collection('episodes').doc(doc.id).update({
+                  status: 'published',
+                  publishDate: now,
+                  updatedAt: now
+                });
+                console.log('✅ Эпизод автопубликован:', doc.id);
+                await this.updateStoryStatusOnEpisodePublish(episode.storyId, episode.episodeNumber);
+              }
             }
           } catch (error) {
             console.error('Ошибка авто-публикации:', error);
