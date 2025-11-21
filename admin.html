@@ -3124,6 +3124,7 @@
             if (!line) return;
             
             if (line.startsWith('[DIALOGUE]')) { currentType = 'text'; return; }
+            if (line.startsWith('[SCENE]')) { currentType = 'system'; return; }
             if (line.startsWith('[ACTION]')) { currentType = 'action'; return; }
             if (line.startsWith('[SYSTEM]')) { currentType = 'system'; return; }
             if (line.startsWith('[THOUGHT]')) { currentType = 'thought'; return; }
