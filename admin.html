@@ -1708,6 +1708,49 @@
             this.importedCharacters = [];
           });
 
+
+          // ===== ИМПОРТ ЦЕЛОЙ ИСТОРИИ - ОБРАБОТЧИКИ =====
+          document.getElementById('btnAddBulkEpisode')?.addEventListener('click', () => {
+            this.addBulkEpisodeBlock();
+          });
+
+          document.getElementById('btnPreviewBulkImport')?.addEventListener('click', () => {
+            this.previewBulkImport();
+          });
+
+          document.getElementById('btnConfirmBulkImport')?.addEventListener('click', () => {
+            this.confirmBulkImport();
+          });
+
+          document.getElementById('btnCancelBulkImport')?.addEventListener('click', () => {
+            document.getElementById('bulkImportTitle').value = '';
+            document.getElementById('bulkImportDescription').value = '';
+            document.getElementById('bulkEpisodeBlocks').innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">📚 Нажми кнопку ниже, чтобы добавить первый эпизод</div>';
+            document.getElementById('bulkImportPreview').style.display = 'none';
+          });
+
+          // ===== ИМПОРТ ЭПИЗОДА В ИСТОРИЮ - ОБРАБОТЧИКИ =====
+          document.getElementById('episodeImportFile')?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            document.getElementById('episodeImportText').value = text;
+          });
+
+          document.getElementById('btnPreviewEpisodeImport')?.addEventListener('click', () => {
+            this.previewEpisodeImport();
+          });
+
+          document.getElementById('btnConfirmEpisodeImport')?.addEventListener('click', () => {
+            this.confirmEpisodeImport();
+          });
+
+          document.getElementById('btnCancelEpisodeImport')?.addEventListener('click', () => {
+            document.getElementById('episodeImportText').value = '';
+            document.getElementById('episodeImportPreview').style.display = 'none';
+            this.episodeImportMessages = [];
+          });
+
           // График публикаций
           document
             .getElementById("btnClearSchedule")
