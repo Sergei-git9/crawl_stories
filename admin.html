@@ -3139,118 +3139,269 @@
           return colors[Math.floor(Math.random() * colors.length)];
         }
 
+        // ===== ИМПОРТ ЦЕЛОЙ ИСТОРИИ =====
+        addBulkEpisodeBlock() {
+          const container = document.getElementById('bulkEpisodeBlocks');
+          const blockId = 'bulk_' + Date.now();
+          const blockHTML = `
+            <div id="${blockId}" style="background: var(--bg-secondary); padding: 15px; margin: 10px 0; border-radius: 4px; border: 1px solid var(--border-light);">
+              <input type="text" placeholder="Название эпизода" class="bulkEpisodeName" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid var(--border-light); border-radius: 4px;">
+              <input type="date" class="bulkEpisodeDate" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid var(--border-light); border-radius: 4px;">
+              <select class="bulkEpisodeFormat" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid var(--border-light); border-radius: 4px;">
+                <option value="txt">📄 TXT (с тегами)</option>
+                <option value="json">📦 JSON (структурированный)</option>
+                <option value="python">🐍 Python (сценарий)</option>
+              </select>
+              <input type="file" class="bulkEpisodeFile" accept=".txt,.json,.py" style="width: 100%; padding: 8px; margin-bottom: 8px;">
+              <textarea class="bulkEpisodeText" rows="6" placeholder="Или вставь текст сообщений..." style="width: 100%; padding: 8px; font-family: monospace; font-size: 12px; border: 1px solid var(--border-light); border-radius: 4px; margin-bottom: 8px;"></textarea>
+              <button class="btn btn-danger btn-small" onclick="admin.removeBulkEpisodeBlock('${blockId}')">🗑️ Удалить</button>
+            </div>
+          `;
+          if (container.querySelector('[style*="Нажми кнопку"]')) {
+            container.innerHTML = '';
+          }
+          container.innerHTML += blockHTML;
+
+          const fileInput = document.querySelector(`#${blockId} .bulkEpisodeFile`);
+          fileInput?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            document.querySelector(`#${blockId} .bulkEpisodeText`).value = text;
+          });
+        }
+
+        removeBulkEpisodeBlock(blockId) {
+          document.getElementById(blockId)?.remove();
+          if (document.querySelectorAll('[id^="bulk_"]').length === 0) {
+            document.getElementById('bulkEpisodeBlocks').innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">📚 Нажми кнопку ниже, чтобы добавить первый эпизод</div>';
+          }
+        }
+
+        getBulkEpisodeBlocks() {
+          const blocks = document.querySelectorAll('[id^="bulk_"]');
+          return Array.from(blocks).map((block, idx) => ({
+            order: idx + 1,
+            title: block.querySelector('.bulkEpisodeName').value || ('Эпизод ' + (idx + 1)),
+            date: block.querySelector('.bulkEpisodeDate').value || new Date().toISOString().split('T')[0],
+            format: block.querySelector('.bulkEpisodeFormat').value,
+            text: block.querySelector('.bulkEpisodeText').value
+          }));
+        }
+
+        async previewBulkImport() {
+          const title = document.getElementById('bulkImportTitle').value;
+          const desc = document.getElementById('bulkImportDescription').value;
+          if (!title) { alert('❌ Введи название истории'); return; }
+
+          const blocks = this.getBulkEpisodeBlocks();
+          if (blocks.length === 0) { alert('❌ Добавь хотя бы один эпизод'); return; }
+
+          let previewHTML = `<div style="padding: 15px; background: var(--bg-card); border-radius: 4px; margin-bottom: 15px;">
+            <h4>${title}</h4>
+            <p style="color: var(--text-secondary);">${desc || 'Без описания'}</p>
+          </div>`;
+
+          for (const block of blocks) {
+            const msgs = this.parseImportText(block.text, block.format);
+            previewHTML += `<div style="padding: 10px; background: var(--bg-secondary); margin: 10px 0; border-radius: 4px;">
+              <strong>📖 ${block.title}</strong> (${block.date})<br>
+              Сообщений: ${msgs.length}
+            </div>`;
+          }
+
+          document.getElementById('bulkPreviewContent').innerHTML = previewHTML;
+          document.getElementById('bulkImportPreview').style.display = 'block';
+        }
+
+        async confirmBulkImport() {
+          const title = document.getElementById('bulkImportTitle').value;
+          const desc = document.getElementById('bulkImportDescription').value;
+          const category = document.getElementById('bulkImportCategory').value;
+
+          if (!title) { alert('❌ Введи название истории'); return; }
+
+          const blocks = this.getBulkEpisodeBlocks();
+          if (blocks.length === 0) { alert('❌ Добавь хотя бы один эпизод'); return; }
+
+          try {
+            const storyRef = await db.collection('stories').add({
+              title: title,
+              description: desc,
+              category: category,
+              status: 'announced',
+              visibility: 'public',
+              episodesCount: 0,
+              plannedEpisodes: blocks.length,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+            const storyId = storyRef.id;
+            console.log('✅ История создана:', storyId);
+
+            for (const block of blocks) {
+              const msgs = this.parseImportText(block.text, block.format);
+              const chars = this.extractCharacters(msgs);
+
+              const charMap = {};
+              for (const ch of chars) {
+                const charRef = await db.collection('story_characters').add({
+                  name: ch.name,
+                  color: ch.color,
+                  bio: 'Импортирован',
+                  storyId: storyId,
+                  isLocal: false,
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                });
+                charMap[ch.name] = charRef.id;
+              }
+
+              const episodeRef = await db.collection('episodes').add({
+                storyId: storyId,
+                episodeNumber: block.order,
+                title: block.title,
+                publishDate: new Date(block.date),
+                status: 'draft',
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+              const episodeId = episodeRef.id;
+
+              for (const msg of msgs) {
+                await db.collection('episode_messages').add({
+                  episodeId: episodeId,
+                  storyId: storyId,
+                  type: msg.type,
+                  content: msg.content,
+                  characterId: msg.characterId ? charMap[msg.characterId] : null,
+                  delay: msg.delay,
+                  order: msg.order,
+                  createdAt: new Date()
+                });
+              }
+            }
+
+            alert('✅ История и ' + blocks.length + ' эпизодов успешно созданы!');
+            document.getElementById('bulkImportTitle').value = '';
+            document.getElementById('bulkImportDescription').value = '';
+            document.getElementById('bulkEpisodeBlocks').innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">📚 Нажми кнопку ниже, чтобы добавить первый эпизод</div>';
+            document.getElementById('bulkImportPreview').style.display = 'none';
+          } catch (error) {
+            console.error('Ошибка:', error);
+            alert('❌ Ошибка: ' + error.message);
+          }
+        }
+
+        // ===== ИМПОРТ ЭПИЗОДА В ИСТОРИЮ =====
         showConstructorImportModal() {
           if (!this.currentStory) {
             alert('❌ Выбери историю в конструкторе');
             return;
           }
-          document.getElementById('importTab')?.click?.() || document.querySelector('[data-tab="import"]')?.click();
-          alert('✅ Откройте вкладку Импорт и выберите формат');
+          const episodeTab = document.getElementById('episodeImportTab');
+          episodeTab.style.display = 'block';
+          document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+          episodeTab.style.display = 'block';
         }
 
-        addEpisodeSlot() {
-          if (!this.currentStory) {
-            alert('❌ Выбери историю');
-            return;
-          }
-          const container = document.getElementById('episodeInsertPoints');
-          const slotId = 'slot_' + Date.now();
-          const slotHTML = `
-            <div id="${slotId}" style="display: flex; gap: 8px; margin: 8px 0; align-items: center; background: var(--bg-secondary); padding: 8px; border-radius: 4px;">
-              <input type="text" placeholder="Название эпизода" class="episodeSlotTitle" style="flex: 1; padding: 6px;">
-              <button class="btn btn-danger btn-small" onclick="admin.removeEpisodeSlot('${slotId}')">🗑️</button>
-            </div>
-          `;
-          container.innerHTML += slotHTML;
+        parseImportText(text, format) {
+          if (format === 'json') return this.parseJSON(text);
+          if (format === 'python') return this.parsePython(text);
+          return this.parseTXT(text);
         }
 
-        removeEpisodeSlot(slotId) {
-          document.getElementById(slotId)?.remove();
+        extractCharacters(messages) {
+          const chars = new Map();
+          const colors = ['#6366f1', '#FFE81F', '#4caf50', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4'];
+
+          messages.forEach((msg, idx) => {
+            if (msg.characterId && !chars.has(msg.characterId)) {
+              chars.set(msg.characterId, {
+                name: msg.characterId,
+                color: colors[idx % colors.length]
+              });
+            }
+          });
+
+          return Array.from(chars.values());
         }
 
-        getEpisodeSlots() {
-          const inputs = document.querySelectorAll('.episodeSlotTitle');
-          return Array.from(inputs).map((input, idx) => ({
-            order: idx + 1,
-            title: input.value || ('Эпизод ' + (idx + 1))
-          }));
-        }
-        
-        previewImport() {
+        previewEpisodeImport() {
           if (!this.currentStory) {
             alert('❌ Выбери историю в конструкторе');
             return;
           }
-          this.importedMessages = this.parseImportedData();
-          if (this.importedMessages.length === 0) { alert('❌ Не удалось спарсить'); return; }
-          const preview = document.getElementById('importPreviewMessages');
-          preview.innerHTML = this.importedMessages.slice(0, 10).map(msg => `
+
+          const format = document.getElementById('episodeImportFormat').value;
+          const text = document.getElementById('episodeImportText').value.trim();
+
+          if (!text) { alert('❌ Вставь текст или выбери файл'); return; }
+
+          this.episodeImportMessages = this.parseImportText(text, format);
+          if (this.episodeImportMessages.length === 0) { alert('❌ Не удалось спарсить'); return; }
+
+          const preview = document.getElementById('episodePreviewMessages');
+          preview.innerHTML = this.episodeImportMessages.slice(0, 10).map(msg => `
             <div style="padding:8px;margin:5px 0;background:var(--bg-primary);border-radius:4px;">
               <span style="color:var(--accent-secondary);font-weight:bold;">[${msg.type}]</span>
               ${msg.characterId ? `<span style="color:var(--accent-primary);">${msg.characterId}:</span>` : ''}
               <span>${msg.content}</span>
             </div>
           `).join('');
-          const charsDiv = document.getElementById('importCharactersToCreate');
-          if (this.importedCharacters.length > 0) {
+
+          const chars = this.extractCharacters(this.episodeImportMessages);
+          const charsDiv = document.getElementById('episodeImportCharacters');
+          if (chars.length > 0) {
             charsDiv.innerHTML = `<strong>Персонажи:</strong><br>` + 
-              this.importedCharacters.map(ch => 
+              chars.map(ch => 
                 `<span style="background:${ch.color};color:#000;padding:2px 6px;border-radius:3px;margin:2px;display:inline-block;">${ch.name}</span>`
               ).join('');
           }
-          document.getElementById('importPreview').style.display = 'block';
-        }
-        async confirmImport() {
-          if (!this.currentStory) { alert('❌ Выбери историю'); return; }
-          if (this.importedMessages.length === 0) { alert('❌ Нет сообщений'); return; }
 
-          const slots = this.getEpisodeSlots();
-          if (slots.length === 0) { alert('❌ Добавь хотя бы одну точку вставки'); return; }
+          document.getElementById('episodeImportPreview').style.display = 'block';
+        }
+
+        async confirmEpisodeImport() {
+          if (!this.currentStory) { alert('❌ Выбери историю'); return; }
+          if (!this.episodeImportMessages || this.episodeImportMessages.length === 0) { alert('❌ Нет сообщений'); return; }
 
           try {
+            const newEpisodeRef = await db.collection('episodes').add({
+              storyId: this.currentStory.id,
+              episodeNumber: (this.currentStory.episodesCount || 0) + 1,
+              title: 'Импортированный эпизод',
+              status: 'draft',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+            const episodeId = newEpisodeRef.id;
+
+            const chars = this.extractCharacters(this.episodeImportMessages);
             const charMap = {};
-            for (const ch of this.importedCharacters) {
+            for (const ch of chars) {
               const docRef = await db.collection('story_characters').add({
-                name: ch.name, color: ch.color, bio: ch.bio, storyId: this.currentStory.id,
-                isLocal: ch.isLocal || false, createdAt: new Date(), updatedAt: new Date()
+                name: ch.name, color: ch.color, bio: 'Импортирован', storyId: this.currentStory.id,
+                isLocal: false, createdAt: new Date(), updatedAt: new Date()
               });
               charMap[ch.name] = docRef.id;
             }
 
-            const msgsPerSlot = Math.ceil(this.importedMessages.length / slots.length);
-            let msgIndex = 0;
-
-            for (const slot of slots) {
-              const newEpisodeRef = await db.collection('episodes').add({
-                storyId: this.currentStory.id,
-                episodeNumber: (this.currentStory.episodesCount || 0) + slot.order,
-                title: slot.title,
-                status: 'draft',
-                createdAt: new Date(),
-                updatedAt: new Date()
+            for (const msg of this.episodeImportMessages) {
+              const charId = msg.characterId ? charMap[msg.characterId] : null;
+              await db.collection('episode_messages').add({
+                episodeId: episodeId, storyId: this.currentStory.id,
+                type: msg.type, content: msg.content, characterId: charId,
+                delay: msg.delay, order: msg.order, createdAt: new Date()
               });
-              const episodeId = newEpisodeRef.id;
-              console.log('📥 Создан эпизод:', slot.title, episodeId);
-
-              const slotMsgs = this.importedMessages.slice(msgIndex, msgIndex + msgsPerSlot);
-              for (const msg of slotMsgs) {
-                const charId = msg.characterId ? charMap[msg.characterId] : null;
-                await db.collection('episode_messages').add({
-                  episodeId: episodeId, storyId: this.currentStory.id,
-                  type: msg.type, content: msg.content, characterId: charId,
-                  delay: msg.delay, order: msg.order, createdAt: new Date()
-                });
-              }
-              msgIndex += msgsPerSlot;
             }
 
-            alert('✅ Импортировано ' + this.importedMessages.length + ' сообщений в ' + slots.length + ' эпизодов');
-            document.getElementById('importText').value = '';
-            document.getElementById('importPreview').style.display = 'none';
-            document.getElementById('episodeInsertPoints').innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">📝 Эпизоды сюда добавятся автоматически</div>';
-            this.importedMessages = [];
-            this.importedCharacters = [];
+            alert('✅ Импортировано: ' + this.episodeImportMessages.length + ' сообщений в новый эпизод');
+            document.getElementById('episodeImportText').value = '';
+            document.getElementById('episodeImportPreview').style.display = 'none';
+            this.episodeImportMessages = [];
             await this.loadConstructorData(this.currentStory.id);
+            await this.loadEpisodeData(episodeId);
           } catch (error) {
             console.error('Ошибка:', error);
             alert('❌ Ошибка: ' + error.message);
