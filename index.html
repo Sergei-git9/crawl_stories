@@ -383,6 +383,59 @@
     /* effects container */
     #seasonal-effects { pointer-events: none; position: fixed; inset: 0; z-index: 9999; }
     #seasonal-effects .effect-item { position: absolute; will-change: transform, opacity; }
+    
+    /* Snowflake animation */
+    .snowflake { 
+      position: absolute; 
+      top: -10px; 
+      color: white; 
+      opacity: 0.9; 
+      font-size: 10px; 
+      animation: fall linear infinite; 
+      user-select: none;
+    }
+    
+    @keyframes fall { 
+      to { 
+        transform: translateY(110vh) rotate(360deg); 
+      } 
+    }
+    
+    /* Halloween bat */
+    .bat {
+      font-size: 20px;
+      animation: float 8s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      50% { transform: translateY(-20px) translateX(10px); }
+    }
+    
+    /* Valentine hearts */
+    .heart { 
+      position: absolute; 
+      font-size: 18px; 
+      color: #ff6b9a; 
+      opacity: 0.9; 
+      animation: floatUp 6s linear infinite; 
+      user-select: none;
+    }
+    
+    @keyframes floatUp { 
+      to { 
+        transform: translateY(-110vh) rotate(-360deg); 
+        opacity: 0; 
+      } 
+    }
+    
+    /* Halloween fog overlay */
+    .fog-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(100,50,150,0.1), rgba(30,10,50,0.2));
+      pointer-events: none;
+    }
 
     /* Theme crossfade helper and notification */
     .theme-fade * { transition: color 400ms ease, background-color 400ms ease, border-color 400ms ease, box-shadow 400ms ease, opacity 400ms ease; }
@@ -785,7 +838,34 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       window.app = new PublicApp();
+      applyPublicTheme();
     });
+    
+    // Создаём красивый падающий снег
+    function createSnowEffect() {
+      console.log('❄️ Создаём падающий снег...');
+      const old = document.getElementById('seasonal-effects');
+      if (old) old.remove();
+      
+      const container = document.createElement('div');
+      container.id = 'seasonal-effects';
+      document.body.appendChild(container);
+      
+      const snowCount = 30;
+      
+      for (let i = 0; i < snowCount; i++) {
+        const snowflake = document.createElement('div');
+        snowflake.className = 'snowflake effect-item';
+        snowflake.textContent = '❄';
+        snowflake.style.left = Math.random() * 100 + '%';
+        snowflake.style.fontSize = (12 + Math.random() * 20) + 'px';
+        snowflake.style.animationDuration = (6 + Math.random() * 8) + 's';
+        snowflake.style.animationDelay = (Math.random() * 5) + 's';
+        snowflake.style.opacity = 0.6 + Math.random() * 0.4;
+        container.appendChild(snowflake);
+      }
+      console.log(`✅ Создано ${snowCount} снежинок!`);
+    }
     
     // Применяем тему на публичной странице
     async function applyPublicTheme(){
@@ -807,7 +887,10 @@
       // clear existing classes/effects
       document.documentElement.classList.remove('theme-newyear','theme-halloween','theme-valentine','theme-fear');
       const old = document.getElementById('seasonal-effects'); if (old) old.remove();
-      if (!theme) return;
+      if (!theme) {
+        createSnowEffect();
+        return;
+      }
       document.documentElement.classList.add('theme-'+theme);
       const container = document.createElement('div'); container.id='seasonal-effects'; document.body.appendChild(container);
       // Read local tuning if available
@@ -820,8 +903,6 @@
       if (theme==='halloween'){ const count = computeCount(6); for(let i=0;i<count;i++){const b=document.createElement('div');b.className='effect-item bat';b.textContent='🦇';b.style.left=Math.random()*100+'%';b.style.top=(5+Math.random()*50)+'%';b.style.opacity=0.6+0.4*intensity;container.appendChild(b);} const fog=document.createElement('div');fog.className='fog-overlay';fog.style.opacity=0.2+0.6*intensity;container.appendChild(fog); }
       if (theme==='valentine'){ const count = computeCount(12); for(let i=0;i<count;i++){const h=document.createElement('div');h.className='heart effect-item';h.textContent='❤';h.style.left=Math.random()*100+'%';h.style.bottom=(-10-Math.random()*40)+'px';h.style.animationDuration=(3+Math.random()*5)/(0.5+intensity)+'s';h.style.opacity=0.5+0.5*intensity;container.appendChild(h);} }
     }
-    // initial run
-    applyPublicTheme();
 
     // Show a small flash notification when theme is updated
     function showThemeUpdatedNotice(){
