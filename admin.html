@@ -3294,25 +3294,31 @@
         async checkAndUnblockAnnouncedStories() {
           try {
             const now = new Date();
-            const announcedStories = await db.collection('stories')
+            const allAnnounced = await db.collection('stories')
               .where('status', '==', 'announced')
-              .where('firstEpisodeDate', '<=', now)
               .get();
 
-            for (const doc of announcedStories.docs) {
-              // Проверяем есть ли уже опубликованные эпизоды
-              const episodes = await db.collection('episodes')
-                .where('storyId', '==', doc.id)
-                .where('status', '==', 'published')
-                .get();
+            for (const doc of allAnnounced.docs) {
+              const story = doc.data();
+              const firstEpisodeDate = story.firstEpisodeDate ? 
+                (story.firstEpisodeDate.toDate ? story.firstEpisodeDate.toDate() : new Date(story.firstEpisodeDate)) 
+                : null;
 
-              if (episodes.size > 0) {
-                // Меняем статус на "new"
-                await db.collection('stories').doc(doc.id).update({
-                  status: 'new',
-                  updatedAt: new Date()
-                });
-                console.log('✅ Анонс разблокирован:', doc.id);
+              if (firstEpisodeDate && firstEpisodeDate <= now) {
+                // Проверяем есть ли уже опубликованные эпизоды
+                const episodes = await db.collection('episodes')
+                  .where('storyId', '==', doc.id)
+                  .where('status', '==', 'published')
+                  .get();
+
+                if (episodes.size > 0) {
+                  // Меняем статус на "new"
+                  await db.collection('stories').doc(doc.id).update({
+                    status: 'new',
+                    updatedAt: new Date()
+                  });
+                  console.log('✅ Анонс разблокирован:', doc.id);
+                }
               }
             }
           } catch (error) {
