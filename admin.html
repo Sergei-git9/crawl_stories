@@ -1105,6 +1105,7 @@
         </button>
         <button class="tab" data-tab="schedule">📅 График публикаций</button>
         <button class="tab" data-tab="new-story">➕ Новая история</button>
+        <button class="tab" data-tab="import">📥 Импорт</button> 
       </div>
 
       <div id="storiesTab" class="tab-content active">
@@ -1362,6 +1363,42 @@
         </div>
       </div>
 
+      <div id="importTab" class="tab-content">
+        <div style="max-width: 900px; margin: 0 auto;">
+          <h3>📥 Импорт эпизодов</h3>
+
+          <div class="form-group">
+            <label>Выбери формат:</label>
+            <select id="importFormat" style="width: 200px;">
+              <option value="txt">📄 TXT (с тегами)</option>
+              <option value="json">📦 JSON (структурированный)</option>
+              <option value="python">🐍 Python (сценарий)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Загрузи файл:</label>
+            <input type="file" id="importFile" accept=".txt,.json,.py">
+          </div>
+
+          <div class="form-group">
+            <label>Или вставь текст:</label>
+            <textarea id="importText" rows="10" placeholder="Вставь содержимое файла здесь..." style="width: 100%; font-family: monospace; font-size: 12px;"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-info" id="btnPreviewImport">👁️ Превью</button>
+            <button class="btn btn-success" id="btnImportMessages">✅ Импортировать</button>
+            <button class="btn btn-secondary" id="btnCancelImport">❌ Отмена</button>
+          </div>
+
+          <div id="importPreview" style="margin-top: 20px; display: none;">
+            <h4>Превью сообщений:</h4>
+            <div id="importPreviewMessages" style="border: 1px solid var(--border-light); border-radius: 8px; padding: 10px; max-height: 400px; overflow-y: auto; background: var(--bg-secondary);"></div>
+            <div id="importCharactersToCreate" style="margin-top: 10px; padding: 10px; background: var(--bg-card); border-radius: 8px;"></div>
+          </div>
+        </div>
+      </div>
       <div id="newStoryTab" class="tab-content">
         <div class="character-form">
           <h3>➕ Создать новую историю</h3>
