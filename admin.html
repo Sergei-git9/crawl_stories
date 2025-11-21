@@ -1082,7 +1082,8 @@
         </button>
         <button class="tab" data-tab="schedule">📅 График публикаций</button>
         <button class="tab" data-tab="new-story">➕ Новая история</button>
-        <button class="tab" data-tab="import">📥 Импорт</button> 
+        <button class="tab" data-tab="import">📥 Импорт</button>
+        <button class="tab" data-tab="settings">⚙️ Настройки сайта</button>
       </div>
 
       <div id="storiesTab" class="tab-content active">
@@ -1431,6 +1432,124 @@
             <h4>Превью сообщений:</h4>
             <div id="episodePreviewMessages" style="border: 1px solid var(--border-light); border-radius: 8px; padding: 10px; max-height: 400px; overflow-y: auto; background: var(--bg-secondary);"></div>
             <div id="episodeImportCharacters" style="margin-top: 10px; padding: 10px; background: var(--bg-card); border-radius: 8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="settingsTab" class="tab-content">
+        <div style="max-width: 1000px; margin: 0 auto;">
+          <h2 style="margin-bottom: 30px; color: var(--accent-primary);">⚙️ Настройки сайта</h2>
+
+          <!-- THEME SETTINGS SECTION -->
+          <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+              🎨 Управление Сезонными Темами
+            </h3>
+            
+            <div style="background: rgba(255, 232, 31, 0.05); border-left: 3px solid var(--accent-primary); padding: 15px; margin-bottom: 20px; border-radius: 6px;">
+              <p style="font-size: 14px; color: var(--text-secondary);">
+                Выберите сезонную тему для оформления сайта. Темы можно включить автоматически (по датам) или вручную. Настройте частоту эффектов, интенсивность и длительность действия темы.
+              </p>
+            </div>
+
+            <!-- Theme Selection -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+              <div class="form-group">
+                <label style="font-weight: bold; margin-bottom: 10px; display: block;">Выбор темы</label>
+                <select id="themeSelect" style="background: transparent; border: 1px solid var(--border-light); color: var(--text-primary); padding: 10px; border-radius: 6px; width: 100%; font-size: 14px;">
+                  <option value="none">По умолчанию (нет темы)</option>
+                  <option value="newyear">❄️ Новый год (1-15 января)</option>
+                  <option value="halloween">🎃 Хэллоуин (25-31 октября)</option>
+                  <option value="valentine">❤️ День влюблённых (13-14 февраля)</option>
+                  <option value="fear">😨 Fear week (31 октября - 7 ноября)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label style="font-weight: bold; margin-bottom: 10px; display: block;">Режим включения</label>
+                <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                  <input type="checkbox" id="themeAuto" />
+                  <span style="font-size: 14px;">Автоматический режим (включить по датам)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Theme Settings Block -->
+            <div style="padding: 15px; background: rgba(255,232,31,0.08); border-radius: 8px; border: 1px solid rgba(255,232,31,0.3); display: none;" id="themeSettings">
+              <h4 style="margin-bottom: 15px; color: var(--accent-primary);">🎛️ Параметры выбранной темы</h4>
+              
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px;">
+                <div>
+                  <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 8px;">
+                    ⚡ Частота эффектов: <span id="freqValue" style="color: var(--accent-primary);">1x</span>
+                  </label>
+                  <input id="themeFrequency" type="range" min="1" max="10" value="1" style="width: 100%; height: 6px; border-radius: 3px;" />
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Больше = больше эффектов на экране</div>
+                </div>
+
+                <div>
+                  <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 8px;">
+                    💡 Интенсивность: <span id="intValue" style="color: var(--accent-primary);">50%</span>
+                  </label>
+                  <input id="themeIntensity" type="range" min="0" max="100" value="50" style="width: 100%; height: 6px; border-radius: 3px;" />
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Яркость и видимость эффектов</div>
+                </div>
+
+                <div>
+                  <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 8px;">📅 Длительность (дни)</label>
+                  <input id="themeDays" type="number" min="1" max="365" value="7" style="width: 100%; padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; background: transparent; color: var(--text-primary);" />
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">На сколько дней включить тему</div>
+                </div>
+
+                <div>
+                  <label style="font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer;">
+                    <input type="checkbox" id="themeAlwaysOn" />
+                    <span>🔄 Включена постоянно</span>
+                  </label>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Не учитывать дни, включить навсегда</div>
+                </div>
+              </div>
+
+              <button id="btnApplyThemeSettings" class="btn btn-success" style="width: 100%;">✅ Применить настройки этой темы</button>
+            </div>
+
+            <!-- Control Buttons -->
+            <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+              <button id="btnApplyTheme" class="btn" style="flex: 1; min-width: 120px;">👁️ Просмотреть</button>
+              <button id="btnSaveTheme" class="btn btn-success" style="flex: 1; min-width: 120px;">💾 Сохранить текущую</button>
+              <button id="btnClearTheme" class="btn btn-warning" style="flex: 1; min-width: 120px;">🔄 Сброс на заводские</button>
+            </div>
+          </div>
+
+          <!-- THEME DESCRIPTIONS -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 15px;">
+              <h4 style="color: #4db8ff; margin-bottom: 8px;">❄️ Новый год</h4>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                Падающий снег на фоне, зимняя атмосфера. Активна: 1-15 января
+              </p>
+            </div>
+
+            <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 15px;">
+              <h4 style="color: #ff9500; margin-bottom: 8px;">🎃 Хэллоуин</h4>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                Тыквы, летучие мыши, мрачная атмосфера. Активна: 25-31 октября
+              </p>
+            </div>
+
+            <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 15px;">
+              <h4 style="color: #ff4d6d; margin-bottom: 8px;">❤️ День влюблённых</h4>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                Плывущие сердца, романтичная атмосфера. Активна: 13-14 февраля
+              </p>
+            </div>
+
+            <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 15px;">
+              <h4 style="color: #ff3333; margin-bottom: 8px;">😨 Fear week</h4>
+              <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                Красный цвет, устрашающие эффекты. Активна: 31 окт - 7 ноября
+              </p>
+            </div>
           </div>
         </div>
       </div>
