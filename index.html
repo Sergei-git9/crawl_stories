@@ -554,7 +554,10 @@
       <section class="stories-section">
         <div class="section-header">
           <h2 id="currentCategoryTitle">Все истории</h2>
-          <div class="stories-count" id="storiesCount">0 историй</div>
+          <div style="display:flex;gap:15px;align-items:center;">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск по названию или описанию..." style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:#05050a;color:#ddd;width:300px;font-family:var(--font-mono);font-size:14px;">
+            <div class="stories-count" id="storiesCount">0 историй</div>
+          </div>
         </div>
         <div id="storiesList" class="stories-grid"></div>
       </section>
@@ -573,15 +576,18 @@
         this.stories = [];
         this.categories = {};
         this.currentCategory = 'all';
+        this.searchQuery = '';
         this.init();
       }
 
       initCategories() {
         this.categories = {
           'all': '📚 Все истории',
-          'published': '🚀 Опубликовано',
-          'scheduled': '⏰ Ожидание', 
-          'soon': '🕐 Скоро',
+          'announced': '🔒 Анонс',
+          'new': '🆕 Новинка',
+          'ongoing': '📖 Продолжается',
+          'finished': '✅ Завершена',
+          'abandoned': '💔 Брошена',
           'fantasy': '🧙 Фэнтези',
           'sci-fi': '🚀 Научная фантастика', 
           'horror': '👻 Хоррор',
@@ -610,6 +616,9 @@
         nav.querySelectorAll('.nav-btn').forEach(btn => {
           btn.addEventListener('click', (e) => {
             this.currentCategory = e.target.dataset.category;
+            this.searchQuery = '';
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = '';
             this.renderCategoryFilters();
             this.renderContent();
           });
@@ -633,18 +642,9 @@
             id: doc.id,
             ...doc.data()
           })).filter(story => {
-            if (story.isPublic === false) return false;
+            const visibility = story.visibility || (story.isPublic === false ? 'hidden' : 'public');
             
-            if (story.publishDate) {
-              const publishDate = story.publishDate?.toDate ? story.publishDate.toDate() : new Date(story.publishDate);
-              const now = new Date();
-              
-              if (publishDate <= now && !story.published) {
-                console.log(`🔄 Автопубликация истории: ${story.title}`);
-                this.autoPublishStory(doc.id);
-                story.published = true;
-              }
-            }
+            if (visibility === 'hidden') return false;
             
             return true;
           });
@@ -680,16 +680,11 @@
       renderStories() {
         let filteredStories = this.stories;
         
-        if (this.currentCategory === 'published') {
-          filteredStories = this.stories.filter(story => story.published === true);
-        } else if (this.currentCategory === 'scheduled') {
-          filteredStories = this.stories.filter(story => 
-            story.publishDate && new Date(story.publishDate) > new Date()
-          );
-        } else if (this.currentCategory === 'soon') {
-          filteredStories = this.stories.filter(story => 
-            !story.published && !story.publishDate
-          );
+        if (['announced', 'new', 'ongoing', 'finished', 'abandoned'].includes(this.currentCategory)) {
+          filteredStories = this.stories.filter(story => {
+            const status = story.status || 'announced';
+            return status === this.currentCategory;
+          });
         } else if (this.currentCategory === 'chat') {
           filteredStories = this.stories.filter(story => 
             story.format === 'chat' || story.isChat === true
@@ -698,6 +693,15 @@
           filteredStories = this.stories.filter(story => 
             story.category === this.currentCategory
           );
+        }
+        
+        if (this.searchQuery) {
+          const query = this.searchQuery.toLowerCase();
+          filteredStories = filteredStories.filter(story => {
+            const title = (story.title || '').toLowerCase();
+            const description = (story.description || '').toLowerCase();
+            return title.includes(query) || description.includes(query);
+          });
         }
 
         this.updateStoriesCount(filteredStories.length);
@@ -713,44 +717,56 @@
         }
 
         return filteredStories.map(story => {
-          const isScheduled = story.publishDate && new Date(story.publishDate) > new Date();
-          const isSoon = !story.published && !story.publishDate;
-          const isPublished = story.published === true;
-          const isChat = story.format === 'chat' || story.isChat === true;
+          const status = story.status || 'announced';
+          const visibility = story.visibility || 'public';
+          const episodesCount = story.episodesCount || 0;
+          const plannedEpisodes = story.plannedEpisodes || 0;
+          const firstEpisodeDate = story.firstEpisodeDate;
           
-          const isBlocked = !isPublished;
+          const isClosed = visibility === 'closed';
+          const isAnnounced = status === 'announced';
+          const isBlocked = isClosed || isAnnounced;
+
+          const statusText = {
+            'announced': '🔒 Анонс',
+            'new': '🆕 Новинка',
+            'ongoing': '📖 Продолжается',
+            'finished': '✅ Завершена',
+            'abandoned': '💔 Брошена'
+          }[status] || status;
 
           return `
-            <div class="story-card ${isScheduled ? 'scheduled' : ''} ${isSoon ? 'soon' : ''} ${isBlocked ? 'blocked' : ''}" 
+            <div class="story-card ${isAnnounced ? 'soon' : ''} ${isClosed ? 'closed' : ''} ${isBlocked ? 'blocked' : ''}" 
                  data-story-id="${story.id}">
               <div class="story-header">
                 <h3 class="story-title">${story.title || 'Без названия'}</h3>
                 <div>
-                  ${story.episode ? `<span class="story-badge">Эпизод ${story.episode}</span>` : ''}
-                  ${isChat ? `<span class="story-badge chat">💬 Чат</span>` : ''}
-                  <span class="story-badge ${isScheduled ? 'scheduled' : ''} ${isSoon ? 'soon' : ''}">
-                    ${this.getCategoryName(story.category, story.customCategory)}
-                  </span>
+                  <span class="story-badge category">${this.getCategoryName(story.category, story.customCategory)}</span>
+                  <span class="story-badge status-${status}">${statusText}</span>
+                  ${isClosed ? `<span class="story-badge">🔐 Закрыта</span>` : ''}
+                  ${plannedEpisodes > 0 ? `<span class="story-badge">📊 ${episodesCount}/${plannedEpisodes}</span>` : ''}
                 </div>
               </div>
               <p class="story-desc">${story.description || 'Описание отсутствует'}</p>
               
-              <div class="story-meta">
-                <div class="story-stats">
-                  ${story.chaptersCount ? `<div class="stat">📖 ${story.chaptersCount} глав</div>` : ''}
-                  ${story.messagesCount ? `<div class="stat">💬 ${story.messagesCount} сообщений</div>` : ''}
-                  ${story.duration ? `<div class="stat">⏱️ ${story.duration} мин</div>` : ''}
+              ${isAnnounced && firstEpisodeDate && !isClosed ? `
+                <div class="story-meta">
+                  <span class="status-announced">📅 Выход: ${new Date(firstEpisodeDate.toDate ? firstEpisodeDate.toDate() : firstEpisodeDate).toLocaleDateString('ru-RU')}</span>
                 </div>
-                <span class="${isScheduled ? 'status-scheduled' : isSoon ? 'status-soon' : 'status-published'}">
-                  ${isScheduled ? '⏰ Ожидание' : isSoon ? '🕐 Скоро' : '✅ Опубликовано'}
-                </span>
-              </div>
+              ` : ''}
               
-              ${isBlocked ? `
+              ${isClosed ? `
                 <div class="blocked-overlay">
                   <div class="blocked-message">
-                    <h4>⏳ Еще не доступно</h4>
-                    <p>Ожидайте выхода, а пока можете посмотреть другие наши истории</p>
+                    <h4>🔐 История закрыта</h4>
+                    <p>Доступна только информация об истории</p>
+                  </div>
+                </div>
+              ` : isAnnounced ? `
+                <div class="blocked-overlay">
+                  <div class="blocked-message">
+                    <h4>⏳ Скоро</h4>
+                    <p>История ещё не вышла. Следите за обновлениями!</p>
                   </div>
                 </div>
               ` : ''}
@@ -789,6 +805,14 @@
         document.getElementById('btnAdmin')?.addEventListener('click', () => {
           window.open('admin.html', '_blank');
         });
+
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+          searchInput.addEventListener('input', (e) => {
+            this.searchQuery = e.target.value;
+            this.renderContent();
+          });
+        }
 
         document.addEventListener('click', (e) => {
           const storyCard = e.target.closest('.story-card');
@@ -888,7 +912,6 @@
       document.documentElement.classList.remove('theme-newyear','theme-halloween','theme-valentine','theme-fear');
       const old = document.getElementById('seasonal-effects'); if (old) old.remove();
       if (!theme) {
-        createSnowEffect();
         return;
       }
       document.documentElement.classList.add('theme-'+theme);

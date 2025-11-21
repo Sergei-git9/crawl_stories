@@ -1061,13 +1061,33 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Эпизод</label>
-            <input type="number" id="newStoryEpisode" min="1" value="1">
+            <label>Планируемых эпизодов</label>
+            <input type="number" id="newStoryPlannedEpisodes" min="1" value="10">
           </div>
         </div>
-        <div class="checkbox-group">
-          <input type="checkbox" id="newStoryIsPublic">
-          <label for="newStoryIsPublic">Сделать публичной сразу</label>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Статус истории</label>
+            <select id="newStoryStatus">
+              <option value="announced">🔒 Анонс</option>
+              <option value="new">🆕 Новинка</option>
+              <option value="ongoing">📖 Продолжается</option>
+              <option value="finished">✅ Завершена</option>
+              <option value="abandoned">💔 Брошена</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Видимость</label>
+            <select id="newStoryVisibility">
+              <option value="public">👁️ Опубликована</option>
+              <option value="closed">🔐 Закрыта (только анонс)</option>
+              <option value="hidden">👻 Скрыта (только админ)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Дата выхода первого эпизода (опционально)</label>
+          <input type="date" id="newStoryFirstEpisodeDate">
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-success" id="btnCreateStory">🚀 Создать историю</button>
@@ -1417,26 +1437,31 @@
 
         container.innerHTML = this.stories.map(story => {
           const status = story.status || 'announced';
-          const isHidden = story.isPublic === false;
+          const visibility = story.visibility || (story.isPublic === false ? 'hidden' : 'public');
+          const episodesCount = story.episodesCount || 0;
+          const plannedEpisodes = story.plannedEpisodes || 0;
 
           return `
-            <div class="story-card ${status === 'scheduled' ? 'scheduled' : ''} ${status === 'announced' ? 'soon' : ''}">
+            <div class="story-card ${status === 'announced' ? 'soon' : ''}" style="border-left: 3px solid ${visibility === 'hidden' ? '#6b7280' : visibility === 'closed' ? '#f59e0b' : '#10b981'}">
               <div class="story-header">
                 <h3 class="story-title">${story.title || 'Без названия'}</h3>
                 <div class="story-meta">
                   <span class="badge category">${this.getCategoryName(story.category, story.customCategory)}</span>
                   <span class="badge status-${status}">${this.getStoryStatusText(status)}</span>
-                  ${isHidden ? `<span class="badge status-hidden">👻 Скрыто</span>` : ''}
+                  <span class="badge status-${visibility}">${this.getVisibilityText(visibility)}</span>
+                  ${plannedEpisodes > 0 ? `<span class="badge">📊 ${episodesCount}/${plannedEpisodes}</span>` : ''}
                 </div>
               </div>
               <p class="story-desc">${story.description || 'Описание отсутствует'}</p>
               <div class="story-actions">
                 <button class="btn btn-secondary btn-small" onclick="adminPanel.editStory('${story.id}')">✏️ Редактировать</button>
                 <button class="btn btn-danger btn-small" onclick="adminPanel.deleteStoryPrompt('${story.id}')">🗑️ Удалить</button>
-                ${isHidden ? 
-                  `<button class="btn btn-success btn-small" onclick="adminPanel.toggleVisibility('${story.id}', true)">👁️ Показать</button>` :
-                  `<button class="btn btn-secondary btn-small" onclick="adminPanel.toggleVisibility('${story.id}', false)">👻 Скрыть</button>`
-                }
+                <select class="btn btn-small" onchange="if(this.value) adminPanel.toggleVisibility('${story.id}', this.value); this.value='';" style="padding:8px;font-size:12px;">
+                  <option value="">Изменить видимость</option>
+                  <option value="public">👁️ Опубликована</option>
+                  <option value="closed">🔐 Закрыта (анонс)</option>
+                  <option value="hidden">👻 Скрыта</option>
+                </select>
                 <button class="btn btn-info btn-small" onclick="adminPanel.safeOpenConstructor('${story.id}')">🛠️ Конструктор</button>
               </div>
             </div>
@@ -1474,10 +1499,22 @@
       getStoryStatusText(status) {
         switch (status) {
           case 'announced': return '🔒 Анонс';
+          case 'new': return '🆕 Новинка';
+          case 'ongoing': return '📖 Продолжается';
+          case 'finished': return '✅ Завершена';
+          case 'abandoned': return '💔 Брошена';
           case 'releasing': return '🚀 Выходит';
-          case 'finished': return '✅ Законченa';
           case 'scheduled': return '⏰ Ожидает';
           default: return status;
+        }
+      }
+
+      getVisibilityText(visibility) {
+        switch (visibility) {
+          case 'public': return '👁️ Опубликована';
+          case 'closed': return '🔐 Закрыта';
+          case 'hidden': return '👻 Скрыта';
+          default: return visibility;
         }
       }
 
@@ -1490,8 +1527,10 @@
         const title = document.getElementById('newStoryTitle').value;
         const description = document.getElementById('newStoryDescription').value;
         const category = document.getElementById('newStoryCategory').value;
-        const episode = parseInt(document.getElementById('newStoryEpisode').value);
-        const isPublic = document.getElementById('newStoryIsPublic').checked;
+        const plannedEpisodes = parseInt(document.getElementById('newStoryPlannedEpisodes').value) || 10;
+        const status = document.getElementById('newStoryStatus').value;
+        const visibility = document.getElementById('newStoryVisibility').value;
+        const firstEpisodeDate = document.getElementById('newStoryFirstEpisodeDate').value;
 
         if (!title.trim()) {
           alert('❌ Введите название истории');
@@ -1499,15 +1538,22 @@
         }
 
         try {
+          const now = new Date();
           const storyData = {
             title: title.trim(),
             description: description.trim(),
             category: category,
-            episode: episode,
-            isPublic: isPublic,
-            published: isPublic,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            plannedEpisodes: plannedEpisodes,
+            status: status,
+            visibility: visibility,
+            firstEpisodeDate: firstEpisodeDate ? new Date(firstEpisodeDate) : null,
+            episodesCount: 0,
+            lastEpisodeDate: null,
+            coverUrl: '',
+            isPublic: visibility === 'public',
+            published: visibility === 'public',
+            createdAt: now,
+            updatedAt: now
           };
 
           const docRef = await db.collection('stories').add(storyData);
@@ -1516,8 +1562,10 @@
           // Очищаем форму
           document.getElementById('newStoryTitle').value = '';
           document.getElementById('newStoryDescription').value = '';
-          document.getElementById('newStoryEpisode').value = '1';
-          document.getElementById('newStoryIsPublic').checked = false;
+          document.getElementById('newStoryPlannedEpisodes').value = '10';
+          document.getElementById('newStoryStatus').value = 'announced';
+          document.getElementById('newStoryVisibility').value = 'public';
+          document.getElementById('newStoryFirstEpisodeDate').value = '';
           
           // Перезагружаем данные
           await this.loadData();
@@ -1542,9 +1590,15 @@
             title: 'Новая история (быстро)',
             description: '',
             category: 'chat',
-            episodeCount: 0,
-            status: 'announced', // announced | releasing | finished | scheduled
+            plannedEpisodes: 10,
+            episodesCount: 0,
+            status: 'announced',
+            visibility: 'public',
+            firstEpisodeDate: null,
+            lastEpisodeDate: null,
+            coverUrl: '',
             isPublic: true,
+            published: true,
             createdAt: now,
             updatedAt: now
           };
@@ -1552,7 +1606,6 @@
           const docRef = await db.collection('stories').add(storyData);
           console.log('✅ Быстрая история создана:', docRef.id);
 
-          // Перезагрузим список и откроем конструктор (без автоматического создания эпизода/персонажей)
           await this.loadData();
           this.openConstructor(docRef.id);
           alert('✅ Быстрая история создана и открыта в конструкторе');
@@ -1605,14 +1658,17 @@
         }
       }
 
-      async toggleVisibility(storyId, isPublic) {
+      async toggleVisibility(storyId, newVisibility) {
         try {
+          const isPublic = newVisibility === 'public';
           await db.collection('stories').doc(storyId).update({
+            visibility: newVisibility,
             isPublic: isPublic,
+            published: isPublic,
             updatedAt: new Date()
           });
           await this.loadData();
-          alert(`✅ История ${isPublic ? 'опубликована' : 'скрыта'}!`);
+          alert(`✅ Видимость изменена: ${this.getVisibilityText(newVisibility)}`);
         } catch (error) {
           alert('❌ Ошибка изменения видимости');
         }

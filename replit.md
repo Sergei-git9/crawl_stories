@@ -89,6 +89,18 @@ This is a static site suitable for:
 - Any static hosting service (Netlify, Vercel, etc.)
 
 ## Recent Changes
+
+- **2025-11-21**: Major feature update - Story Status & Visibility System
+  - Implemented comprehensive story status system (Announced, New, Ongoing, Finished, Abandoned)
+  - Added visibility control (Public, Closed, Hidden) with proper filtering logic
+  - Updated Firestore structure: plannedEpisodes, status, firstEpisodeDate, visibility, episodesCount, lastEpisodeDate
+  - Added search functionality by title/description on main page
+  - Fixed seasonal themes - snow now displays only during winter theme (New Year), not always
+  - Implemented status-based filtering in index.html (all statuses including abandoned)
+  - Added announcement-only view for closed stories
+  - Updated admin panel with full status/visibility management
+  - Improved category filters with search query reset on category change
+
 - **2024-11-20**: Initial Replit setup
   - Installed Node.js 20 and http-server
   - Configured workflow for port 5000 with proper flags
@@ -96,7 +108,9 @@ This is a static site suitable for:
   - Created project documentation
 
 ## User Preferences
-None specified yet.
+- Implement all features according to FULL_SPEC.txt
+- Focus on status/visibility system correctness
+- Seasonal effects should be theme-appropriate (snow only in winter)
 
 ## Notes
 - The project is fully self-contained - all HTML, CSS, and JS are in the HTML files
