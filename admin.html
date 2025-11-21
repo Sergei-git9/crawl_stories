@@ -3128,30 +3128,27 @@
           }
         }
 
-        // REAL-TIME СИНХРОНИЗАЦИЯ И УВЕДОМЛЕНИЯ
         startRealtimeListeners() {
-          // Слушаем изменения эпизодов для обновления episodesCount
-          db.collection('episodes').onSnapshot((snapshot) => {
-            snapshot.docChanges().forEach(async (change) => {
+          const self = this;
+          db.collection('episodes').onSnapshot(function(snapshot) {
+            snapshot.docChanges().forEach(function(change) {
               if (change.type === 'added' || change.type === 'modified') {
                 const episode = change.doc.data();
-                await this.updateStoryEpisodeStats(episode.storyId);
+                self.updateStoryEpisodeStats(episode.storyId);
                 if (change.type === 'added' && episode.status === 'published') {
-                  await this.notifyNewEpisode(episode);
+                  self.notifyNewEpisode(episode);
                 }
               }
             });
           });
-
-          // Слушаем изменения историй
-          db.collection('stories').onSnapshot((snapshot) => {
-            snapshot.docChanges().forEach((change) => {
+          db.collection('stories').onSnapshot(function(snapshot) {
+            snapshot.docChanges().forEach(function(change) {
               if (change.type === 'modified') {
                 const story = change.doc.data();
                 console.log('📡 История обновлена:', change.doc.id, story);
-                if (this.currentStory?.id === change.doc.id) {
-                  this.currentStory = { id: change.doc.id, ...story };
-                  this.loadConstructorData(change.doc.id);
+                if (self.currentStory && self.currentStory.id === change.doc.id) {
+                  self.currentStory = { id: change.doc.id, ...story };
+                  self.loadConstructorData(change.doc.id);
                 }
               }
             });
