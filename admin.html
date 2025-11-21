@@ -1368,10 +1368,10 @@
 
       <div id="importTab" class="tab-content">
         <div style="max-width: 900px; margin: 0 auto;">
-          <h3>📥 Импорт эпизодов</h3>
+          <h3>📥 Импорт целой истории</h3>
 
           <div class="form-group">
-            <label>Выбери формат:</label>
+            <label>1️⃣ Выбери формат файла:</label>
             <select id="importFormat" style="width: 200px;">
               <option value="txt">📄 TXT (с тегами)</option>
               <option value="json">📦 JSON (структурированный)</option>
@@ -1380,13 +1380,25 @@
           </div>
 
           <div class="form-group">
-            <label>Загрузи файл:</label>
+            <label>2️⃣ Загрузи файл:</label>
             <input type="file" id="importFile" accept=".txt,.json,.py">
           </div>
 
           <div class="form-group">
             <label>Или вставь текст:</label>
             <textarea id="importText" rows="10" placeholder="Вставь содержимое файла здесь..." style="width: 100%; font-family: monospace; font-size: 12px;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>3️⃣ В какие эпизоды вставлять:</label>
+            <div id="episodeInsertPoints" style="border: 1px solid var(--border-light); padding: 10px; border-radius: 4px; min-height: 60px; background: var(--bg-primary);">
+              <div style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                📝 Эпизоды сюда добавятся автоматически
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-small" id="btnAddEpisodeSlot" style="margin-top: 8px;">
+              ➕ Добавить точку вставки
+            </button>
           </div>
 
           <div class="form-actions">
@@ -1608,6 +1620,11 @@
               this.saveMessage();
             });
 
+          // ИМПОРТ В КОНСТРУКТОРЕ
+          document.getElementById('btnImportEpisode')?.addEventListener('click', () => {
+            this.showConstructorImportModal();
+          });
+          
           document
             .getElementById("btnCancelMessage")
             .addEventListener("click", () => {
