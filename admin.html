@@ -961,84 +961,7 @@
       <header>
         <div class="header-content">
           <h1>⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES</h1>
-          <div style="display: flex; align-items: center; gap: 8px">
-            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <label style="font-size: 13px;">Тема:</label>
-                <select id="themeSelect" style="background: transparent; border: 1px solid var(--border-light); color: var(--text-primary); padding: 6px; border-radius: 6px;">
-                  <option value="none">По умолчанию</option>
-                  <option value="newyear">❄️ Новый год</option>
-                  <option value="halloween">🎃 Хэллоуин</option>
-                  <option value="valentine">❤️ День влюблённых</option>
-                  <option value="fear">😨 Fear week</option>
-                </select>
-              </div>
-
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <label style="font-size: 13px;"><input type="checkbox" id="themeAuto" /> Авто</label>
-              </div>
-
-              <div style="display: flex; gap: 6px;">
-                <button id="btnApplyTheme" class="theme-control-btn">Применить</button>
-                <button id="btnSaveTheme" class="theme-control-btn">Сохранить</button>
-                <button id="btnClearTheme" class="theme-control-btn">Сброс</button>
-              </div>
-            </div>
-
-            <div style="margin-top: 12px; padding: 12px; background: rgba(255,232,31,0.05); border-radius: 6px; display: none;" id="themeSettings">
-              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                  Частота: <span id="freqValue">1x</span>
-                  <input id="themeFrequency" type="range" min="1" max="10" value="1" style="width: 80px; flex: 1;" />
-                </label>
-                
-                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                  Интенсивность: <span id="intValue">50%</span>
-                  <input id="themeIntensity" type="range" min="0" max="100" value="50" style="width: 80px; flex: 1;" />
-                </label>
-
-                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                  Дней: <input id="themeDays" type="number" min="1" max="365" value="7" style="width: 60px; padding: 4px;" />
-                </label>
-
-                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                  <input type="checkbox" id="themeAlwaysOn" /> Включена постоянно
-                </label>
-              </div>
-              <button id="btnApplyThemeSettings" class="theme-control-btn" style="margin-top: 12px;">Применить настройки</button>
-            </div>
-            <!-- Fear week quick controls -->
-            <div
-              id="fearControls"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                margin-left: 6px;
-              "
-            >
-              <input
-                id="fearDays"
-                type="number"
-                min="1"
-                max="30"
-                value="7"
-                style="
-                  width: 64px;
-                  padding: 6px;
-                  border-radius: 6px;
-                  background: transparent;
-                  border: 1px solid var(--border-light);
-                  color: var(--text-primary);
-                "
-              />
-              <button id="btnStartFear" class="theme-control-btn">
-                Запустить Fear
-              </button>
-              <button id="btnStopFear" class="theme-control-btn">
-                Остановить
-              </button>
-            </div>
+          <div style="display: flex; align-items: center; gap: 8px; justify-content: space-between; flex-wrap: wrap;">
             <!-- Auth -->
             <div
               id="authBlock"
@@ -1046,7 +969,6 @@
                 display: flex;
                 align-items: center;
                 gap: 6px;
-                margin-left: 8px;
               "
             >
               <span
