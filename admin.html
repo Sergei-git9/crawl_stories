@@ -1359,18 +1359,38 @@
       </div>
 
       <div id="settingsTab" class="tab-content">
-        <div style="max-width: 1000px; margin: 0 auto;">
+        <div style="max-width: 1200px; margin: 0 auto;">
           <h2 style="margin-bottom: 30px; color: var(--accent-primary);">⚙️ Настройки сайта</h2>
 
-          <!-- THEME SETTINGS SECTION -->
+          <!-- QUICK THEME BUTTONS -->
+          <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+            <h3 style="margin-bottom: 20px;">🎨 Быстрый выбор сезонной темы</h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+              <button onclick="window.themesSystem?.setManualTheme('newyear')" class="btn" style="background: #aee0ff; color: #020205; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; border: none; cursor: pointer; transition: all 0.3s;">❄️ Новый год</button>
+              <button onclick="window.themesSystem?.setManualTheme('halloween')" class="btn" style="background: #ff8c00; color: white; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; border: none; cursor: pointer; transition: all 0.3s;">🎃 Хэллоуин</button>
+              <button onclick="window.themesSystem?.setManualTheme('valentine')" class="btn" style="background: #ff9bb3; color: white; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; border: none; cursor: pointer; transition: all 0.3s;">❤️ Валентин</button>
+              <button onclick="window.themesSystem?.setManualTheme('spring')" class="btn" style="background: #a8e6cf; color: #020205; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; border: none; cursor: pointer; transition: all 0.3s;">🌸 Весна</button>
+              <button onclick="window.themesSystem?.setManualTheme('summer')" class="btn" style="background: #ffd89b; color: #020205; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; border: none; cursor: pointer; transition: all 0.3s;">☀️ Лето</button>
+              <button onclick="window.themesSystem?.setManualTheme('autumn')" class="btn" style="background: #ffb366; color: #020205; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; border: none; cursor: pointer; transition: all 0.3s;">🍁 Осень</button>
+            </div>
+            
+            <button onclick="window.themesSystem?.disableManualMode()" class="btn btn-secondary" style="width: 100%; padding: 12px; margin-bottom: 15px;">🔄 Авто-режим (по календарю)</button>
+            
+            <div style="background: rgba(76,175,80,0.1); border-left: 3px solid #4caf50; padding: 15px; border-radius: 6px;">
+              <p style="font-size: 14px; color: var(--text-secondary); margin: 0;">✅ Система активна! Выберите тему выше или включите авто-режим для автоматического переключения по датам.</p>
+            </div>
+          </div>
+
+          <!-- THEME SETTINGS SECTION (ADVANCED) -->
           <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 25px; margin-bottom: 30px;">
             <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-              🎨 Управление Сезонными Темами
+              🔧 Расширенные параметры тем
             </h3>
             
             <div style="background: rgba(255, 232, 31, 0.05); border-left: 3px solid var(--accent-primary); padding: 15px; margin-bottom: 20px; border-radius: 6px;">
               <p style="font-size: 14px; color: var(--text-secondary);">
-                Выберите сезонную тему для оформления сайта. Темы можно включить автоматически (по датам) или вручную. Настройте частоту эффектов, интенсивность и длительность действия темы.
+                Вы можете управлять частотой и интенсивностью эффектов каждой темы через localStorage. Сейчас система работает с полностью функциональными анимациями CSS для каждой сезонной темы.
               </p>
             </div>
 
@@ -4313,5 +4333,6 @@
         window.adminPanel = new AdminPanel();
       });
     </script>
-  </body>
+  <script src="themes-system.js"></script>
+</body>
 </html>
