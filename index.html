@@ -926,5 +926,37 @@
       }
     });
   </script>
+
+  <script>
+// Снег только когда включена зимняя тема
+function updateSnow() {
+    const body = document.body;
+    const hasWinter = body.classList.contains('winter-theme');
+    const snowflakes = document.querySelector('.snowflakes');
+    if (hasWinter && !snowflakes) {
+        const snowDiv = document.createElement('div');
+        snowDiv.className = 'snowflakes';
+        snowDiv.setAttribute('aria-hidden', 'true');
+        const flakes = '❅❆❄';
+        for (let i = 0; i < 50; i++) {
+            const flake = document.createElement('div');
+            flake.className = 'snowflake';
+            flake.textContent = flakes[Math.floor(Math.random() * flakes.length)];
+            flake.style.left = Math.random() * 100 + 'vw';
+            flake.style.animationDuration = Math.random() * 3 + 2 + 's';
+            flake.style.opacity = Math.random();
+            flake.style.fontSize = Math.random() * 10 + 10 + 'px';
+            snowDiv.appendChild(flake);
+        }
+        document.body.appendChild(snowDiv);
+    } else if (!hasWinter && snowflakes) {
+        snowflakes.remove();
+    }
+}
+
+// Запускаем при загрузке и при смене темы
+document.addEventListener('DOMContentLoaded', updateSnow);
+document.addEventListener('click', () => setTimeout(updateSnow, 100));
+
 </body>
 </html>
