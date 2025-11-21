@@ -1865,90 +1865,13 @@
             themeAuto.checked = true;
           });
 
-          // Theme tuning controls
-          const themeEnabled = document.getElementById("themeEnabled");
-          // themeFrequency и themeIntensity уже объявлены выше (строка 1788-1789)
+          // Other controls
           const fearDays = document.getElementById("fearDays");
           const btnStartFear = document.getElementById("btnStartFear");
           const btnStopFear = document.getElementById("btnStopFear");
           const btnSignInAuth = document.getElementById("btnSignInAuth");
           const btnSignOutAuth = document.getElementById("btnSignOutAuth");
           const adminUserInfo = document.getElementById("adminUserInfo");
-
-          // When selected theme changes, populate tuning UI from stored settings
-          themeSelect?.addEventListener("change", async () => {
-            const s = await this.loadThemeSetting();
-            const themeKey =
-              themeSelect.value === "none" ? null : themeSelect.value;
-            if (!s || !s.themeSettings) {
-              themeEnabled.checked = true;
-              themeFrequency.value = 1;
-              themeIntensity.value = 50;
-              // apply default/no theme
-              if (themeKey) {
-                this.applyTheme(themeKey);
-                this.createEffectsForTheme(themeKey);
-              } else {
-                this.applyTheme(null);
-              }
-              return;
-            }
-            if (themeKey && s.themeSettings && s.themeSettings[themeKey]) {
-              const cfg = s.themeSettings[themeKey];
-              themeEnabled.checked = cfg.enabled !== false;
-              themeFrequency.value = cfg.frequency || 1;
-              themeIntensity.value = Math.round((cfg.intensity || 0.5) * 100);
-              // apply the selected theme with loaded settings
-              if (themeEnabled.checked) {
-                this.applyTheme(themeKey);
-                this.createEffectsForTheme(themeKey, {
-                  frequency: cfg.frequency || 1,
-                  intensity: cfg.intensity || 0.5,
-                });
-              } else {
-                this.applyTheme(null);
-              }
-            } else {
-              themeEnabled.checked = true;
-              themeFrequency.value = 1;
-              themeIntensity.value = 50;
-              if (themeKey) {
-                this.applyTheme(themeKey);
-                this.createEffectsForTheme(themeKey);
-              } else {
-                this.applyTheme(null);
-              }
-            }
-          });
-
-          // Live-preview handlers for tuning controls (не сохраняют настройки)
-          const applyPreview = () => {
-            const themeKey =
-              themeSelect.value === "none" ? null : themeSelect.value;
-            if (!themeKey) return;
-            // ensure classes applied
-            this.applyTheme(themeKey);
-            const freq = parseInt(themeFrequency.value || 1);
-            const intensityVal = Math.round(themeIntensity.value || 50);
-            const intensity = Math.min(100, Math.max(0, intensityVal)) / 100;
-            this.createEffectsForTheme(themeKey, {
-              frequency: freq,
-              intensity: intensity,
-            });
-          };
-
-          themeFrequency?.addEventListener("input", () => applyPreview());
-          themeIntensity?.addEventListener("input", () => applyPreview());
-          themeEnabled?.addEventListener("change", () => {
-            const themeKey =
-              themeSelect.value === "none" ? null : themeSelect.value;
-            if (!themeKey) return;
-            if (!themeEnabled.checked) {
-              this.applyTheme(null);
-            } else {
-              this.applyTheme(themeKey);
-            }
-          });
 
           btnStartFear?.addEventListener("click", async () => {
             const days = parseInt(fearDays.value) || 7;
