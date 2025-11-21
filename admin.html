@@ -1765,6 +1765,56 @@
           const btnApplyTheme = document.getElementById("btnApplyTheme");
           const btnSaveTheme = document.getElementById("btnSaveTheme");
           const btnClearTheme = document.getElementById("btnClearTheme");
+          const themeSettingsBlock = document.getElementById("themeSettings");
+          const themeDays = document.getElementById("themeDays");
+          const themeAlwaysOn = document.getElementById("themeAlwaysOn");
+          const btnApplyThemeSettings = document.getElementById("btnApplyThemeSettings");
+          const freqValue = document.getElementById("freqValue");
+          const intValue = document.getElementById("intValue");
+
+          const updateThemeSettingsDisplay = () => {
+            const t = themeSelect.value;
+            if (t === "none") {
+              themeSettingsBlock.style.display = "none";
+            } else {
+              themeSettingsBlock.style.display = "block";
+            }
+          };
+
+          themeSelect?.addEventListener("change", () => {
+            updateThemeSettingsDisplay();
+          });
+
+          const themeFrequency = document.getElementById("themeFrequency");
+          const themeIntensity = document.getElementById("themeIntensity");
+
+          themeFrequency?.addEventListener("input", () => {
+            freqValue.textContent = themeFrequency.value + "x";
+          });
+
+          themeIntensity?.addEventListener("input", () => {
+            intValue.textContent = themeIntensity.value + "%";
+          });
+
+          btnApplyThemeSettings?.addEventListener("click", async () => {
+            const t = themeSelect.value;
+            if (t === "none") {
+              alert("❌ Выберите тему");
+              return;
+            }
+
+            const setting = (await this.loadThemeSetting()) || {};
+            setting.themeSettings = setting.themeSettings || {};
+            setting.themeSettings[t] = {
+              frequency: parseInt(themeFrequency?.value || 1),
+              intensity: parseInt(themeIntensity?.value || 50) / 100,
+              days: themeAlwaysOn.checked ? null : parseInt(themeDays?.value || 7),
+              alwaysOn: themeAlwaysOn.checked
+            };
+
+            await this.saveThemeSetting(setting);
+            alert("✅ Настройки темы применены!");
+          });
 
           btnApplyTheme?.addEventListener("click", () => {
             const t = themeSelect.value;
@@ -1775,15 +1825,15 @@
           btnSaveTheme?.addEventListener("click", async () => {
             const themeSelectEl = document.getElementById("themeSelect");
             const themeAutoEl = document.getElementById("themeAuto");
-            const themeEnabledEl = document.getElementById("themeEnabled");
             const themeFrequencyEl = document.getElementById("themeFrequency");
             const themeIntensityEl = document.getElementById("themeIntensity");
+            const themeDaysEl = document.getElementById("themeDays");
+            const themeAlwaysOnEl = document.getElementById("themeAlwaysOn");
 
             const t =
               themeSelectEl.value === "none" ? null : themeSelectEl.value;
             const auto = themeAutoEl.checked;
 
-            // Загружаем текущие настройки и обновляем
             const setting = (await this.loadThemeSetting()) || {};
             setting.theme = t;
             setting.auto = !!auto;
@@ -1791,14 +1841,13 @@
 
             if (t) {
               setting.themeSettings[t] = setting.themeSettings[t] || {};
-              setting.themeSettings[t].enabled = !!(
-                themeEnabledEl && themeEnabledEl.checked
-              );
               setting.themeSettings[t].frequency = parseInt(
                 themeFrequencyEl?.value || 1,
               );
               setting.themeSettings[t].intensity =
                 parseInt(themeIntensityEl?.value || 50) / 100;
+              setting.themeSettings[t].days = themeAlwaysOnEl && themeAlwaysOnEl.checked ? null : parseInt(themeDaysEl?.value || 7);
+              setting.themeSettings[t].alwaysOn = !!(themeAlwaysOnEl && themeAlwaysOnEl.checked);
             }
 
             await this.saveThemeSetting(setting);
@@ -1811,7 +1860,9 @@
             this.applyTheme(null);
             themeSelect.value = "none";
             themeAuto.checked = false;
-            alert("✅ Настройки темы сброшены");
+            updateThemeSettingsDisplay();
+            alert("✅ Настройки темы сброшены и будет автоматически включена авто-режим");
+            themeAuto.checked = true;
           });
 
           // Theme tuning controls
