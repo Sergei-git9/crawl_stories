@@ -962,74 +962,51 @@
         <div class="header-content">
           <h1>⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES</h1>
           <div style="display: flex; align-items: center; gap: 8px">
-            <label style="font-size: 13px; margin-right: 6px">Тема:</label>
-            <select
-              id="themeSelect"
-              style="
-                background: transparent;
-                border: 1px solid var(--border-light);
-                color: var(--text-primary);
-                padding: 6px;
-                border-radius: 6px;
-              "
-            >
-              <option value="none">По умолчанию</option>
-              <option value="newyear">Новый год</option>
-              <option value="halloween">Хэллоуин</option>
-              <option value="valentine">День влюблённых</option>
-              <option value="fear">Fear week</option>
-            </select>
-            <label style="font-size: 13px; margin-left: 6px"
-              ><input type="checkbox" id="themeAuto" /> Авто</label
-            >
-            <button id="btnApplyTheme" class="theme-control-btn">
-              Применить
-            </button>
-            <button id="btnSaveTheme" class="theme-control-btn">
-              Сохранить
-            </button>
-            <button id="btnClearTheme" class="theme-control-btn">Сброс</button>
-            <!-- Theme tuning -->
-            <label
-              style="
-                font-size: 13px;
-                margin-left: 8px;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-              "
-              >Вкл:<input type="checkbox" id="themeEnabled"
-            /></label>
-            <label
-              style="
-                font-size: 13px;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-              "
-              >Частота:<input
-                id="themeFrequency"
-                type="range"
-                min="1"
-                max="10"
-                value="1"
-                style="width: 80px"
-            /></label>
-            <label
-              style="
-                font-size: 13px;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-              "
-              >Интенс.:<input
-                id="themeIntensity"
-                type="range"
-                min="0"
-                max="100"
-                value="50"
-                style="width: 100px"
-            /></label>
+            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 13px;">Тема:</label>
+                <select id="themeSelect" style="background: transparent; border: 1px solid var(--border-light); color: var(--text-primary); padding: 6px; border-radius: 6px;">
+                  <option value="none">По умолчанию</option>
+                  <option value="newyear">❄️ Новый год</option>
+                  <option value="halloween">🎃 Хэллоуин</option>
+                  <option value="valentine">❤️ День влюблённых</option>
+                  <option value="fear">😨 Fear week</option>
+                </select>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 13px;"><input type="checkbox" id="themeAuto" /> Авто</label>
+              </div>
+
+              <div style="display: flex; gap: 6px;">
+                <button id="btnApplyTheme" class="theme-control-btn">Применить</button>
+                <button id="btnSaveTheme" class="theme-control-btn">Сохранить</button>
+                <button id="btnClearTheme" class="theme-control-btn">Сброс</button>
+              </div>
+            </div>
+
+            <div style="margin-top: 12px; padding: 12px; background: rgba(255,232,31,0.05); border-radius: 6px; display: none;" id="themeSettings">
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                  Частота: <span id="freqValue">1x</span>
+                  <input id="themeFrequency" type="range" min="1" max="10" value="1" style="width: 80px; flex: 1;" />
+                </label>
+                
+                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                  Интенсивность: <span id="intValue">50%</span>
+                  <input id="themeIntensity" type="range" min="0" max="100" value="50" style="width: 80px; flex: 1;" />
+                </label>
+
+                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                  Дней: <input id="themeDays" type="number" min="1" max="365" value="7" style="width: 60px; padding: 4px;" />
+                </label>
+
+                <label style="font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="themeAlwaysOn" /> Включена постоянно
+                </label>
+              </div>
+              <button id="btnApplyThemeSettings" class="theme-control-btn" style="margin-top: 12px;">Применить настройки</button>
+            </div>
             <!-- Fear week quick controls -->
             <div
               id="fearControls"
@@ -1523,6 +1500,16 @@
           <div class="form-group">
             <label>Дата выхода первого эпизода (опционально)</label>
             <input type="date" id="newStoryFirstEpisodeDate" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Обложка истории (URL)</label>
+              <input type="text" id="newStoryCoverUrl" placeholder="https://example.com/cover.jpg" />
+            </div>
+            <div class="form-group">
+              <label>Расписание публикации (дата/время)</label>
+              <input type="datetime-local" id="newStoryPublishDate" />
+            </div>
           </div>
           <div class="form-actions">
             <button type="button" class="btn btn-success" id="btnCreateStory">
@@ -2131,6 +2118,8 @@
           const firstEpisodeDate = document.getElementById(
             "newStoryFirstEpisodeDate",
           ).value;
+          const coverUrl = document.getElementById("newStoryCoverUrl").value.trim();
+          const publishDateStr = document.getElementById("newStoryPublishDate").value;
 
           if (!title.trim()) {
             alert("❌ Введите название истории");
@@ -2151,7 +2140,8 @@
                 : null,
               episodesCount: 0,
               lastEpisodeDate: null,
-              coverUrl: "",
+              coverUrl: coverUrl,
+              publishDate: publishDateStr ? new Date(publishDateStr) : null,
               isPublic: visibility === "public",
               published: visibility === "public",
               createdAt: now,
@@ -2168,6 +2158,8 @@
             document.getElementById("newStoryStatus").value = "announced";
             document.getElementById("newStoryVisibility").value = "public";
             document.getElementById("newStoryFirstEpisodeDate").value = "";
+            document.getElementById("newStoryCoverUrl").value = "";
+            document.getElementById("newStoryPublishDate").value = "";
 
             // Перезагружаем данные
             await this.loadData();

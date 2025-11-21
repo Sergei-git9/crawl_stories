@@ -43,7 +43,14 @@
       color: var(--text-primary);
       font-family: "Courier New", monospace;
       -webkit-font-smoothing: antialiased;
+      transition: all 0.3s ease;
     }
+
+    /* Seasonal themes */
+    .theme-newyear { --accent-primary: #aee0ff; }
+    .theme-halloween { --accent-primary: #ff8c00; }
+    .theme-valentine { --accent-primary: #ff9bb3; }
+    .theme-fear { --accent-primary: #ff4d4d; }
 
     header {
       height: var(--header-height);
@@ -73,6 +80,7 @@
       font-size: 24px;
       cursor: pointer;
       padding: 5px;
+      transition: transform 0.2s;
     }
 
     .back-btn:hover {
@@ -102,7 +110,7 @@
     .cover {
       width: 300px;
       height: 400px;
-      border-radius: 8px;
+      border-radius: 12px;
       background: var(--bg-secondary);
       border: 2px solid var(--border-light);
       display: flex;
@@ -110,6 +118,7 @@
       justify-content: center;
       overflow: hidden;
       flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
 
     .cover img {
@@ -125,13 +134,14 @@
 
     .story-details h1 {
       font-size: 32px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       color: var(--accent-primary);
+      line-height: 1.2;
     }
 
     .story-meta {
       display: flex;
-      gap: 15px;
+      gap: 12px;
       margin: 20px 0;
       flex-wrap: wrap;
     }
@@ -139,9 +149,9 @@
     .badge {
       background: var(--accent-secondary);
       color: white;
-      padding: 6px 12px;
+      padding: 8px 14px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: bold;
     }
 
@@ -150,6 +160,31 @@
       line-height: 1.6;
       margin: 20px 0;
       max-width: 600px;
+      font-size: 15px;
+    }
+
+    .story-stats {
+      display: flex;
+      gap: 30px;
+      margin: 25px 0;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .stat {
+      flex: 1;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      color: var(--accent-primary);
+      font-size: 18px;
+      font-weight: bold;
     }
 
     .episodes-section {
@@ -159,7 +194,7 @@
 
     .episodes-section h2 {
       font-size: 24px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       color: var(--accent-primary);
     }
 
@@ -172,24 +207,28 @@
       background: var(--bg-secondary);
       border: 1px solid var(--border-light);
       padding: 20px;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.3s;
     }
 
     .episode-item:hover {
-      background: rgba(255, 232, 31, 0.05);
+      background: rgba(255, 232, 31, 0.08);
       border-color: var(--accent-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
     .episode-number {
       color: var(--accent-primary);
       font-weight: bold;
+      font-size: 13px;
     }
 
     .episode-title {
       font-size: 18px;
       margin: 10px 0;
+      font-weight: 600;
     }
 
     .episode-date {
@@ -199,29 +238,91 @@
 
     .loading {
       text-align: center;
-      padding: 40px;
+      padding: 60px 20px;
       color: var(--text-secondary);
+      font-size: 16px;
     }
 
     .error {
       background: #ff6b6b;
       color: white;
       padding: 20px;
-      border-radius: 8px;
+      border-radius: 12px;
       text-align: center;
+      grid-column: 1 / -1;
+    }
+
+    .read-btn {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border: none;
+      padding: 12px 28px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      margin-top: 20px;
+      transition: opacity 0.3s;
+    }
+
+    .read-btn:hover {
+      opacity: 0.9;
+    }
+
+    #seasonal-effects {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #seasonal-effects .effect-item {
+      position: absolute;
+      will-change: transform, opacity;
+    }
+
+    .snowflake {
+      position: absolute;
+      top: -10px;
+      color: white;
+      opacity: 0.9;
+      font-size: 10px;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(360deg); }
+    }
+
+    .heart {
+      position: absolute;
+      font-size: 18px;
+      color: #ff6b9a;
+      opacity: 0.9;
+      animation: floatUp 6s linear infinite;
+    }
+
+    @keyframes floatUp {
+      to { transform: translateY(-120vh); opacity: 0; }
     }
 
     @media (max-width: 768px) {
       .story-container {
         grid-template-columns: 1fr;
       }
-
       .cover {
         width: 100%;
+        height: 300px;
       }
-
       .story-details h1 {
         font-size: 24px;
+      }
+      .story-stats {
+        flex-direction: column;
+        gap: 15px;
       }
     }
   </style>
@@ -251,7 +352,89 @@
           this.showError('История не найдена');
           return;
         }
+        this.applyTheme();
         this.loadStory();
+      }
+
+      async applyTheme() {
+        try {
+          let setting = null;
+          const doc = await db.collection('settings').doc('theme').get();
+          if (doc.exists) setting = doc.data();
+          
+          if (!setting) {
+            try {
+              setting = JSON.parse(localStorage.getItem('siteTheme'));
+            } catch (e) {}
+          }
+
+          let theme = null;
+          if (setting) {
+            theme = setting.auto ? this.getAutoTheme() : (setting.theme || null);
+          } else {
+            theme = this.getAutoTheme();
+          }
+
+          document.documentElement.classList.remove('theme-newyear','theme-halloween','theme-valentine','theme-fear');
+          const old = document.getElementById('seasonal-effects');
+          if (old) old.remove();
+
+          if (!theme) return;
+
+          document.documentElement.classList.add('theme-' + theme);
+          let cfg = null;
+          try {
+            const raw = localStorage.getItem('siteTheme');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              cfg = parsed.themeSettings && theme ? parsed.themeSettings[theme] : null;
+            }
+          } catch (e) {}
+
+          const frequency = (cfg && cfg.frequency) ? Math.max(1, cfg.frequency) : 1;
+          const intensity = (cfg && typeof cfg.intensity === 'number') ? Math.min(1, Math.max(0, cfg.intensity)) : 0.5;
+          const computeCount = (base) => Math.max(1, Math.round(base * frequency * (0.5 + intensity)));
+
+          const container = document.createElement('div');
+          container.id = 'seasonal-effects';
+          document.body.appendChild(container);
+
+          if (theme === 'newyear') {
+            for (let i = 0; i < computeCount(30); i++) {
+              const snowflake = document.createElement('div');
+              snowflake.className = 'snowflake effect-item';
+              snowflake.textContent = '❄';
+              snowflake.style.left = Math.random() * 100 + '%';
+              snowflake.style.fontSize = (12 + Math.random() * 20) + 'px';
+              snowflake.style.animationDuration = (6 + Math.random() * 8) + 's';
+              snowflake.style.animationDelay = (Math.random() * 5) + 's';
+              snowflake.style.opacity = 0.6 + Math.random() * 0.4;
+              container.appendChild(snowflake);
+            }
+          } else if (theme === 'valentine') {
+            for (let i = 0; i < computeCount(20); i++) {
+              const heart = document.createElement('div');
+              heart.className = 'heart effect-item';
+              heart.textContent = '❤️';
+              heart.style.left = Math.random() * 100 + '%';
+              heart.style.animationDuration = (5 + Math.random() * 5) + 's';
+              heart.style.animationDelay = (Math.random() * 3) + 's';
+              container.appendChild(heart);
+            }
+          }
+        } catch (e) {
+          console.error('Ошибка темы:', e);
+        }
+      }
+
+      getAutoTheme() {
+        const now = new Date();
+        const m = now.getMonth() + 1;
+        const d = now.getDate();
+        if ((m === 12 && d >= 20) || (m === 1 && d <= 10)) return 'newyear';
+        if ((m === 10 && d >= 25) || (m === 11 && d <= 5)) return 'halloween';
+        if (m === 2 && d >= 7 && d <= 16) return 'valentine';
+        return null;
       }
 
       async loadStory() {
@@ -265,6 +448,7 @@
           const story = { id: storyDoc.id, ...storyDoc.data() };
           const episodes = await db.collection('episodes')
             .where('storyId', '==', this.storyId)
+            .where('status', '==', 'published')
             .orderBy('episodeNumber', 'asc')
             .get();
 
@@ -301,9 +485,17 @@
                 ${category ? `<span class="badge">${category}</span>` : ''}
               </div>
               <p class="story-description">${story.description || 'Описание отсутствует'}</p>
-              <div>
-                <strong>📊 Эпизодов:</strong> ${episodes.length}/${story.plannedEpisodes || '?'}
+              <div class="story-stats">
+                <div class="stat">
+                  <div class="stat-label">СТАТУС</div>
+                  <div class="stat-value">${statusText}</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-label">ЭПИЗОДОВ</div>
+                  <div class="stat-value">${episodes.length}/${story.plannedEpisodes || '?'}</div>
+                </div>
               </div>
+              ${episodes.length > 0 ? `<button class="read-btn" onclick="window.open('reader.html?episode=${episodes[0].id}&story=${this.storyId}', '_blank')">Начать читать →</button>` : ''}
             </div>
 
             <div class="episodes-section">
