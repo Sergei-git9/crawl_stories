@@ -687,7 +687,15 @@
       }
       
       .form-actions {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        overflow-x: auto;
+      }
+      
+      .form-actions button {
+        flex-shrink: 0;
+        min-width: 80px;
       }
       
       .story-header {
@@ -697,6 +705,8 @@
       .story-meta {
         width: 100%;
         justify-content: flex-start;
+        overflow-x: auto;
+        flex-wrap: wrap;
       }
       
       .story-actions {
@@ -712,6 +722,17 @@
       .timeline-date {
         text-align: left;
         width: 100%;
+      }
+      
+      #themeButtons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        overflow-x: auto;
+      }
+      
+      #themeButtons button {
+        flex-shrink: 0;
       }
     }
 
@@ -1932,7 +1953,7 @@
           });
 
           await this.loadConstructorData(this.currentStory.id);
-          this.openEpisode(docRef.id);
+          setTimeout(() => this.openEpisode(docRef.id), 300);
 
         } catch (error) {
           console.error('Ошибка создания эпизода:', error);
@@ -2600,7 +2621,7 @@
         // Helper to compute count from base by frequency and intensity
         const computeCount = (base) => Math.max(1, Math.round(base * frequency * (0.5 + intensity)));
 
-        if (theme === 'newyear') {
+        if (theme === 'newyear' && document.body.classList.contains('winter-theme')) {
           const count = computeCount(18);
           for (let i = 0; i < count; i++) {
             const s = document.createElement('div');
