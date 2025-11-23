@@ -4,25 +4,187 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Читалка — CRAWL.STORIES</title>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+
   <script>
-    const firebaseConfig = { /* тот же конфиг */ };
+    const firebaseConfig = {
+      apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
+      authDomain: "crawl-stories.firebaseapp.com",
+      projectId: "crawl-stories",
+      storageBucket: "crawl-stories.firebasestorage.app",
+      messagingSenderId: "886479757650",
+      appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
+      measurementId: "G-SGC2HF0455"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
+
   <style>
-    :root { --bg-primary: #0e1621; --accent: #FFE81F; }
-    body { background:#0e1621; color:#fff; font-family:'Courier New',monospace; margin:0; height:100vh; overflow:hidden; }
-    /* Весь твой текущий стиль читалки, но без лишнего */
+    :root {
+      --bg-primary: #0e1621;
+      --bg-chat: #17212b;
+      --bg-user: #2b5278;
+      --bg-other: #182533;
+      --bg-system: #78582b;
+      --bg-thought: #2b5278;
+      --accent: #FFE81F;
+      --text: #e1e1e1;
+      --time: #7f8c8d;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg-primary); color:#fff; font-family:'Courier New',monospace; height:100vh; overflow:hidden; }
+
+    /* ШАПКА */
+    header {
+      position:fixed; top:0; left:0; right:0; height:70px; background:rgba(2,2,5,0.95);
+      backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,0.1); z-index:1000;
+      display:flex; align-items:center; justify-content:space-between; padding:0 20px;
+    }
+    .logo { display:flex; align-items:center; gap:12px; cursor:pointer; }
+    .logo-box { width:48px; height:48px; background:#1a1a1a; border:2px solid #333; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px; }
+    .logo-text { font-size:24px; font-weight:900; color:var(--accent); }
+    .back { color:#fff; font-size:28px; cursor:pointer; }
+    .episode-title { font-size:16px; color:#ccc; max-width:60%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* ЧАТ */
+    #chatContainer {
+      height:100vh; padding:80px 20px 100px; overflow-y:auto; display:flex; flex-direction:column; gap:15px;
+    }
+    .message {
+      max-width:80%; padding:14px 18px; border-radius:18px; line-height:1.5;
+      word-wrap:break-word; align-self:flex-start;
+    }
+    .user { background:var(--bg-user); align-self:flex-end; border-bottom-right-radius:4px; }
+    .other { background:var(--bg-other); border-bottom-left-radius:4px; }
+    .system { background:var(--bg-system); text-align:center; font-style:italic; align-self:center; margin:20px auto; }
+    .thought { background:var(--bg-thought); opacity:0.9; font-style:italic; align-self:center; }
+
+    .time { font-size:11px; color:var(--time); margin-top:6px; text-align:right; }
+
+    /* НИЖНЯЯ ПАНЕЛЬ */
+    .controls {
+      position:fixed; bottom:0; left:0; right:0; background:rgba(0,0,0,0.85); padding:15px;
+      display:flex; justify-content:center; gap:20px; z-index:999;
+    }
+    .btn { background:var(--accent); color:#000; padding:12px 24px; border-radius:12px; font-weight:bold; cursor:pointer; }
+    .btn:hover { background:#fff; }
+
+    #seasonal-effects { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; }
   </style>
 </head>
 <body>
-  <!-- Твой полный код читалки из reader.html — он уже идеален, просто убран мусор -->
-  <div id="chatContainer">...</div>
+
+  <!-- ШАПКА -->
+  <header>
+    <div class="back" onclick="history.back()">←</div>
+    <div class="logo" onclick="location.href='index.html'">
+      <div class="logo-box">C</div>
+      <div class="logo-text">CRAWL.STORIES</div>
+    </div>
+    <div class="episode-title" id="episodeTitle">Загрузка...</div>
+  </header>
+
+  <!-- ЧАТ -->
+  <div id="chatContainer"></div>
+
+  <!-- КНОПКИ -->
+  <div class="controls">
+    <div class="btn" onclick="prevEpisode()">← Предыдущая</div>
+    <div class="btn" onclick="nextEpisode()">Следующая →</div>
+  </div>
+
+  <div id="seasonal-effects"></div>
+
   <script>
-    // Твой текущий код reader — работает на 100%
+    const urlParams = new URLSearchParams(location.search);
+    let storyId = urlParams.get('story');
+    let episodeId = urlParams.get('episode');
+
+    let story = {};
+    let episodes = [];
+    let currentIndex = 0;
+
+    async function loadStoryAndEpisodes() {
+      if (!storyId) return alert("Нет истории");
+
+      const storyDoc = await db.collection("stories").doc(storyId).get();
+      if (!storyDoc.exists) return alert("История не найдена");
+      story = storyDoc.data();
+
+      const snap = await db.collection("episodes")
+        .where("storyId", "==", storyId)
+        .orderBy("episodeNumber")
+        .get();
+
+      episodes = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      currentIndex = episodes.findIndex(e => e.id === episodeId);
+      if (currentIndex === -1) currentIndex = 0;
+
+      document.getElementById("episodeTitle").textContent = 
+        `${story.title} — Эпизод ${episodes[currentIndex]?.episodeNumber || "?"}`;
+
+      loadMessages();
+    }
+
+    async function loadMessages() {
+      const container = document.getElementById("chatContainer");
+      container.innerHTML = "";
+
+      const snap = await db.collection("episode_messages")
+        .where("episodeId", "==", episodes[currentIndex].id)
+        .orderBy("order")
+        .get();
+
+      snap.forEach(doc => {
+        const m = doc.data();
+        const div = document.createElement("div");
+        div.className = `message ${m.type || 'other'}`;
+        if (m.type === 'user') div.classList.add("user");
+        if (m.type === 'system') div.classList.add("system");
+        if (m.type === 'thought') div.classList.add("thought");
+
+        let text = m.text || "";
+        if (m.character) text = `<strong>${m.character}:</strong> ${text}`;
+        if (m.type !== 'system' && m.type !== 'thought') {
+          const time = m.timestamp?.toDate() || new Date();
+          text += `<div class="time">${time.toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'})}</div>`;
+        }
+        div.innerHTML = text;
+        container.appendChild(div);
+      });
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function nextEpisode() {
+      if (currentIndex < episodes.length - 1) {
+        currentIndex++;
+        episodeId = episodes[currentIndex].id;
+        history.replaceState(null, null, `?story=${storyId}&episode=${episodeId}`);
+        document.getElementById("episodeTitle").textContent = 
+          `${story.title} — Эпизод ${episodes[currentIndex].episodeNumber}`;
+        loadMessages();
+      }
+    }
+
+    function prevEpisode() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        episodeId = episodes[currentIndex].id;
+        history.replaceState(null, null, `?story=${storyId}&episode=${episodeId}`);
+        document.getElementById("episodeTitle").textContent = 
+          `${story.title} — Эпизод ${episodes[currentIndex].episodeNumber}`;
+        loadMessages();
+      }
+    }
+
+    loadStoryAndEpisodes();
   </script>
+
   <script src="themes-system.js"></script>
 </body>
 </html>
