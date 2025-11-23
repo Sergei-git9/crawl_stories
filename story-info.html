@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>История — CRAWL.STORIES</title>
 
-  <!-- ПОДКЛЮЧЕНИЕ FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
   <script>
@@ -24,41 +23,106 @@
 
   <style>
     body { background:#020205; color:#fff; font-family:'Courier New',monospace; padding:20px; min-height:100vh; }
-    .cover { width:100%; max-width:600px; border-radius:16px; margin:30px auto; display:block; box-shadow:0 10px 30px rgba(0,0,0,0.8); }
-    .title { font-size:36px; color:#FFE81F; text-align:center; margin:20px 0; }
-    .desc { font-size:18px; line-height:1.6; max-width:800px; margin:30px auto; color:#ccc; }
-    .read-btn { display:block; width:300px; margin:40px auto; padding:16px; background:#FFE81F; color:#000; text-align:center; font-weight:bold; border-radius:12px; text-decoration:none; font-size:20px; }
-    .read-btn:hover { background:#fff; }
+    .container { max-width:900px; margin:0 auto; }
+    .cover { width:100%; max-width:600px; border-radius:16px; margin:30px auto; display:block; box-shadow:0 10px 40px rgba(0,0,0,0.8); }
+    .title { font-size:36px; color:#FFE81F; text-align:center; margin:20px 0; font-weight:900; }
+    .desc { font-size:17px; line-height:1.7; color:#ccc; margin:30px 0; text-align:center; }
+    .meta { display:flex; justify-content:center; gap:20px; margin:20px 0; flex-wrap:wrap; }
+    .status { padding:8px 16px; border-radius:12px; font-weight:bold; font-size:14px; }
+    .new { background:#e91e63; color:#fff; }
+    .ongoing { background:#ff9800; color:#fff; }
+    .finished { background:#4caf50; color:#fff; }
+    .genres { color:#FFE81F; font-size:15px; }
+    .read-btn { display:block; width:320px; margin:40px auto; padding:18px; background:#FFE81F; color:#000; text-align:center; font-weight:bold; border-radius:16px; text-decoration:none; font-size:22px; transition:0.3s; }
+    .read-btn:hover { background:#fff; transform:scale(1.05); }
+    .episodes { margin-top:50px; }
+    .episodes h2 { color:#FFE81F; text-align:center; margin-bottom:20px; }
+    .episode-list { display:grid; gap:12px; }
+    .episode { background:#0b0b0f; padding:16px; border-radius:12px; cursor:pointer; transition:0.2s; }
+    .episode:hover { background:#111; transform:translateX(8px); }
+    .episode-title { font-weight:bold; }
+    .episode-date { font-size:13px; color:#999; margin-top:4px; }
   </style>
 </head>
 <body>
-  <h1 class="title" id="title">Загрузка...</h1>
-  <img id="cover" class="cover" src="" alt="">
-  <p class="desc" id="desc">Загрузка описания...</p>
-  <a href="#" id="readBtn" class="read-btn">Начать читать →</a>
+  <div class="container">
+    <h1 class="title" id="title">Загрузка...</h1>
+    <img id="cover" class="cover" src="" alt="">
+    <p class="desc" id="desc">Загрузка описания...</p>
+
+    <div class="meta">
+      <span id="status" class="status">—</span>
+      <span id="genres" class="genres">—</span>
+    </div>
+
+    <a href="#" id="readBtn" class="read-btn">Начать читать →</a>
+
+    <div class="episodes">
+      <h2>Эпизоды</h2>
+      <div class="episode-list" id="episodes"></div>
+    </div>
+  </div>
 
   <script>
     const urlParams = new URLSearchParams(location.search);
     const storyId = urlParams.get('id');
+
     if (!storyId) {
       document.body.innerHTML = "<h1 style='text-align:center;color:#e91e63'>История не найдена</h1>";
     } else {
       db.collection("stories").doc(storyId).get().then(doc => {
-        if (doc.exists) {
-          const d = doc.data();
-          document.getElementById("title").textContent = d.title || "Без названия";
-          document.getElementById("cover").src = d.cover || "https://via.placeholder.com/600x800/111/333?text=CRAWL";
-          document.getElementById("desc").textContent = d.description || "Описание отсутствует";
-          document.getElementById("readBtn").href = `reader.html?story=${storyId}`;
-        } else {
+        if (!doc.exists) {
           document.body.innerHTML = "<h1 style='text-align:center;color:#e91e63'>История не найдена</h1>";
+          return;
         }
+        const s = doc.data();
+
+        document.getElementById("title").textContent = s.title || "Без названия";
+        document.getElementById("cover").src = s.cover || "https://via.placeholder.com/600x800/111/333?text=CRAWL";
+        document.getElementById("desc").textContent = s.description || "Описание отсутствует";
+
+        const statusEl = document.getElementById("status");
+        const statusClass = s.status === "announced" ? "new" : s.status === "finished" ? "finished" : "ongoing";
+        const statusText = s.status === "announced" ? "Новинка" : s.status === "finished" ? "Закончена" : "В процессе";
+        statusEl.className = "status " + statusClass;
+        statusEl.textContent = statusText;
+
+        if (s.genres && s.genres.length) {
+          document.getElementById("genres").textContent = s.genres.join(" • ");
+        }
+
+        document.getElementById("readBtn").href = `reader.html?story=${storyId}`;
+
+        // Загрузка эпизодов
+        db.collection("episodes")
+          .where("storyId", "==", storyId)
+          .orderBy("episodeNumber")
+          .get()
+          .then(snap => {
+            const list = document.getElementById("episodes");
+            if (snap.empty) {
+              list.innerHTML = "<p style='text-align:center;color:#999'>Эпизоды скоро появятся</p>";
+              return;
+            }
+            snap.forEach(epDoc => {
+              const ep = epDoc.data();
+              const div = document.createElement("div");
+              div.className = "episode";
+              div.onclick = () => location.href = `reader.html?episode=${epDoc.id}&story=${storyId}`;
+              div.innerHTML = `
+                <div class="episode-title">Эпизод ${ep.episodeNumber} — ${ep.title || "Без названия"}</div>
+                ${ep.publishDate ? `<div class="episode-date">${new Date(ep.publishDate.toDate()).toLocaleDateString('ru-RU')}</div>` : ""}
+              `;
+              list.appendChild(div);
+            });
+          });
       }).catch(err => {
         console.error(err);
         document.body.innerHTML = "<h1 style='text-align:center;color:#e91e63'>Ошибка загрузки</h1>";
       });
     }
   </script>
+
   <script src="themes-system.js"></script>
 </body>
 </html>
