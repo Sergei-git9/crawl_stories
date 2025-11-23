@@ -1,16 +1,12 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CRAWL.STORIES — интерактивные чат-истории</title>
-  
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-  
   <script>
-    // Firebase конфигурация
     const firebaseConfig = {
       apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
       authDomain: "crawl-stories.firebaseapp.com",
@@ -23,934 +19,98 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
-  
   <style>
-    /* CRAWL.STORIES - ОСНОВНЫЕ СТИЛИ */
     :root {
-      --bg-primary: #020205;
-      --bg-secondary: #0b0b0f;
-      --bg-card: #0b0b0f;
-      --accent-primary: #FFE81F;
-      --accent-secondary: #6366f1;
-      --text-primary: #ffffff;
-      --text-secondary: #9aa0a6;
-      --text-muted: #7f8c8d;
-      --chat-border: rgba(255,255,255,0.1);
-      --transition-smooth: all 0.3s ease;
-      --font-mono: "Courier New", monospace;
-      --header-height: 70px;
+      --bg: #020205;
+      --card: #0b0b0f;
+      --text: #fff;
+      --accent: #FFE81F;
+      --gray: #9aa0a6;
+      --border: rgba(255,255,255,0.1);
     }
-
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-    }
-
-    html, body {
-      height: 100%;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-family: var(--font-mono);
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-
-    /* HEADER */
-    header {
-      height: var(--header-height);
-      border-bottom: 1px solid var(--chat-border);
-      background: linear-gradient(180deg, rgba(2,2,5,0.95), transparent);
-      backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      width: 100%;
-    }
-
-    .header-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      height: 100%;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
-
-    .logo h1 {
-      margin: 0;
-      font-size: 20px;
-      color: var(--accent-primary);
-      letter-spacing: 1px;
-    }
-
-    .main-nav {
-      display: flex;
-      gap: 15px;
-      flex: 1;
-      justify-content: center;
-    }
-
-    .nav-btn {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.1);
-      color: var(--text-secondary);
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: var(--transition-smooth);
-      font-size: 14px;
-      white-space: nowrap;
-    }
-
-    .nav-btn.active {
-      background: var(--accent-primary);
-      color: var(--bg-primary);
-      border-color: var(--accent-primary);
-    }
-
-    .nav-btn:hover {
-      background: var(--accent-primary);
-      color: var(--bg-primary);
-      border-color: var(--accent-primary);
-    }
-
-    .btn-admin {
-      background: var(--accent-primary);
-      color: var(--bg-primary);
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    /* HERO SECTION */
-    .hero-section {
-      padding: 80px 20px;
-      text-align: center;
-      background: linear-gradient(180deg, var(--bg-primary), var(--bg-secondary));
-      border-bottom: 1px solid var(--chat-border);
-    }
-
-    .hero-content {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .hero-title {
-      font-size: clamp(32px, 5vw, 48px);
-      color: var(--accent-primary);
-      margin-bottom: 20px;
-      line-height: 1.2;
-    }
-
-    .hero-subtitle {
-      font-size: clamp(16px, 3vw, 18px);
-      color: var(--text-secondary);
-      line-height: 1.5;
-    }
-
-    /* STORIES SECTION */
-    .stories-section {
-      padding: 60px 20px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 40px;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .section-header h2 {
-      margin: 0;
-      color: var(--accent-primary);
-      font-size: 28px;
-    }
-
-    .stories-count {
-      color: var(--text-secondary);
-      font-size: 16px;
-    }
-
-    .stories-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 25px;
-    }
-
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'Courier New',monospace; min-height:100vh; }
+    header { height:70px; background:rgba(2,2,5,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
+    .logo { font-size:28px; font-weight:900; color:var(--accent); letter-spacing:1px; }
+    .menu-btn { font-size:30px; cursor:pointer; }
+    .login-btn { color:var(--accent); cursor:pointer; font-weight:600; }
+    .container { max-width:1200px; margin:0 auto; padding:20px; }
+    .stories { display:grid; gap:18px; }
     .story-card {
-      background: linear-gradient(180deg, var(--bg-card), #07070a);
-      border-radius: 15px;
-      padding: 25px;
-      border: 1px solid var(--chat-border);
-      cursor: pointer;
-      transition: var(--transition-smooth);
-      position: relative;
-      overflow: hidden;
+      display:flex; background:var(--card); border-radius:16px; overflow:hidden;
+      box-shadow:0 6px 25px rgba(0,0,0,0.6); transition:0.3s; height:170px; text-decoration:none; color:inherit;
     }
-
-    .story-card:hover {
-      transform: translateY(-5px);
-      border-color: rgba(255,232,31,0.3);
-      box-shadow: 0 10px 30px rgba(255,232,31,0.1);
-    }
-
-    .story-card.scheduled {
-      border-color: #ffc107;
-      background: linear-gradient(180deg, #0b0b0f, #1a1a1f);
-    }
-
-    .story-card.soon {
-      border-color: #9e9e9e;
-      background: linear-gradient(180deg, #0b0b0f, #15151a);
-    }
-
-    .story-card.blocked {
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
-
-    .story-card.blocked:hover {
-      transform: none;
-      border-color: var(--chat-border);
-      box-shadow: none;
-    }
-
-    .story-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 15px;
-    }
-
-    .story-title {
-      margin: 0;
-      color: var(--accent-primary);
-      font-size: 20px;
-      line-height: 1.3;
-      flex: 1;
-    }
-
-    .story-badge {
-      background: rgba(255,232,31,0.1);
-      color: var(--accent-primary);
-      padding: 6px 12px;
-      border-radius: 15px;
-      font-size: 12px;
-      font-weight: bold;
-      margin-left: 10px;
-      white-space: nowrap;
-    }
-
-    .story-badge.scheduled {
-      background: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
-    }
-
-    .story-badge.soon {
-      background: rgba(158, 158, 158, 0.1);
-      color: #9e9e9e;
-    }
-
-    .story-badge.chat {
-      background: rgba(99, 102, 241, 0.1);
-      color: var(--accent-secondary);
-    }
-
-    .story-desc {
-      color: var(--text-secondary);
-      font-size: 15px;
-      line-height: 1.5;
-      margin-bottom: 20px;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .story-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    .story-stats {
-      display: flex;
-      gap: 15px;
-    }
-
-    .stat {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .status-published {
-      background: #00c853;
-      color: white;
-      padding: 4px 10px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    .status-scheduled {
-      background: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
-      padding: 4px 10px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    .status-soon {
-      background: rgba(158, 158, 158, 0.1);
-      color: #9e9e9e;
-      padding: 4px 10px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    .blocked-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(2,2,5,0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      backdrop-filter: blur(5px);
-    }
-
-    .story-card.blocked:hover .blocked-overlay {
-      opacity: 1;
-    }
-
-    .blocked-message {
-      text-align: center;
-      padding: 20px;
-      color: var(--accent-primary);
-    }
-
-    .blocked-message h4 {
-      margin: 0 0 10px 0;
-      color: var(--accent-primary);
-    }
-
-    .blocked-message p {
-      margin: 0;
-      color: var(--text-secondary);
-      font-size: 14px;
-    }
-
-    /* FOOTER */
-    footer {
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--chat-border);
-      padding: 40px 20px;
-      text-align: center;
-      margin-top: 60px;
-    }
-
-    /* Seasonal theme variables */
-    .theme-newyear { --accent-primary: #aee0ff; }
-    .theme-halloween { --accent-primary: #ff8c00; }
-    .theme-valentine { --accent-primary: #ff9bb3; }
-    .theme-fear { --accent-primary: #ff4d4d; }
-
-    /* effects container */
-    #seasonal-effects { pointer-events: none; position: fixed; inset: 0; z-index: 9999; }
-    #seasonal-effects .effect-item { position: absolute; will-change: transform, opacity; }
-    
-    /* Snowflake animation */
-    .snowflake { 
-      position: absolute; 
-      top: -10px; 
-      color: white; 
-      opacity: 0.9; 
-      font-size: 10px; 
-      animation: fall linear infinite; 
-      user-select: none;
-    }
-    
-    @keyframes fall { 
-      to { 
-        transform: translateY(110vh) rotate(360deg); 
-      } 
-    }
-    
-    /* Halloween bat */
-    .bat {
-      font-size: 20px;
-      animation: float 8s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0) translateX(0); }
-      50% { transform: translateY(-20px) translateX(10px); }
-    }
-    
-    /* Valentine hearts */
-    .heart { 
-      position: absolute; 
-      font-size: 18px; 
-      color: #ff6b9a; 
-      opacity: 0.9; 
-      animation: floatUp 6s linear infinite; 
-      user-select: none;
-    }
-    
-    @keyframes floatUp { 
-      to { 
-        transform: translateY(-110vh) rotate(-360deg); 
-        opacity: 0; 
-      } 
-    }
-    
-    /* Halloween fog overlay */
-    .fog-overlay {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(to bottom, rgba(100,50,150,0.1), rgba(30,10,50,0.2));
-      pointer-events: none;
-    }
-
-    /* Theme crossfade helper and notification */
-    .theme-fade * { transition: color 400ms ease, background-color 400ms ease, border-color 400ms ease, box-shadow 400ms ease, opacity 400ms ease; }
-    #theme-notice { position: fixed; top: 16px; right: 16px; background: rgba(0,0,0,0.7); color: var(--accent-primary); padding: 8px 12px; border-radius: 8px; font-weight: bold; opacity: 0; pointer-events: none; transform: translateY(-8px); transition: opacity 300ms ease, transform 300ms ease; z-index: 10000; }
-    #theme-notice.show { opacity: 1; transform: translateY(0); }
-
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .footer-text {
-      color: var(--text-secondary);
-      margin-bottom: 20px;
-    }
-
-    /* АДАПТИВНОСТЬ */
-    @media (max-width: 768px) {
-      :root { 
-        --header-height: 60px; 
-      }
-      
-      .header-content { 
-        padding: 0 15px; 
-        flex-wrap: wrap; 
-        gap: 10px; 
-      }
-      
-      .logo h1 { 
-        font-size: 16px; 
-      }
-      
-      .main-nav { 
-        gap: 8px; 
-        overflow-x: auto; 
-        padding: 10px 0; 
-        justify-content: flex-start; 
-      }
-      
-      .nav-btn { 
-        padding: 6px 12px; 
-        font-size: 12px; 
-        flex-shrink: 0; 
-      }
-      
-      .btn-admin { 
-        padding: 6px 12px; 
-        font-size: 12px; 
-      }
-      
-      .hero-section { 
-        padding: 60px 15px; 
-      }
-      
-      .stories-section { 
-        padding: 40px 15px; 
-      }
-      
-      .stories-grid { 
-        grid-template-columns: 1fr; 
-      }
-      
-      .section-header { 
-        flex-direction: column; 
-        align-items: flex-start; 
-        gap: 10px; 
-      }
-      
-      .story-header { 
-        flex-direction: column; 
-        gap: 10px; 
-      }
-      
-      .story-badge { 
-        margin-left: 0; 
-        align-self: flex-start; 
-      }
-      
-      .story-meta { 
-        flex-direction: column; 
-        gap: 10px; 
-        align-items: flex-start; 
-      }
-      
-      .story-stats { 
-        width: 100%; 
-        justify-content: space-between; 
-      }
+    .story-card:hover { transform:translateY(-8px); box-shadow:0 15px 40px rgba(255,232,31,0.15); }
+    .cover { width:130px; flex-shrink:0; }
+    .cover img { width:100%; height:100%; object-fit:cover; }
+    .info { padding:18px; flex-grow:1; display:flex; flex-direction:column; justify-content:space-between; }
+    .title { font-size:19px; font-weight:700; margin-bottom:8px; }
+    .status { padding:5px 12px; border-radius:8px; font-size:11px; font-weight:700; display:inline-block; }
+    .new { background:#e91e63; color:#fff; }
+    .ongoing { background:#ff9800; color:#fff; }
+    .finished { background:#4caf50; color:#fff; }
+    .genres { font-size:12px; color:var(--gray); margin:8px 0; }
+    .desc { font-size:13.5px; color:var(--gray); line-height:1.45; opacity:0.9; }
+    @media (max-width:768px) {
+      .story-card { height:150px; }
+      .cover { width:110px; }
+      .title { font-size:17px; }
     }
   </style>
 </head>
 <body>
-  <div id="mainApp">
-    <header>
-      <div class="header-content">
-        <a href="index.html" class="logo">
-          <h1>💬 CRAWL.STORIES</h1>
-        </a>
-        <nav class="main-nav" id="mainNav"></nav>
-        <div class="header-controls">
-          <button id="btnAdmin" class="btn-admin">⚙️ Админ</button>
-        </div>
-      </div>
-    </header>
+  <header>
+    <div class="menu-btn">☰</div>
+    <div class="logo">CRAWL.STORIES</div>
+    <div class="login-btn" onclick="location.href='admin.html'">Вход</div>
+  </header>
 
-    <main>
-      <section class="hero-section">
-        <div class="hero-content">
-          <h1 class="hero-title">Чат-истории</h1>
-          <p class="hero-subtitle">
-            Погрузись в уникальные истории, рассказанные через переписку в мессенджере
-          </p>
-        </div>
-      </section>
-
-      <section class="stories-section">
-        <div class="section-header">
-          <h2 id="currentCategoryTitle">Все истории</h2>
-          <div style="display:flex;gap:15px;align-items:center;">
-            <input type="text" id="searchInput" placeholder="🔍 Поиск по названию или описанию..." style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:#05050a;color:#ddd;width:300px;font-family:var(--font-mono);font-size:14px;">
-            <div class="stories-count" id="storiesCount">0 историй</div>
-          </div>
-        </div>
-        <div id="storiesList" class="stories-grid"></div>
-      </section>
-    </main>
-
-    <footer>
-      <div class="footer-content">
-        <p class="footer-text">CRAWL.STORIES — платформа для интерактивных чат-историй</p>
-      </div>
-    </footer>
+  <div class="container">
+    <h1 style="margin:30px 0 20px; color:var(--accent); font-size:32px;">Для вас</h1>
+    <div class="stories" id="stories">Загрузка...</div>
   </div>
 
   <script>
-    class PublicApp {
-      constructor() {
-        this.stories = [];
-        this.categories = {};
-        this.currentCategory = 'all';
-        this.searchQuery = '';
-        this.init();
-      }
-
-      initCategories() {
-        this.categories = {
-          'all': '📚 Все истории',
-          'announced': '🔒 Анонс',
-          'new': '🆕 Новинка',
-          'ongoing': '📖 Продолжается',
-          'finished': '✅ Завершена',
-          'abandoned': '💔 Брошена',
-          'fantasy': '🧙 Фэнтези',
-          'sci-fi': '🚀 Научная фантастика', 
-          'horror': '👻 Хоррор',
-          'adventure': '🗺️ Приключения',
-          'mystery': '🕵️ Мистика',
-          'chat': '💬 Чат-истории'
-        };
-      }
-
-      renderCategoryFilters() {
-        const nav = document.getElementById('mainNav');
-        if (!nav) return;
-
-        nav.innerHTML = Object.keys(this.categories).map(category => `
-          <button class="nav-btn ${this.currentCategory === category ? 'active' : ''}" 
-                  data-category="${category}">
-            ${this.categories[category]}
-          </button>
-        `).join('');
-
-        const categoryTitle = document.getElementById('currentCategoryTitle');
-        if (categoryTitle) {
-          categoryTitle.textContent = this.categories[this.currentCategory];
-        }
-
-        nav.querySelectorAll('.nav-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            this.currentCategory = e.target.dataset.category;
-            this.searchQuery = '';
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) searchInput.value = '';
-            this.renderCategoryFilters();
-            this.renderContent();
-          });
-        });
-      }
-
-      async init() {
-        await this.loadPublicData();
-        this.initCategories();
-        this.renderCategoryFilters();
-        this.setupEventListeners();
-        console.log('💬 Публичный сайт запущен');
-      }
-
-      async loadPublicData() {
-        try {
-          console.log('🔄 Загрузка данных...');
-          const storiesSnapshot = await db.collection('stories').get();
-          
-          this.stories = storiesSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })).filter(story => {
-            const visibility = story.visibility || (story.isPublic === false ? 'hidden' : 'public');
-            
-            if (visibility === 'hidden') return false;
-            
-            return true;
-          });
-
-          console.log('✅ Загружено историй:', this.stories.length);
-          this.renderContent();
-
-        } catch (error) {
-          console.error('❌ Ошибка загрузки данных:', error);
-          this.showError('Не удалось загрузить истории');
-        }
-      }
-
-      async autoPublishStory(storyId) {
-        try {
-          await db.collection('stories').doc(storyId).update({
-            published: true,
-            publishDate: null,
-            updatedAt: new Date()
-          });
-          console.log(`✅ История ${storyId} автоматически опубликована`);
-        } catch (error) {
-          console.error('❌ Ошибка автопубликации:', error);
-        }
-      }
-
-      renderContent() {
-        const container = document.getElementById('storiesList');
-        if (!container) return;
-        container.innerHTML = this.renderStories();
-      }
-
-      renderStories() {
-        let filteredStories = this.stories;
-        
-        if (['announced', 'new', 'ongoing', 'finished', 'abandoned'].includes(this.currentCategory)) {
-          filteredStories = this.stories.filter(story => {
-            const status = story.status || 'announced';
-            return status === this.currentCategory;
-          });
-        } else if (this.currentCategory === 'chat') {
-          filteredStories = this.stories.filter(story => 
-            story.format === 'chat' || story.isChat === true
-          );
-        } else if (this.currentCategory !== 'all') {
-          filteredStories = this.stories.filter(story => 
-            story.category === this.currentCategory
-          );
-        }
-        
-        if (this.searchQuery) {
-          const query = this.searchQuery.toLowerCase();
-          filteredStories = filteredStories.filter(story => {
-            const title = (story.title || '').toLowerCase();
-            const description = (story.description || '').toLowerCase();
-            return title.includes(query) || description.includes(query);
-          });
-        }
-
-        this.updateStoriesCount(filteredStories.length);
-
-        if (filteredStories.length === 0) {
-          return `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-secondary);">
-              <div style="font-size: 64px; margin-bottom: 20px;">📝</div>
-              <h3 style="margin-bottom: 10px; color: var(--text-secondary);">Пока здесь пусто</h3>
-              <p>Истории появятся скоро...</p>
-            </div>
-          `;
-        }
-
-        return filteredStories.map(story => {
-          const status = story.status || 'announced';
-          const visibility = story.visibility || 'public';
-          const episodesCount = story.episodesCount || 0;
-          const plannedEpisodes = story.plannedEpisodes || 0;
-          const firstEpisodeDate = story.firstEpisodeDate;
-          
-          const isClosed = visibility === 'closed';
-          const isAnnounced = status === 'announced';
-          const isBlocked = isClosed || isAnnounced;
-
-          const statusText = {
-            'announced': '🔒 Анонс',
-            'new': '🆕 Новинка',
-            'ongoing': '📖 Продолжается',
-            'finished': '✅ Завершена',
-            'abandoned': '💔 Брошена'
-          }[status] || status;
-
-          return `
-            <div class="story-card ${isAnnounced ? 'soon' : ''} ${isClosed ? 'closed' : ''} ${isBlocked ? 'blocked' : ''}" 
-                 data-story-id="${story.id}">
-              ${story.coverUrl ? `<div style="width: 100%; height: 200px; border-radius: 4px; background: url('${story.coverUrl}') center/cover no-repeat; margin-bottom: 10px;"></div>` : ''}
-              <div class="story-header">
-                <h3 class="story-title">${story.title || 'Без названия'}</h3>
-                <div>
-                  <span class="story-badge category">${this.getCategoryName(story.category, story.customCategory)}</span>
-                  <span class="story-badge status-${status}">${statusText}</span>
-                  ${isClosed ? `<span class="story-badge">🔐 Закрыта</span>` : ''}
-                  ${plannedEpisodes > 0 ? `<span class="story-badge">📊 ${episodesCount}/${plannedEpisodes}</span>` : ''}
-                </div>
-              </div>
-              <p class="story-desc">${story.description || 'Описание отсутствует'}</p>
-              
-              ${isAnnounced && firstEpisodeDate && !isClosed ? `
-                <div class="story-meta">
-                  <span class="status-announced">📅 Выход: ${new Date(firstEpisodeDate.toDate ? firstEpisodeDate.toDate() : firstEpisodeDate).toLocaleDateString('ru-RU')}</span>
-                </div>
-              ` : ''}
-              
-              ${isClosed ? `
-                <div class="blocked-overlay">
-                  <div class="blocked-message">
-                    <h4>🔐 История закрыта</h4>
-                    <p>Доступна только информация об истории</p>
-                  </div>
-                </div>
-              ` : isAnnounced ? `
-                <div class="blocked-overlay">
-                  <div class="blocked-message">
-                    <h4>⏳ Скоро</h4>
-                    <p>История ещё не вышла. Следите за обновлениями!</p>
-                  </div>
-                </div>
-              ` : ''}
-            </div>
-          `;
-        }).join('');
-      }
-
-      getCategoryName(category, customCategory) {
-        const categories = {
-          'fantasy': '🧙 Фэнтези',
-          'sci-fi': '🚀 Научная фантастика', 
-          'horror': '👻 Хоррор',
-          'adventure': '🗺️ Приключения',
-          'mystery': '🕵️ Мистика',
-          'chat': '💬 Чат-истории'
-        };
-        return customCategory || categories[category] || category;
-      }
-
-      updateStoriesCount(count) {
-        const countElement = document.getElementById('storiesCount');
-        if (countElement) {
-          const word = this.getStoriesWord(count);
-          countElement.textContent = `${count} ${word}`;
-        }
-      }
-
-      getStoriesWord(count) {
-        if (count % 10 === 1 && count % 100 !== 11) return 'история';
-        if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return 'истории';
-        return 'историй';
-      }
-
-      setupEventListeners() {
-        document.getElementById('btnAdmin')?.addEventListener('click', () => {
-          window.open('admin.html', '_blank');
-        });
-
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-          searchInput.addEventListener('input', (e) => {
-            this.searchQuery = e.target.value;
-            this.renderContent();
-          });
-        }
-
-        document.addEventListener('click', (e) => {
-          const storyCard = e.target.closest('.story-card');
-          if (storyCard && !storyCard.classList.contains('blocked')) {
-            const storyId = storyCard.dataset.storyId;
-            if (storyId) {
-              this.openStory(storyId);
-            }
-          } else if (storyCard && storyCard.classList.contains('blocked')) {
-            this.showBlockedMessage();
-          }
-        });
-      }
-
-      openStory(storyId) {
-        const story = this.stories.find(s => s.id === storyId);
-        if (!story) {
-          console.warn('История не найдена:', storyId);
-          return;
-        }
-
-        if (!story.published) {
-          this.showBlockedMessage();
-          return;
-        }
-
-        window.open(`story-info.html?story=${storyId}`, '_blank');
-      }
-
-      showBlockedMessage() {
-        alert('Ой! Данный эпизод еще не доступен, ожидайте выхода, а пока можете посмотреть другие наши истории и эпизоды.');
-      }
-
-      showError(message) {
-        const container = document.getElementById('storiesList');
-        if (container) {
-          container.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #ff6b6b;">
-              <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
-              <h3 style="margin-bottom: 10px;">Ошибка загрузки</h3>
-              <p>${message}</p>
-            </div>
-          `;
-        }
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      window.app = new PublicApp();
-      applyPublicTheme();
-    });
-    
-    // Создаём красивый падающий снег
-    function createSnowEffect() {
-      console.log('❄️ Создаём падающий снег...');
-      const old = document.getElementById('seasonal-effects');
-      if (old) old.remove();
-      
-      const container = document.createElement('div');
-      container.id = 'seasonal-effects';
-      document.body.appendChild(container);
-      
-      const snowCount = 30;
-      
-      for (let i = 0; i < snowCount; i++) {
-        const snowflake = document.createElement('div');
-        snowflake.className = 'snowflake effect-item';
-        snowflake.textContent = '❄';
-        snowflake.style.left = Math.random() * 100 + '%';
-        snowflake.style.fontSize = (12 + Math.random() * 20) + 'px';
-        snowflake.style.animationDuration = (6 + Math.random() * 8) + 's';
-        snowflake.style.animationDelay = (Math.random() * 5) + 's';
-        snowflake.style.opacity = 0.6 + Math.random() * 0.4;
-        container.appendChild(snowflake);
-      }
-      console.log(`✅ Создано ${snowCount} снежинок!`);
-    }
-    
-    // Применяем тему на публичной странице
-    async function applyPublicTheme(){
-      // start theme crossfade
-      try { document.documentElement.classList.add('theme-fade'); } catch (e) {}
-      // remove fade helper after transition
-      setTimeout(() => { try { document.documentElement.classList.remove('theme-fade'); } catch (e) {} }, 450);
-
-      let setting = null;
-      try { const doc = await db.collection('settings').doc('theme').get(); if (doc.exists) setting = doc.data(); } catch (e) {}
-      if (!setting) { try { setting = JSON.parse(localStorage.getItem('siteTheme')); } catch (e) { setting = null; } }
-      let theme = null;
-      if (setting) {
-        theme = setting.auto ? (function(){ const now=new Date(),m=now.getMonth()+1,d=now.getDate(); if((m===12&&d>=20)||(m===1&&d<=10))return'newyear'; if((m===10&&d>=25)||(m===11&&d<=5))return'halloween'; if(m===2&&d>=7&&d<=16)return'valentine'; return null; })() : (setting.theme||null);
-      } else {
-        // авто-определение по дате
-        const now=new Date(),m=now.getMonth()+1,d=now.getDate(); if((m===12&&d>=20)||(m===1&&d<=10)) theme='newyear'; else if((m===10&&d>=25)||(m===11&&d<=5)) theme='halloween'; else if(m===2&&d>=7&&d<=16) theme='valentine';
-      }
-      // clear existing classes/effects
-      document.documentElement.classList.remove('theme-newyear','theme-halloween','theme-valentine','theme-fear');
-      const old = document.getElementById('seasonal-effects'); if (old) old.remove();
-      if (!theme) {
-        return;
-      }
-      document.documentElement.classList.add('theme-'+theme);
-      const container = document.createElement('div'); container.id='seasonal-effects'; document.body.appendChild(container);
-      // Read local tuning if available
-      let cfg = null;
-      try { const raw = localStorage.getItem('siteTheme'); if (raw) { const parsed = JSON.parse(raw); cfg = parsed.themeSettings && theme ? parsed.themeSettings[theme] : null; } } catch (e) { cfg = null; }
-      const frequency = (cfg && cfg.frequency) ? Math.max(1, cfg.frequency) : 1;
-      const intensity = (cfg && typeof cfg.intensity === 'number') ? Math.min(1, Math.max(0, cfg.intensity)) : 0.5;
-      const computeCount = (base) => Math.max(1, Math.round(base * frequency * (0.5 + intensity)));
-      if (theme==='newyear') { const count = computeCount(18); for(let i=0;i<count;i++){const s=document.createElement('div');s.className='snowflake effect-item';s.textContent='❄';s.style.left=Math.random()*100+'%';s.style.fontSize=((8+Math.random()*18)*(0.5+intensity))+'px';s.style.animationDuration=(5+Math.random()*6)/(0.5+intensity)+'s';s.style.opacity=0.4+Math.random()*0.6*intensity;container.appendChild(s);} }
-      if (theme==='halloween'){ const count = computeCount(6); for(let i=0;i<count;i++){const b=document.createElement('div');b.className='effect-item bat';b.textContent='🦇';b.style.left=Math.random()*100+'%';b.style.top=(5+Math.random()*50)+'%';b.style.opacity=0.6+0.4*intensity;container.appendChild(b);} const fog=document.createElement('div');fog.className='fog-overlay';fog.style.opacity=0.2+0.6*intensity;container.appendChild(fog); }
-      if (theme==='valentine'){ const count = computeCount(12); for(let i=0;i<count;i++){const h=document.createElement('div');h.className='heart effect-item';h.textContent='❤';h.style.left=Math.random()*100+'%';h.style.bottom=(-10-Math.random()*40)+'px';h.style.animationDuration=(3+Math.random()*5)/(0.5+intensity)+'s';h.style.opacity=0.5+0.5*intensity;container.appendChild(h);} }
-    }
-
-    // Show a small flash notification when theme is updated
-    function showThemeUpdatedNotice(){
+    async function loadStories() {
       try {
-        let n = document.getElementById('theme-notice');
-        if (!n) {
-          n = document.createElement('div');
-          n.id = 'theme-notice';
-          n.textContent = 'Тема обновлена';
-          document.body.appendChild(n);
-        }
-        n.classList.add('show');
-        setTimeout(() => n.classList.remove('show'), 2000);
-      } catch (e) { console.warn('showThemeUpdatedNotice', e); }
-    }
-
-    // React to changes saved in other tabs/windows
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'siteTheme') {
-        try { showThemeUpdatedNotice(); applyPublicTheme(); } catch (err) { console.warn('applyPublicTheme error', err); }
+        const snap = await db.collection("stories")
+          .where("visibility", "==", "public")
+          .orderBy("firstEpisodeDate", "desc")
+          .get();
+        
+        const container = document.getElementById("stories");
+        container.innerHTML = snap.empty ? "<p style='text-align:center;color:var(--gray);padding:60px'>Историй пока нет</p>" : "";
+        
+        snap.forEach(doc => {
+          const s = doc.data();
+          const card = document.createElement("a");
+          card.href = `story-info.html?id=${doc.id}`;
+          card.className = "story-card";
+          
+          const statusClass = s.status === "announced" ? "new" : s.status === "finished" ? "finished" : "ongoing";
+          const statusText = s.status === "announced" ? "Новинка" : s.status === "finished" ? "Закончена" : "В процессе";
+          
+          card.innerHTML = `
+            <div class="cover">
+              <img src="${s.cover || 'https://via.placeholder.com/130x170/111/333?text=CRAWL'}" alt="${s.title}">
+            </div>
+            <div class="info">
+              <div>
+                <div class="title">${s.title || "Без названия"}</div>
+                <span class="status ${statusClass}">${statusText}</span>
+                ${s.genres ? `<div class="genres">${s.genres.join(" • ")}</div>` : ''}
+              </div>
+              <div class="desc">${(s.description || "Описание скоро появится...").substring(0,140)}${(s.description||'').length>140?'...':''}</div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        document.getElementById("stories").innerHTML = "<p style='color:#e91e63;text-align:center'>Ошибка загрузки</p>";
       }
-    });
+    }
+    loadStories();
   </script>
-
   <script src="themes-system.js"></script>
 </body>
 </html>
