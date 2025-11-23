@@ -19,11 +19,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
+
   <style>
     :root {
       --bg: #020205;
       --card: #0b0b0f;
-      --text: #fff;
+      --text: #ffffff;
       --accent: #FFE81F;
       --gray: #9aa0a6;
       --border: rgba(255,255,255,0.1);
@@ -31,86 +32,86 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:var(--bg); color:var(--text); font-family:'Courier New',monospace; min-height:100vh; }
     header { height:70px; background:rgba(2,2,5,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
-    .logo { font-size:28px; font-weight:900; color:var(--accent); letter-spacing:1px; }
+    .logo { display:flex; align-items:center; gap:12px; cursor:pointer; }
+    .logo-box { width:48px; height:48px; background:#1a1a1a; border:2px solid #333; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px; }
+    .logo-text { font-size:24px; font-weight:900; letter-spacing:0.5px; }
     .menu-btn { font-size:30px; cursor:pointer; }
-    .login-btn { color:var(--accent); cursor:pointer; font-weight:600; }
-    .container { max-width:1200px; margin:0 auto; padding:20px; }
-    .stories { display:grid; gap:18px; }
-    .story-card {
-      display:flex; background:var(--card); border-radius:16px; overflow:hidden;
-      box-shadow:0 6px 25px rgba(0,0,0,0.6); transition:0.3s; height:170px; text-decoration:none; color:inherit;
-    }
-    .story-card:hover { transform:translateY(-8px); box-shadow:0 15px 40px rgba(255,232,31,0.15); }
+    .login { color:var(--accent); cursor:pointer; font-weight:600; }
+    .container { max-width:1300px; margin:0 auto; padding:20px; }
+    .page-title { font-size:32px; color:var(--accent); margin:20px 0; }
+    .stories { display:grid; gap:20px; }
+    .story { display:flex; background:var(--card); border-radius:16px; overflow:hidden; height:170px; text-decoration:none; color:inherit; transition:0.3s; }
+    .story:hover { transform:translateY(-6px); box-shadow:0 12px 30px rgba(255,232,31,0.2); }
     .cover { width:130px; flex-shrink:0; }
     .cover img { width:100%; height:100%; object-fit:cover; }
-    .info { padding:18px; flex-grow:1; display:flex; flex-direction:column; justify-content:space-between; }
-    .title { font-size:19px; font-weight:700; margin-bottom:8px; }
-    .status { padding:5px 12px; border-radius:8px; font-size:11px; font-weight:700; display:inline-block; }
+    .info { padding:18px; flex:1; display:flex; flex-direction:column; justify-content:space-between; }
+    .title { font-size:19px; font-weight:700; margin-bottom:6px; }
+    .status { padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; display:inline-block; }
     .new { background:#e91e63; color:#fff; }
     .ongoing { background:#ff9800; color:#fff; }
     .finished { background:#4caf50; color:#fff; }
-    .genres { font-size:12px; color:var(--gray); margin:8px 0; }
+    .genres { font-size:12px; color:var(--gray); margin:6px 0; }
     .desc { font-size:13.5px; color:var(--gray); line-height:1.45; opacity:0.9; }
-    @media (max-width:768px) {
-      .story-card { height:150px; }
-      .cover { width:110px; }
-      .title { font-size:17px; }
-    }
+    @media (max-width:768px) { .story { height:150px; } .cover { width:110px; } }
   </style>
 </head>
 <body>
   <header>
     <div class="menu-btn">☰</div>
-    <div class="logo">CRAWL.STORIES</div>
-    <div class="login-btn" onclick="location.href='admin.html'">Вход</div>
+    <div class="logo" onclick="location.reload()">
+      <div class="logo-box">C</div>
+      <div class="logo-text">CRAWL.STORIES</div>
+    </div>
+    <div class="login" onclick="location.href='admin.html'">Вход</div>
   </header>
 
   <div class="container">
-    <h1 style="margin:30px 0 20px; color:var(--accent); font-size:32px;">Для вас</h1>
+    <h1 class="page-title">Для вас</h1>
     <div class="stories" id="stories">Загрузка...</div>
   </div>
 
   <script>
-    async function loadStories() {
+    async function load() {
       try {
         const snap = await db.collection("stories")
           .where("visibility", "==", "public")
           .orderBy("firstEpisodeDate", "desc")
           .get();
-        
-        const container = document.getElementById("stories");
-        container.innerHTML = snap.empty ? "<p style='text-align:center;color:var(--gray);padding:60px'>Историй пока нет</p>" : "";
-        
+
+        const list = document.getElementById("stories");
+        if (snap.empty) {
+          list.innerHTML = "<p style='text-align:center;color:var(--gray);padding:80px'>Историй пока нет</p>";
+          return;
+        }
+
         snap.forEach(doc => {
-          const s = doc.data();
-          const card = document.createElement("a");
-          card.href = `story-info.html?id=${doc.id}`;
-          card.className = "story-card";
-          
-          const statusClass = s.status === "announced" ? "new" : s.status === "finished" ? "finished" : "ongoing";
-          const statusText = s.status === "announced" ? "Новинка" : s.status === "finished" ? "Закончена" : "В процессе";
-          
-          card.innerHTML = `
-            <div class="cover">
-              <img src="${s.cover || 'https://via.placeholder.com/130x170/111/333?text=CRAWL'}" alt="${s.title}">
-            </div>
+          const d = doc.data();
+          const statusClass = d.status === "announced" ? "new" : d.status === "finished" ? "finished" : "ongoing";
+          const statusText = d.status === "announced" ? "Новинка" : d.status === "finished" ? "Закончена" : "В процессе";
+
+          const el = document.createElement("a");
+          el.href = `story-info.html?id=${doc.id}`;
+          el.className = "story";
+          el.innerHTML = `
+            <div class="cover"><img src="${d.cover || 'https://via.placeholder.com/130x170/111/333?text=CRAWL'}" alt=""></div>
             <div class="info">
               <div>
-                <div class="title">${s.title || "Без названия"}</div>
+                <div class="title">${d.title || "Без названия"}</div>
                 <span class="status ${statusClass}">${statusText}</span>
-                ${s.genres ? `<div class="genres">${s.genres.join(" • ")}</div>` : ''}
+                ${d.genres ? `<div class="genres">${d.genres.join(" • ")}</div>` : ""}
               </div>
-              <div class="desc">${(s.description || "Описание скоро появится...").substring(0,140)}${(s.description||'').length>140?'...':''}</div>
+              <div class="desc">${(d.description || "").substring(0,140)}${(d.description||"").length>140?"...":""}</div>
             </div>
           `;
-          container.appendChild(card);
+          list.appendChild(el);
         });
       } catch (e) {
         document.getElementById("stories").innerHTML = "<p style='color:#e91e63;text-align:center'>Ошибка загрузки</p>";
       }
     }
-    loadStories();
+    load();
   </script>
+
   <script src="themes-system.js"></script>
 </body>
 </html>
