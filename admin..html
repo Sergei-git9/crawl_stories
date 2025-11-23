@@ -1,31 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <title>Админка — CRAWL.STORIES</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Админ-панель — CRAWL.STORIES</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
+      authDomain: "crawl-stories.firebaseapp.com",
+      projectId: "crawl-stories",
+      storageBucket: "crawl-stories.firebasestorage.app",
+      messagingSenderId: "886479757650",
+      appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
+      measurementId: "G-SGC2HF0455"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+  </script>
+
   <style>
-    body { background:#000; color:#FFE81F; font-family:'Courier New'; text-align:center; padding:100px; }
-    input { padding:10px; margin:10px; width:300px; }
-    button { padding:12px 30px; background:#FFE81F; color:#000; border:none; font-weight:bold; cursor:pointer; }
+    :root {
+      --bg: #020205;
+      --card: #0b0b0f;
+      --text: #ffffff;
+      --accent: #FFE81F;
+      --gray: #9aa0a6;
+      --border: rgba(255,255,255,0.1);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'Courier New',monospace; min-height:100vh; }
+    header { height:70px; background:rgba(2,2,5,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; position:fixed; width:100%; z-index:1000; }
+    .logo { display:flex; align-items:center; gap:12px; }
+    .logo-box { width:48px; height:48px; background:#1a1a1a; border:2px solid #333; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px; }
+    .logo-text { font-size:24px; font-weight:900; color:var(--accent); }
+    .container { padding-top:90px; max-width:1400px; margin:0 auto; padding:20px; }
+    .btn { background:var(--accent); color:#000; padding:12px 24px; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin:10px; }
+    .btn:hover { background:#fff; }
+    .card { background:var(--card); padding:20px; border-radius:16px; margin:20px 0; box-shadow:0 6px 20px rgba(0,0,0,0.6); }
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; }
+    .modal-content { background:var(--card); padding:30px; border-radius:16px; width:90%; max-width:600px; }
+    input, textarea, select { width:100%; padding:12px; margin:10px 0; background:#111; border:1px solid #333; color:#fff; border-radius:8px; }
+    .drop-zone { border:2px dashed var(--accent); padding:40px; text-align:center; border-radius:12px; margin:20px 0; cursor:pointer; }
+    .drop-zone.dragover { background:rgba(255,232,31,0.1); }
   </style>
 </head>
 <body>
-  <h1>CRAWL.STORIES</h1>
-  <h2>Админ-панель</h2>
-  <input type="text" id="login" placeholder="Логин"><br>
-  <input type="password" id="pass" placeholder="Пароль"><br>
-  <button onclick="check()">Войти</button>
-  <p id="error" style="color:red"></p>
+
+  <header>
+    <div class="logo">
+      <div class="logo-box">C</div>
+      <div class="logo-text">CRAWL.STORIES</div>
+    </div>
+    <div>Админ-панель</div>
+    <div class="btn" onclick="auth.signOut()">Выйти</div>
+  </header>
+
+  <div class="container">
+    <h1 style="color:var(--accent); margin:20px 0;">Управление историями</h1>
+    <button class="btn" onclick="openCreateModal()">Создать историю</button>
+
+    <div id="storiesList"></div>
+  </div>
+
+  <!-- Модальное окно создания истории -->
+  <div id="createModal" class="modal">
+    <div class="modal-content">
+      <h2 style="color:var(--accent);">Новая история</h2>
+      <input type="text" id="newTitle" placeholder="Название">
+      <div class="drop-zone" id="dropZone">Перетащи обложку сюда</div>
+      <input type="file" id="coverInput" accept="image/*" style="display:none">
+      <textarea id="newDesc" placeholder="Описание" rows="4"></textarea>
+      <input type="text" id="newGenres" placeholder="Жанры (через запятую)">
+      <input type="text" id="newPlanned" placeholder="Плановое кол-во эпизодов">
+      <input type="text" id="newDate" placeholder="Дата публикации (ДД.ММ.ГГГГ или ММ.ГГГГ или ГГГГ)">
+      <div style="margin:20px 0; text-align:center;">
+        <button class="btn" onclick="createStory()">Создать</button>
+        <button class="btn" style="background:#666;" onclick="closeModal()">Отмена</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    function check() {
-      const l = document.getElementById("login").value;
-      const p = document.getElementById("pass").value;
-      if (l === "admin" && p === "crawl2025") {
-        location.href = "admin-panel.html"; // потом сделаем настоящий админ
-      } else {
-        document.getElementById("error").textContent = "Неправильный логин или пароль";
-      }
+    // Проверка авторизации
+    auth.onAuthStateChanged(user => {
+      if (!user) location.href = "index.html";
+    });
+
+    // Drag & Drop обложки
+    const dropZone = document.getElementById('dropZone');
+    const coverInput = document.getElementById('coverInput');
+    ['dragover', 'dragenter'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.add('dragover')));
+    ['dragleave', 'dragend', 'drop'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.remove('dragover')));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      if (e.dataTransfer.files[0]) coverInput.files = e.dataTransfer.files;
+    });
+    dropZone.addEventListener('click', () => coverInput.click());
+
+    function openCreateModal() {
+      document.getElementById('createModal').style.display = 'flex';
     }
+    function closeModal() {
+      document.getElementById('createModal').style.display = 'none';
+    }
+
+    async function createStory() {
+      const title = document.getElementById('newTitle').value;
+      if (!title) return alert("Введите название");
+
+      const file = coverInput.files[0];
+      let coverUrl = "";
+      if (file) {
+        // Заглушка — в реальности нужна загрузка в Storage
+        coverUrl = URL.createObjectURL(file);
+      }
+
+      const story = {
+        title,
+        description: document.getElementById('newDesc').value,
+        cover: coverUrl,
+        genres: document.getElementById('newGenres').value.split(',').map(g => g.trim()).filter(g => g),
+        plannedEpisodes: parseInt(document.getElementById('newPlanned').value) || null,
+        publishDate: document.getElementById('newDate').value || null,
+        status: "announced",
+        visibility: "public",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      await db.collection("stories").add(story);
+      closeModal();
+      loadStories();
+    }
+
+    async function loadStories() {
+      const snap = await db.collection("stories").orderBy("createdAt", "desc").get();
+      const list = document.getElementById("storiesList");
+      list.innerHTML = "";
+      snap.forEach(doc => {
+        const s = doc.data();
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <h3>${s.title}</h3>
+          <p>Статус: <strong>${s.status}</strong> | Эпизодов: ${s.episodesCount || 0}</p>
+          <button class="btn" onclick="location.href='reader.html?story=${doc.id}'">Открыть</button>
+          <button class="btn" style="background:#e91e63" onclick="db.collection('stories').doc('${doc.id}').delete().then(loadStories)">Удалить</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    loadStories();
   </script>
+
+  <script src="themes-system.js"></script>
 </body>
 </html>
