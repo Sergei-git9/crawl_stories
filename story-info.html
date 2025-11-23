@@ -2,34 +2,62 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>История — CRAWL.STORIES</title>
+
+  <!-- ПОДКЛЮЧЕНИЕ FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
+      authDomain: "crawl-stories.firebaseapp.com",
+      projectId: "crawl-stories",
+      storageBucket: "crawl-stories.firebasestorage.app",
+      messagingSenderId: "886479757650",
+      appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
+      measurementId: "G-SGC2HF0455"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
   <style>
-    body { background:#020205; color:#fff; font-family:'Courier New'; padding:20px; }
-    .cover-big { width:100%; max-width:600px; border-radius:16px; margin:20px auto; display:block; }
-    .title { font-size:32px; color:#FFE81F; text-align:center; }
+    body { background:#020205; color:#fff; font-family:'Courier New',monospace; padding:20px; min-height:100vh; }
+    .cover { width:100%; max-width:600px; border-radius:16px; margin:30px auto; display:block; box-shadow:0 10px 30px rgba(0,0,0,0.8); }
+    .title { font-size:36px; color:#FFE81F; text-align:center; margin:20px 0; }
+    .desc { font-size:18px; line-height:1.6; max-width:800px; margin:30px auto; color:#ccc; }
+    .read-btn { display:block; width:300px; margin:40px auto; padding:16px; background:#FFE81F; color:#000; text-align:center; font-weight:bold; border-radius:12px; text-decoration:none; font-size:20px; }
+    .read-btn:hover { background:#fff; }
   </style>
 </head>
 <body>
   <h1 class="title" id="title">Загрузка...</h1>
-  <img id="cover" class="cover-big" src="" alt="">
-  <p id="desc"></p>
-  <button onclick="location.href='reader.html?story='+new URLSearchParams(location.search).get('id')">
-    Начать читать →
-  </button>
+  <img id="cover" class="cover" src="" alt="">
+  <p class="desc" id="desc">Загрузка описания...</p>
+  <a href="#" id="readBtn" class="read-btn">Начать читать →</a>
 
   <script>
     const urlParams = new URLSearchParams(location.search);
     const storyId = urlParams.get('id');
-    db.collection("stories").doc(storyId).get().then(doc => {
-      if (doc.exists) {
-        const d = doc.data();
-        document.getElementById("title").textContent = d.title;
-        document.getElementById("cover").src = d.cover || "https://via.placeholder.com/600x800/111/333?text=CRAWL";
-        document.getElementById("desc").textContent = d.description || "Нет описания";
-      }
-    });
+    if (!storyId) {
+      document.body.innerHTML = "<h1 style='text-align:center;color:#e91e63'>История не найдена</h1>";
+    } else {
+      db.collection("stories").doc(storyId).get().then(doc => {
+        if (doc.exists) {
+          const d = doc.data();
+          document.getElementById("title").textContent = d.title || "Без названия";
+          document.getElementById("cover").src = d.cover || "https://via.placeholder.com/600x800/111/333?text=CRAWL";
+          document.getElementById("desc").textContent = d.description || "Описание отсутствует";
+          document.getElementById("readBtn").href = `reader.html?story=${storyId}`;
+        } else {
+          document.body.innerHTML = "<h1 style='text-align:center;color:#e91e63'>История не найдена</h1>";
+        }
+      }).catch(err => {
+        console.error(err);
+        document.body.innerHTML = "<h1 style='text-align:center;color:#e91e63'>Ошибка загрузки</h1>";
+      });
+    }
   </script>
   <script src="themes-system.js"></script>
 </body>
