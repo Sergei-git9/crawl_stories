@@ -221,6 +221,12 @@ class ThemesSystem {
       oldBanner.remove();
     }
     
+    // Удаляем margin-top у header если был
+    const header = document.querySelector('header');
+    if (header) {
+      header.style.marginTop = '0';
+    }
+    
     // Праздничные темы показывают баннер
     const holidayThemes = ['newyear', 'halloween', 'spring', 'summer', 'autumn', 'christmas'];
     
@@ -236,10 +242,22 @@ class ThemesSystem {
       top: 0;
       left: 0;
       right: 0;
-      z-index: 10000;
+      height: 50px;
+      z-index: 9999;
       animation: slideDown 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     `;
     document.body.insertBefore(banner, document.body.firstChild);
+    
+    // Сдвигаем header вниз чтобы баннер не накладывался
+    setTimeout(() => {
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.marginTop = '50px';
+      }
+    }, 100);
   }
 
   createSeasonalElements(themeName) {

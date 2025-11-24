@@ -21,6 +21,16 @@
   font-size: 16px;
 }
 
+/* ЛЕТУЧИЕ МЫШИ - ЛЕТАЮТ СО СТОРОНЫ В СТОРОНУ */
+.seasonal-element.bats {
+  animation: flyBat 10s infinite linear !important;
+  position: fixed !important;
+  z-index: 1000 !important;
+  pointer-events: none !important;
+  font-size: 2em !important;
+  opacity: 0.8 !important;
+}
+
 /* ПАУТИНА */
 .cobweb {
   position: fixed;
@@ -92,13 +102,19 @@ a:hover,
 @keyframes flyBat {
   0% {
     left: -50px;
-    top: 10%;
+    top: 20%;
+  }
+  25% {
+    top: 15%;
   }
   50% {
-    top: 5%;
+    top: 25%;
+  }
+  75% {
+    top: 15%;
   }
   100% {
     left: calc(100vw + 50px);
-    top: 10%;
+    top: 20%;
   }
 }
