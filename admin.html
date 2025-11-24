@@ -1623,6 +1623,12 @@
         const container = document.getElementById('themeControls');
         const autoModeCheckbox = document.getElementById('autoThemeMode');
         
+        // Если контейнер не найден - ждем и пробуем снова
+        if (!container) {
+          setTimeout(() => this.loadThemeControls(), 100);
+          return;
+        }
+        
         // Используем глобальную систему тем для синхронизации
         const themes = window.themesSystem.getAvailableThemes() || {};
         const currentTheme = window.themesSystem.getCurrentTheme();

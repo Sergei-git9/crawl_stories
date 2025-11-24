@@ -1,0 +1,86 @@
+/* ТЕМА: НОВЫЙ ГОД */
+:root {
+  --accent-primary: #aee0ff;
+  --accent-secondary: #d4f1ff;
+  --bg-accent: rgba(174, 224, 255, 0.1);
+  --theme-color: #00bfff;
+}
+
+/* БАННЕР */
+.theme-banner {
+  background: linear-gradient(90deg, #0a3d6b 0%, #1a7fb8 50%, #0a3d6b 100%);
+  color: white;
+  padding: 12px 20px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideDown 0.5s ease;
+}
+
+.theme-banner::before {
+  content: "🎄 С Новым Годом! 🎄";
+  font-size: 16px;
+}
+
+/* СНЕЖИНКИ */
+.snowflake {
+  position: fixed;
+  color: #aee0ff;
+  font-size: 1.5em;
+  opacity: 0.8;
+  z-index: 1000;
+  pointer-events: none;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+/* ACCENT ЦВЕТА */
+.btn-primary, 
+.btn-success,
+.tag, 
+.status-badge,
+a:hover,
+.progress-bar {
+  --accent: #aee0ff !important;
+}
+
+.story-card:hover {
+  border-color: #aee0ff !important;
+  box-shadow: 0 0 15px rgba(174, 224, 255, 0.3) !important;
+}
+
+/* LOGO EMOJI */
+.logo-emoji::before {
+  content: "🎄";
+  margin-right: 8px;
+}
+
+/* КАРТОЧКИ ИСТОРИЙ */
+.story-card::before {
+  content: "❄️";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes snowfall {
+  0% {
+    transform: translateY(-100%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0.3;
+  }
+}

@@ -1,0 +1,71 @@
+/* ТЕМА: ЗИМА */
+:root {
+  --accent-primary: #b8e2f2;
+  --accent-secondary: #d0ebf2;
+  --bg-accent: rgba(184, 226, 242, 0.1);
+  --theme-color: #00bfff;
+}
+
+/* БАННЕР */
+.theme-banner {
+  background: linear-gradient(90deg, #4a90e2 0%, #7cb9e8 50%, #4a90e2 100%);
+  color: white;
+  padding: 12px 20px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideDown 0.5s ease;
+  display: none; /* Зима - только автоматическая, без баннера */
+}
+
+/* ЛЕГКИЙ СНЕГ */
+.light-snow {
+  position: fixed;
+  color: #b8e2f2;
+  font-size: 1.2em;
+  opacity: 0.6;
+  z-index: 1000;
+  pointer-events: none;
+  animation: slowSnow 12s infinite linear;
+}
+
+/* ACCENT ЦВЕТА */
+.btn-primary, 
+.btn-success,
+.tag, 
+.status-badge,
+a:hover,
+.progress-bar {
+  --accent: #b8e2f2 !important;
+}
+
+.story-card:hover {
+  border-color: #b8e2f2 !important;
+  box-shadow: 0 0 15px rgba(184, 226, 242, 0.3) !important;
+}
+
+/* LOGO EMOJI */
+.logo-emoji::before {
+  content: "❄️";
+  margin-right: 8px;
+}
+
+/* КАРТОЧКИ ИСТОРИЙ */
+.story-card::before {
+  content: "🧊";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+@keyframes slowSnow {
+  0% {
+    transform: translateY(-100%) rotate(0deg);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0.2;
+  }
+}

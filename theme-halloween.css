@@ -1,0 +1,104 @@
+/* ТЕМА: ХЕЛЛОУИН */
+:root {
+  --accent-primary: #ff8c00;
+  --accent-secondary: #ff7f50;
+  --bg-accent: rgba(255, 140, 0, 0.1);
+  --theme-color: #ff6347;
+}
+
+/* БАННЕР */
+.theme-banner {
+  background: linear-gradient(90deg, #2a2a2a 0%, #1a1a1a 50%, #2a2a2a 100%);
+  color: #ff8c00;
+  padding: 12px 20px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideDown 0.5s ease;
+}
+
+.theme-banner::before {
+  content: "🎃 Счастливого Хеллоуина! 🎃";
+  font-size: 16px;
+}
+
+/* ПАУТИНА */
+.cobweb {
+  position: fixed;
+  z-index: 1;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.bat {
+  position: fixed;
+  color: #ff8c00;
+  font-size: 2em;
+  z-index: 1000;
+  pointer-events: none;
+  animation: flyBat 8s infinite linear;
+}
+
+/* ТЫКВЫ */
+.pumpkin {
+  position: fixed;
+  font-size: 2.5em;
+  z-index: 1;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ACCENT ЦВЕТА */
+.btn-primary, 
+.btn-success,
+.tag, 
+.status-badge,
+a:hover,
+.progress-bar {
+  --accent: #ff8c00 !important;
+}
+
+.story-card:hover {
+  border-color: #ff8c00 !important;
+  box-shadow: 0 0 15px rgba(255, 140, 0, 0.4) !important;
+}
+
+/* LOGO EMOJI */
+.logo-emoji::before {
+  content: "🎃";
+  margin-right: 8px;
+}
+
+/* КАРТОЧКИ ИСТОРИЙ */
+.story-card::before {
+  content: "👻";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes flyBat {
+  0% {
+    left: -50px;
+    top: 10%;
+  }
+  50% {
+    top: 5%;
+  }
+  100% {
+    left: calc(100vw + 50px);
+    top: 10%;
+  }
+}

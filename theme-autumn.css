@@ -1,0 +1,86 @@
+/* ТЕМА: ОСЕНЬ */
+:root {
+  --accent-primary: #ffb366;
+  --accent-secondary: #ffc266;
+  --bg-accent: rgba(255, 179, 102, 0.1);
+  --theme-color: #ff8c00;
+}
+
+/* БАННЕР */
+.theme-banner {
+  background: linear-gradient(90deg, #8b4513 0%, #cd853f 50%, #8b4513 100%);
+  color: #fff8dc;
+  padding: 12px 20px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideDown 0.5s ease;
+}
+
+.theme-banner::before {
+  content: "🍁 Осенняя пора! 🍁";
+  font-size: 16px;
+}
+
+/* ЛИСТЬЯ */
+.leaf {
+  position: fixed;
+  color: #ff8c00;
+  font-size: 1.8em;
+  opacity: 0.8;
+  z-index: 1000;
+  pointer-events: none;
+  animation: fallLeaf 8s infinite linear;
+}
+
+/* ACCENT ЦВЕТА */
+.btn-primary, 
+.btn-success,
+.tag, 
+.status-badge,
+a:hover,
+.progress-bar {
+  --accent: #ffb366 !important;
+}
+
+.story-card:hover {
+  border-color: #ffb366 !important;
+  box-shadow: 0 0 15px rgba(255, 179, 102, 0.3) !important;
+}
+
+/* LOGO EMOJI */
+.logo-emoji::before {
+  content: "🍁";
+  margin-right: 8px;
+}
+
+/* КАРТОЧКИ ИСТОРИЙ */
+.story-card::before {
+  content: "🍂";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fallLeaf {
+  0% {
+    transform: translateY(-100%) rotate(0deg) translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg) translateX(100px);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,84 @@
+/* ТЕМА: РОЖДЕСТВО */
+:root {
+  --accent-primary: #ffd700;
+  --accent-secondary: #ffed4e;
+  --bg-accent: rgba(255, 215, 0, 0.1);
+  --theme-color: #ffa500;
+}
+
+/* БАННЕР */
+.theme-banner {
+  background: linear-gradient(90deg, #d4212f 0%, #c8102e 50%, #d4212f 100%);
+  color: #ffd700;
+  padding: 12px 20px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideDown 0.5s ease;
+}
+
+.theme-banner::before {
+  content: "⭐ С Рождеством! ⭐";
+  font-size: 16px;
+}
+
+/* ЗВЕЗДЫ */
+.star {
+  position: fixed;
+  color: #ffd700;
+  font-size: 1.5em;
+  opacity: 0.8;
+  z-index: 1000;
+  pointer-events: none;
+  animation: twinkle 3s infinite;
+}
+
+/* ACCENT ЦВЕТА */
+.btn-primary, 
+.btn-success,
+.tag, 
+.status-badge,
+a:hover,
+.progress-bar {
+  --accent: #ffd700 !important;
+}
+
+.story-card:hover {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4) !important;
+}
+
+/* LOGO EMOJI */
+.logo-emoji::before {
+  content: "⭐";
+  margin-right: 8px;
+}
+
+/* КАРТОЧКИ ИСТОРИЙ */
+.story-card::before {
+  content: "🌟";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}

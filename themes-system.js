@@ -185,10 +185,61 @@ class ThemesSystem {
     const theme = this.themes[themeName];
     document.documentElement.style.setProperty('--accent-primary', theme.accentColor);
     
+    // ПОДГРУЖАЕМ CSS ФАЙЛ ТЕМЫ
+    await this.loadThemeCSS(themeName);
+    
     this.createSeasonalElements(themeName);
+    
+    // Добавляем баннер если это праздничная тема
+    this.createThemeBanner(themeName);
     
     // Обновляем UI переключателя тем если он есть
     this.updateThemeSelector();
+  }
+
+  async loadThemeCSS(themeName) {
+    // Удаляем старую CSS тему если была
+    const oldLink = document.getElementById('theme-css');
+    if (oldLink) {
+      oldLink.remove();
+    }
+    
+    // Загружаем новую CSS тему
+    const link = document.createElement('link');
+    link.id = 'theme-css';
+    link.rel = 'stylesheet';
+    link.href = `theme-${themeName}.css`;
+    link.onload = () => console.log(`✅ Тема CSS загружена: ${themeName}`);
+    link.onerror = () => console.warn(`⚠️ CSS тема не найдена: theme-${themeName}.css`);
+    document.head.appendChild(link);
+  }
+
+  createThemeBanner(themeName) {
+    // Удаляем старый баннер если был
+    const oldBanner = document.getElementById('theme-banner');
+    if (oldBanner) {
+      oldBanner.remove();
+    }
+    
+    // Праздничные темы показывают баннер
+    const holidayThemes = ['newyear', 'halloween', 'spring', 'summer', 'autumn', 'christmas'];
+    
+    if (!holidayThemes.includes(themeName)) {
+      return;
+    }
+    
+    const banner = document.createElement('div');
+    banner.id = 'theme-banner';
+    banner.className = 'theme-banner';
+    banner.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      animation: slideDown 0.5s ease;
+    `;
+    document.body.insertBefore(banner, document.body.firstChild);
   }
 
   createSeasonalElements(themeName) {

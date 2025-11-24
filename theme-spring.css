@@ -1,0 +1,104 @@
+/* ТЕМА: ВЕСНА */
+:root {
+  --accent-primary: #a8e6cf;
+  --accent-secondary: #c5f0dd;
+  --bg-accent: rgba(168, 230, 207, 0.1);
+  --theme-color: #90ee90;
+}
+
+/* БАННЕР */
+.theme-banner {
+  background: linear-gradient(90deg, #b8f3f3 0%, #d5f4e6 50%, #b8f3f3 100%);
+  color: #2a5a4a;
+  padding: 12px 20px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideDown 0.5s ease;
+}
+
+.theme-banner::before {
+  content: "🌸 Весна пришла! 🌸";
+  font-size: 16px;
+}
+
+/* ЦВЕТЫ (ЛЕПЕСТКИ) */
+.petal {
+  position: fixed;
+  color: #ff69b4;
+  font-size: 1.5em;
+  opacity: 0.8;
+  z-index: 1000;
+  pointer-events: none;
+  animation: fallPetal 8s infinite linear;
+}
+
+/* ПТИЧКИ */
+.bird {
+  position: fixed;
+  font-size: 1.2em;
+  z-index: 1000;
+  pointer-events: none;
+  animation: flyBird 10s infinite linear;
+}
+
+/* ACCENT ЦВЕТА */
+.btn-primary, 
+.btn-success,
+.tag, 
+.status-badge,
+a:hover,
+.progress-bar {
+  --accent: #a8e6cf !important;
+}
+
+.story-card:hover {
+  border-color: #a8e6cf !important;
+  box-shadow: 0 0 15px rgba(168, 230, 207, 0.3) !important;
+}
+
+/* LOGO EMOJI */
+.logo-emoji::before {
+  content: "🌸";
+  margin-right: 8px;
+}
+
+/* КАРТОЧКИ ИСТОРИЙ */
+.story-card::before {
+  content: "🌺";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fallPetal {
+  0% {
+    transform: translateY(-100%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes flyBird {
+  0% {
+    left: -50px;
+  }
+  100% {
+    left: calc(100vw + 50px);
+  }
+}

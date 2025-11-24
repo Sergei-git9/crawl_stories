@@ -1,0 +1,82 @@
+/* ТЕМА: ЛЕТО */
+:root {
+  --accent-primary: #87ceeb;
+  --accent-secondary: #b0e0e6;
+  --bg-accent: rgba(135, 206, 235, 0.1);
+  --theme-color: #00bfff;
+}
+
+/* БАННЕР */
+.theme-banner {
+  background: linear-gradient(90deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+  color: #8b4513;
+  padding: 12px 20px;
+  text-align: center;
+  font-weight: bold;
+  animation: slideDown 0.5s ease;
+}
+
+.theme-banner::before {
+  content: "☀️ Летнее настроение! ☀️";
+  font-size: 16px;
+}
+
+/* СОЛНЕЧНЫЕ ЛУЧИ */
+.sunbeam {
+  position: fixed;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* ВОЛНЫ */
+.wave {
+  position: fixed;
+  color: #87ceeb;
+  font-size: 2em;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ACCENT ЦВЕТА */
+.btn-primary, 
+.btn-success,
+.tag, 
+.status-badge,
+a:hover,
+.progress-bar {
+  --accent: #87ceeb !important;
+}
+
+.story-card:hover {
+  border-color: #87ceeb !important;
+  box-shadow: 0 0 15px rgba(135, 206, 235, 0.3) !important;
+}
+
+/* LOGO EMOJI */
+.logo-emoji::before {
+  content: "☀️";
+  margin-right: 8px;
+}
+
+/* КАРТОЧКИ ИСТОРИЙ */
+.story-card::before {
+  content: "🌊";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
