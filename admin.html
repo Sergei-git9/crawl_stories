@@ -1,163 +1,1072 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Админ-панель — CRAWL.STORIES</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Админ-панель CRAWL.STORIES</title>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
-      authDomain: "crawl-stories.firebaseapp.com",
-      projectId: "crawl-stories",
-      storageBucket: "crawl-stories.firebasestorage.app",
-      messagingSenderId: "886479757650",
-      appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
-      measurementId: "G-SGC2HF0455"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-  </script>
-
   <style>
     :root {
-      --bg: #020205;
-      --card: #0b0b0f;
-      --text: #ffffff;
-      --accent: #FFE81F;
-      --gray: #9aa0a6;
-      --border: rgba(255,255,255,0.1);
+      --bg-primary: #020205;
+      --bg-secondary: #0b0b0f;
+      --bg-card: #0b0b0f;
+      --accent-primary: #ffe81f;
+      --accent-secondary: #6366f1;
+      --text-primary: #ffffff;
+      --text-secondary: #9aa0a6;
+      --text-muted: #7f8c8d;
+      --border-light: rgba(255, 255, 255, 0.1);
+      --font-mono: "Courier New", monospace;
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--bg); color:var(--text); font-family:'Courier New',monospace; min-height:100vh; }
-    header { height:70px; background:rgba(2,2,5,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; position:fixed; width:100%; z-index:1000; }
-    .logo { display:flex; align-items:center; gap:12px; }
-    .logo-box { width:48px; height:48px; background:#1a1a1a; border:2px solid #333; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px; }
-    .logo-text { font-size:24px; font-weight:900; color:var(--accent); }
-    .container { padding-top:90px; max-width:1400px; margin:0 auto; padding:20px; }
-    .btn { background:var(--accent); color:#000; padding:12px 24px; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin:10px; }
-    .btn:hover { background:#fff; }
-    .card { background:var(--card); padding:20px; border-radius:16px; margin:20px 0; box-shadow:0 6px 20px rgba(0,0,0,0.6); }
-    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; }
-    .modal-content { background:var(--card); padding:30px; border-radius:16px; width:90%; max-width:600px; }
-    input, textarea, select { width:100%; padding:12px; margin:10px 0; background:#111; border:1px solid #333; color:#fff; border-radius:8px; }
-    .drop-zone { border:2px dashed var(--accent); padding:40px; text-align:center; border-radius:12px; margin:20px 0; cursor:pointer; }
-    .drop-zone.dragover { background:rgba(255,232,31,0.1); }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      min-height: 100vh;
+    }
+
+    /* LOGIN SCREEN */
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .login-card h2 {
+      color: var(--accent-primary);
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      background: #05050a;
+      color: #ddd;
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+
+    /* BUTTONS */
+    button {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      transition: opacity 0.3s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent-primary);
+      border: 1px solid var(--border-light);
+    }
+
+    .btn-danger {
+      background: #ff4444;
+      color: white;
+    }
+
+    .btn-success {
+      background: #4caf50;
+      color: white;
+    }
+
+    .btn-info {
+      background: var(--accent-secondary);
+      color: white;
+    }
+
+    /* ADMIN INTERFACE */
+    .admin-interface {
+      display: none;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border-light);
+      background: rgba(2, 2, 5, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* STORIES GRID */
+    .stories-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      margin-top: 20px;
+    }
+
+    .story-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border-light);
+      transition: border-color 0.3s;
+      cursor: pointer;
+    }
+
+    .story-card:hover {
+      border-color: rgba(255, 232, 31, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .story-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .story-title {
+      color: var(--accent-primary);
+      font-size: 18px;
+      margin: 0;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .story-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      white-space: nowrap;
+      font-weight: bold;
+    }
+
+    .badge.announcement {
+      background: rgba(255, 193, 7, 0.1);
+      color: #ffc107;
+    }
+
+    .badge.draft {
+      background: rgba(158, 158, 158, 0.1);
+      color: #9e9e9e;
+    }
+
+    .badge.working {
+      background: rgba(33, 150, 243, 0.1);
+      color: #2196f3;
+    }
+
+    .badge.published {
+      background: rgba(76, 175, 80, 0.1);
+      color: #4caf50;
+    }
+
+    .badge.hidden {
+      background: rgba(158, 158, 158, 0.1);
+      color: #9e9e9e;
+      border: 1px dashed #9e9e9e;
+    }
+
+    .story-desc {
+      color: var(--text-secondary);
+      margin-bottom: 15px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .story-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* MODALS */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-light);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      color: var(--accent-primary);
+      font-size: 20px;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      background: #05050a;
+      color: #ddd;
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+
+    .checkbox-group label {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .genres-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--accent-primary);
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      color: var(--text-secondary);
+      margin: 10px 0;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .drop-zone:hover {
+      background: rgba(255, 232, 31, 0.1);
+    }
+
+    .drop-zone.active {
+      background: rgba(255, 232, 31, 0.1);
+      border-color: var(--accent-primary);
+    }
+
+    .date-precision {
+      font-size: 12px;
+      color: var(--accent-primary);
+      margin-top: 5px;
+    }
+
+    /* SCHEDULE */
+    .schedule-list {
+      margin-top: 20px;
+    }
+
+    .schedule-item {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .schedule-info {
+      flex: 1;
+    }
+
+    .schedule-date {
+      text-align: right;
+      min-width: 200px;
+    }
+
+    .publish-date {
+      color: var(--accent-primary);
+      font-weight: bold;
+    }
+
+    .publish-status {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* SETTINGS */
+    .settings-grid {
+      display: grid;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .settings-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border-light);
+    }
+
+    .theme-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .theme-option {
+      background: var(--bg-secondary);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .theme-option:hover {
+      border-color: var(--accent-secondary);
+    }
+
+    .theme-option.active {
+      border-color: var(--accent-primary);
+    }
+
+    /* EMPTY STATES */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .header-nav {
+        justify-content: center;
+      }
+
+      .stories-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .schedule-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .schedule-date {
+        text-align: left;
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
-
-  <header>
-    <div class="logo">
-      <div class="logo-box">C</div>
-      <div class="logo-text">CRAWL.STORIES</div>
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h2>🔐 Вход в админ-панель</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Пароль администратора</label>
+          <input type="password" id="adminPassword" required />
+        </div>
+        <button type="submit">Войти в админку</button>
+      </form>
     </div>
-    <div>Админ-панель</div>
-    <div class="btn" onclick="auth.signOut()">Выйти</div>
-  </header>
-
-  <div class="container">
-    <h1 style="color:var(--accent); margin:20px 0;">Управление историями</h1>
-    <button class="btn" onclick="openCreateModal()">Создать историю</button>
-
-    <div id="storiesList"></div>
   </div>
 
-  <!-- Модальное окно создания истории -->
-  <div id="createModal" class="modal">
-    <div class="modal-content">
-      <h2 style="color:var(--accent);">Новая история</h2>
-      <input type="text" id="newTitle" placeholder="Название">
-      <div class="drop-zone" id="dropZone">Перетащи обложку сюда</div>
-      <input type="file" id="coverInput" accept="image/*" style="display:none">
-      <textarea id="newDesc" placeholder="Описание" rows="4"></textarea>
-      <input type="text" id="newGenres" placeholder="Жанры (через запятую)">
-      <input type="text" id="newPlanned" placeholder="Плановое кол-во эпизодов">
-      <input type="text" id="newDate" placeholder="Дата публикации (ДД.ММ.ГГГГ или ММ.ГГГГ или ГГГГ)">
-      <div style="margin:20px 0; text-align:center;">
-        <button class="btn" onclick="createStory()">Создать</button>
-        <button class="btn" style="background:#666;" onclick="closeModal()">Отмена</button>
+  <!-- ADMIN INTERFACE -->
+  <div id="adminInterface" class="admin-interface">
+    <header>
+      <div class="header-content">
+        <h1>⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES</h1>
+        <div class="header-nav">
+          <button id="btnCreateStory" class="btn btn-success">➕ Создать историю</button>
+          <button id="btnStories" class="btn btn-secondary">📚 Истории</button>
+          <button id="btnSchedule" class="btn btn-secondary">📅 График</button>
+          <button id="btnImport" class="btn btn-info">📥 Импорт готовой истории</button>
+          <button id="btnSettings" class="btn btn-secondary">⚙️ Настройки</button>
+          <button id="btnLogout" class="btn btn-danger">🚪 Выйти</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <!-- STORIES VIEW -->
+      <div id="storiesView">
+        <h2>📚 Все истории</h2>
+        <div id="storiesList" class="stories-grid">
+          <div class="loading">Загрузка историй...</div>
+        </div>
+      </div>
+
+      <!-- SCHEDULE VIEW -->
+      <div id="scheduleView" style="display: none;">
+        <h2>📅 График публикаций</h2>
+        <div id="scheduleList" class="schedule-list">
+          <div class="empty-state">
+            <div class="icon">📅</div>
+            <p>Нет запланированных публикаций</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMPORT VIEW -->
+      <div id="importView" style="display: none;">
+        <h2>📥 Импорт готовой истории</h2>
+        <div class="empty-state">
+          <div class="icon">📥</div>
+          <p>Функция импорта будет реализована в следующем обновлении</p>
+        </div>
+      </div>
+
+      <!-- SETTINGS VIEW -->
+      <div id="settingsView" style="display: none;">
+        <h2>⚙️ Настройки сайта</h2>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>🎨 Темы оформления</h3>
+            <div class="theme-options">
+              <div class="theme-option active" data-theme="default">
+                <div style="font-size: 24px;">🌙</div>
+                <div>Тёмная тема</div>
+              </div>
+              <div class="theme-option" data-theme="light">
+                <div style="font-size: 24px;">☀️</div>
+                <div>Светлая тема</div>
+              </div>
+              <div class="theme-option" data-theme="newyear">
+                <div style="font-size: 24px;">❄️</div>
+                <div>Новый год</div>
+              </div>
+              <div class="theme-option" data-theme="halloween">
+                <div style="font-size: 24px;">🎃</div>
+                <div>Хэллоуин</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- MODAL: CREATE STORY -->
+  <div id="createStoryModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ Создать историю</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      
+      <form id="createStoryForm">
+        <div class="form-group">
+          <label>Название истории *</label>
+          <input type="text" id="storyTitle" required placeholder="Введите название истории">
+        </div>
+
+        <div class="form-group">
+          <label>Обложка истории</label>
+          <div class="drop-zone" id="coverDropZone">
+            <div>📁 Перетащите файл сюда</div>
+            <div style="font-size: 12px; margin-top: 8px;">или кликните для выбора</div>
+            <input type="file" id="coverFile" accept="image/*" style="display: none;">
+          </div>
+          <div id="coverPreview" style="display: none; margin-top: 10px;">
+            <img id="coverPreviewImg" style="max-width: 200px; border-radius: 8px;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Краткое описание</label>
+          <textarea id="storyDescription" rows="3" placeholder="Опишите сюжет истории..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Примерное количество эпизодов</label>
+            <input type="number" id="plannedEpisodes" min="0" placeholder="Не указано">
+          </div>
+          <div class="form-group">
+            <label>Дата начала публикации</label>
+            <input type="text" id="publishDate" placeholder="ДД.ММ.ГГГГ, ММ.ГГГГ или ГГГГ">
+            <div class="date-precision" id="datePrecision"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Жанры</label>
+          <div class="genres-container">
+            <div class="checkbox-group">
+              <input type="checkbox" id="genreFantasy" value="fantasy">
+              <label for="genreFantasy">🧙 Фэнтези</label>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="genreScifi" value="sci-fi">
+              <label for="genreScifi">🚀 Научная фантастика</label>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="genreHorror" value="horror">
+              <label for="genreHorror">👻 Хоррор</label>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="genreAdventure" value="adventure">
+              <label for="genreAdventure">🗺️ Приключения</label>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="genreMystery" value="mystery">
+              <label for="genreMystery">🕵️ Мистика</label>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="genreRomance" value="romance">
+              <label for="genreRomance">💖 Романтика</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions" style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" id="btnCancelStory">❌ Отмена</button>
+          <button type="submit" class="btn btn-success">✅ Создать анонс</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
-    // Проверка авторизации
-    auth.onAuthStateChanged(user => {
-      if (!user) location.href = "index.html";
-    });
+    class AdminPanel {
+      constructor() {
+        this.stories = [];
+        this.currentView = 'stories';
+        this.adminPassword = "1111";
+        
+        // Firebase конфигурация
+        this.firebaseConfig = {
+          apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
+          authDomain: "crawl-stories.firebaseapp.com",
+          projectId: "crawl-stories",
+          storageBucket: "crawl-stories.firebasestorage.app",
+          messagingSenderId: "886479757650",
+          appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
+          measurementId: "G-SGC2HF0455",
+        };
 
-    // Drag & Drop обложки
-    const dropZone = document.getElementById('dropZone');
-    const coverInput = document.getElementById('coverInput');
-    ['dragover', 'dragenter'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.add('dragover')));
-    ['dragleave', 'dragend', 'drop'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.remove('dragover')));
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      if (e.dataTransfer.files[0]) coverInput.files = e.dataTransfer.files;
-    });
-    dropZone.addEventListener('click', () => coverInput.click());
-
-    function openCreateModal() {
-      document.getElementById('createModal').style.display = 'flex';
-    }
-    function closeModal() {
-      document.getElementById('createModal').style.display = 'none';
-    }
-
-    async function createStory() {
-      const title = document.getElementById('newTitle').value;
-      if (!title) return alert("Введите название");
-
-      const file = coverInput.files[0];
-      let coverUrl = "";
-      if (file) {
-        // Заглушка — в реальности нужна загрузка в Storage
-        coverUrl = URL.createObjectURL(file);
+        this.init();
       }
 
-      const story = {
-        title,
-        description: document.getElementById('newDesc').value,
-        cover: coverUrl,
-        genres: document.getElementById('newGenres').value.split(',').map(g => g.trim()).filter(g => g),
-        plannedEpisodes: parseInt(document.getElementById('newPlanned').value) || null,
-        publishDate: document.getElementById('newDate').value || null,
-        status: "announced",
-        visibility: "public",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
+      async init() {
+        try {
+          // Инициализация Firebase
+          if (typeof firebase !== 'undefined') {
+            firebase.initializeApp(this.firebaseConfig);
+            this.db = firebase.firestore();
+            console.log("🔥 Firebase инициализирован");
+          } else {
+            console.warn("Firebase не загружен, используется режим демо");
+          }
 
-      await db.collection("stories").add(story);
-      closeModal();
-      loadStories();
+          this.setupEventListeners();
+          this.showLoginScreen();
+        } catch (error) {
+          console.error("Ошибка инициализации:", error);
+        }
+      }
+
+      showLoginScreen() {
+        document.getElementById("loginScreen").style.display = "flex";
+        document.getElementById("adminInterface").style.display = "none";
+      }
+
+      showAdminInterface() {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminInterface").style.display = "block";
+        this.loadStories();
+      }
+
+      setupEventListeners() {
+        // Логин
+        document.getElementById("loginForm").addEventListener("submit", (e) => {
+          e.preventDefault();
+          this.handleLogin();
+        });
+
+        // Навигация
+        document.getElementById("btnCreateStory").addEventListener("click", () => {
+          this.showCreateStoryModal();
+        });
+
+        document.getElementById("btnStories").addEventListener("click", () => {
+          this.showView('stories');
+        });
+
+        document.getElementById("btnSchedule").addEventListener("click", () => {
+          this.showView('schedule');
+        });
+
+        document.getElementById("btnImport").addEventListener("click", () => {
+          this.showView('import');
+        });
+
+        document.getElementById("btnSettings").addEventListener("click", () => {
+          this.showView('settings');
+        });
+
+        document.getElementById("btnLogout").addEventListener("click", () => {
+          this.showLoginScreen();
+        });
+
+        // Модальное окно создания истории
+        document.getElementById("createStoryForm").addEventListener("submit", (e) => {
+          e.preventDefault();
+          this.createStory();
+        });
+
+        document.getElementById("btnCancelStory").addEventListener("click", () => {
+          this.hideModal('createStoryModal');
+        });
+
+        document.querySelector("#createStoryModal .close-modal").addEventListener("click", () => {
+          this.hideModal('createStoryModal');
+        });
+
+        // Drag & drop для обложки
+        const dropZone = document.getElementById('coverDropZone');
+        const fileInput = document.getElementById('coverFile');
+
+        dropZone.addEventListener('click', () => {
+          fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+          this.handleCoverSelect(e.target.files[0]);
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropZone.classList.add('active');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+          dropZone.classList.remove('active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('active');
+          const file = e.dataTransfer.files[0];
+          if (file && file.type.startsWith('image/')) {
+            this.handleCoverSelect(file);
+          }
+        });
+
+        // Определение точности даты
+        document.getElementById('publishDate').addEventListener('input', (e) => {
+          this.updateDatePrecision(e.target.value);
+        });
+
+        // Темы оформления
+        document.querySelectorAll('.theme-option').forEach(option => {
+          option.addEventListener('click', (e) => {
+            this.selectTheme(e.currentTarget.dataset.theme);
+          });
+        });
+      }
+
+      handleLogin() {
+        const password = document.getElementById("adminPassword").value;
+        if (password === this.adminPassword) {
+          this.showAdminInterface();
+        } else {
+          alert("❌ Неверный пароль");
+        }
+      }
+
+      showView(viewName) {
+        // Скрыть все вью
+        document.getElementById('storiesView').style.display = 'none';
+        document.getElementById('scheduleView').style.display = 'none';
+        document.getElementById('importView').style.display = 'none';
+        document.getElementById('settingsView').style.display = 'none';
+
+        // Показать выбранную вью
+        document.getElementById(viewName + 'View').style.display = 'block';
+        this.currentView = viewName;
+
+        // Загрузить данные если нужно
+        if (viewName === 'stories') {
+          this.loadStories();
+        } else if (viewName === 'schedule') {
+          this.loadSchedule();
+        }
+      }
+
+      showCreateStoryModal() {
+        document.getElementById('createStoryModal').style.display = 'flex';
+        document.getElementById('createStoryForm').reset();
+        document.getElementById('coverPreview').style.display = 'none';
+        document.getElementById('datePrecision').textContent = '';
+      }
+
+      hideModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+      }
+
+      handleCoverSelect(file) {
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = document.getElementById('coverPreview');
+          const img = document.getElementById('coverPreviewImg');
+          img.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+
+      updateDatePrecision(dateString) {
+        const precisionEl = document.getElementById('datePrecision');
+        if (!dateString.trim()) {
+          precisionEl.textContent = '';
+          return;
+        }
+
+        // Проверяем формат даты
+        if (dateString.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+          precisionEl.textContent = '✅ точная дата';
+        } else if (dateString.match(/^\d{2}\.\d{4}$/)) {
+          precisionEl.textContent = '📅 месяц запланирован';
+        } else if (dateString.match(/^\d{4}$/)) {
+          precisionEl.textContent = '📅 год запланирован';
+        } else {
+          precisionEl.textContent = '❌ неверный формат (используйте ДД.ММ.ГГГГ, ММ.ГГГГ или ГГГГ)';
+        }
+      }
+
+      async createStory() {
+        const title = document.getElementById('storyTitle').value.trim();
+        const description = document.getElementById('storyDescription').value.trim();
+        const plannedEpisodes = document.getElementById('plannedEpisodes').value;
+        const publishDate = document.getElementById('publishDate').value.trim();
+
+        if (!title) {
+          alert('❌ Введите название истории');
+          return;
+        }
+
+        // Собираем выбранные жанры
+        const genres = [];
+        document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+          genres.push(checkbox.value);
+        });
+
+        try {
+          const storyData = {
+            title: title,
+            description: description,
+            coverUrl: document.getElementById('coverPreviewImg').src || '',
+            plannedEpisodes: plannedEpisodes ? parseInt(plannedEpisodes) : null,
+            publishDate: publishDate || null,
+            genres: genres,
+            status: 'announcement',
+            episodesCount: 0,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+
+          if (this.db) {
+            const docRef = await this.db.collection('stories').add(storyData);
+            console.log('✅ История создана:', docRef.id);
+          } else {
+            // Демо-режим
+            storyData.id = 'demo-' + Date.now();
+            this.stories.push(storyData);
+          }
+
+          this.hideModal('createStoryModal');
+          this.loadStories();
+          alert('✅ Анонс истории создан!');
+        } catch (error) {
+          console.error('Ошибка создания истории:', error);
+          alert('❌ Ошибка создания истории');
+        }
+      }
+
+      async loadStories() {
+        try {
+          if (this.db) {
+            const snapshot = await this.db.collection('stories').orderBy('createdAt', 'desc').get();
+            this.stories = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+          }
+
+          this.renderStories();
+        } catch (error) {
+          console.error('Ошибка загрузки историй:', error);
+          // Демо-данные
+          this.stories = [
+            {
+              id: 'demo-1',
+              title: 'Пример истории',
+              description: 'Это демонстрационная история',
+              status: 'announcement',
+              publishDate: '12.2024',
+              episodesCount: 0,
+              createdAt: new Date()
+            }
+          ];
+          this.renderStories();
+        }
+      }
+
+      renderStories() {
+        const container = document.getElementById('storiesList');
+        
+        if (this.stories.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">📚</div>
+              <p>Историй пока нет</p>
+              <p>Создайте первую историю</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = this.stories.map(story => `
+          <div class="story-card" onclick="adminPanel.openStoryConfig('${story.id}')">
+            <div class="story-header">
+              <h3 class="story-title">${story.title}</h3>
+              <div class="story-meta">
+                <span class="badge ${story.status}">${this.getStatusText(story.status)}</span>
+                ${story.episodesCount > 0 ? `<span class="badge">📊 ${story.episodesCount} эп.</span>` : ''}
+              </div>
+            </div>
+            <p class="story-desc">${story.description || 'Описание отсутствует'}</p>
+            ${story.publishDate ? `<div class="story-date">📅 ${this.formatPublishDate(story.publishDate)}</div>` : ''}
+          </div>
+        `).join('');
+      }
+
+      openStoryConfig(storyId) {
+        // Открываем страницу конфигурации истории
+        window.open(`admin_config.html?story=${storyId}`, '_blank');
+      }
+
+      async loadSchedule() {
+        const container = document.getElementById('scheduleList');
+        
+        // Фильтруем истории с датами публикации
+        const scheduledStories = this.stories.filter(story => story.publishDate);
+        
+        if (scheduledStories.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">📅</div>
+              <p>Нет запланированных публикаций</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = scheduledStories.map(story => `
+          <div class="schedule-item">
+            <div class="schedule-info">
+              <h4>${story.title}</h4>
+              <p>${story.description || 'Без описания'}</p>
+            </div>
+            <div class="schedule-date">
+              <div class="publish-date">${this.formatPublishDate(story.publishDate)}</div>
+              <div class="publish-status">${this.getStatusText(story.status)}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      selectTheme(theme) {
+        // Убираем активный класс у всех тем
+        document.querySelectorAll('.theme-option').forEach(option => {
+          option.classList.remove('active');
+        });
+        
+        // Добавляем активный класс выбранной теме
+        document.querySelector(`[data-theme="${theme}"]`).classList.add('active');
+        
+        // Применяем тему (здесь будет логика применения темы ко всему сайту)
+        this.applyTheme(theme);
+        alert(`✅ Тема "${theme}" применена`);
+      }
+
+      applyTheme(theme) {
+        // Здесь будет логика применения темы ко всему сайту
+        console.log('Применена тема:', theme);
+        // В будущем здесь будет код для применения CSS переменных и т.д.
+      }
+
+      getStatusText(status) {
+        const statuses = {
+          'announcement': 'Анонс',
+          'draft': 'Черновик',
+          'working': 'В работе',
+          'published': 'Опубликовано',
+          'hidden': 'Скрыто'
+        };
+        return statuses[status] || status;
+      }
+
+      formatPublishDate(dateString) {
+        if (dateString.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+          return `Запланировано: ${dateString}`;
+        } else if (dateString.match(/^\d{2}\.\d{4}$/)) {
+          const [month, year] = dateString.split('.');
+          const monthNames = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+          return `Запланировано на ${monthNames[parseInt(month) - 1]} ${year}`;
+        } else if (dateString.match(/^\d{4}$/)) {
+          return `Запланировано на ${dateString}`;
+        }
+        return dateString;
+      }
     }
 
-    async function loadStories() {
-      const snap = await db.collection("stories").orderBy("createdAt", "desc").get();
-      const list = document.getElementById("storiesList");
-      list.innerHTML = "";
-      snap.forEach(doc => {
-        const s = doc.data();
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-          <h3>${s.title}</h3>
-          <p>Статус: <strong>${s.status}</strong> | Эпизодов: ${s.episodesCount || 0}</p>
-          <button class="btn" onclick="location.href='reader.html?story=${doc.id}'">Открыть</button>
-          <button class="btn" style="background:#e91e63" onclick="db.collection('stories').doc('${doc.id}').delete().then(loadStories)">Удалить</button>
-        `;
-        list.appendChild(div);
-      });
-    }
-
-    loadStories();
+    // Инициализация админ-панели
+    document.addEventListener('DOMContentLoaded', () => {
+      window.adminPanel = new AdminPanel();
+    });
   </script>
-
-  <script src="themes-system.js"></script>
 </body>
 </html>
