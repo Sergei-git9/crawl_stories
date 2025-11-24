@@ -158,6 +158,12 @@
       text-align: center;
       font-weight: bold;
       border-bottom: 1px solid var(--border-light);
+      animation: slideDown 0.5s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-100%); }
+      to { transform: translateY(0); }
     }
 
     /* MAIN CONTENT */
@@ -458,8 +464,8 @@
 
     .theme-header {
       display: flex;
-      justify-content: between;
-      align-items: center;
+      justify-content: space-between;
+      align-items: flex-start;
       margin-bottom: 10px;
     }
 
@@ -485,6 +491,18 @@
       margin: 10px 0;
     }
 
+    .theme-settings {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      display: none;
+    }
+
+    .theme-settings.active {
+      display: block;
+    }
+
     /* EFFECTS CONTAINER */
     #theme-effects {
       position: fixed;
@@ -496,7 +514,7 @@
       z-index: 9999;
     }
 
-    .snowflake, .leaf, .petal, .particle {
+    .snowflake, .leaf, .petal, .particle, .bat {
       position: absolute;
       pointer-events: none;
       user-select: none;
@@ -628,6 +646,13 @@
         <div class="settings-grid">
           <div class="settings-card">
             <h3>🎨 Управление темами</h3>
+            <div style="margin-bottom: 20px;">
+              <div class="checkbox-group">
+                <input type="checkbox" id="autoThemeMode" checked>
+                <label for="autoThemeMode">🔄 Автоматическое переключение тем по датам</label>
+              </div>
+            </div>
+            
             <div class="theme-controls" id="themeControls">
               <!-- Themes will be loaded here -->
             </div>
@@ -635,6 +660,9 @@
             <div style="margin-top: 20px;">
               <button class="btn btn-success" onclick="adminPanel.createCustomTheme()">
                 🎨 Создать свою тему
+              </button>
+              <button class="btn btn-secondary" onclick="adminPanel.resetThemes()" style="margin-left: 10px;">
+                🔄 Сбросить все темы
               </button>
             </div>
           </div>
@@ -735,7 +763,7 @@
             startDate: "20.12",
             endDate: "10.01",
             effects: { snow: true, particlesSpeed: "normal" },
-            decorations: { logoEmoji: "🎄", cardCorner: "❄️", specialBanner: "С Новым Годом!" },
+            decorations: { logoEmoji: "🎄", cardCorner: "❄️", specialBanner: "🎄 С Новым Годом! 🎄" },
             colors: { accent: "#4fffdc", backgroundOverlay: "rgba(0,0,0,0.15)" }
           },
           christmas: {
@@ -745,7 +773,7 @@
             startDate: "05.01",
             endDate: "08.01",
             effects: { snow: true, particlesSpeed: "slow" },
-            decorations: { logoEmoji: "⭐", cardCorner: "🌟", specialBanner: "С Рождеством!" },
+            decorations: { logoEmoji: "⭐", cardCorner: "🌟", specialBanner: "⭐ С Рождеством! ⭐" },
             colors: { accent: "#ffd700", backgroundOverlay: "rgba(255,215,0,0.1)" }
           },
           halloween: {
@@ -755,7 +783,7 @@
             startDate: "27.10",
             endDate: "02.11",
             effects: { bats: true, fog: true },
-            decorations: { logoEmoji: "🎃", cardCorner: "👻", specialBanner: "Счастливого Хеллоуина!" },
+            decorations: { logoEmoji: "🎃", cardCorner: "👻", specialBanner: "🎃 Счастливого Хеллоуина! 🎃" },
             colors: { accent: "#ff8c00", backgroundOverlay: "rgba(128,0,128,0.1)" }
           },
           spring: {
@@ -765,7 +793,7 @@
             startDate: "01.03",
             endDate: "31.05",
             effects: { petals: true },
-            decorations: { logoEmoji: "🌸", cardCorner: "🌺", specialBanner: "Весна пришла!" },
+            decorations: { logoEmoji: "🌸", cardCorner: "🌺", specialBanner: "🌸 Весна пришла! 🌸" },
             colors: { accent: "#ff69b4", backgroundOverlay: "rgba(144,238,144,0.1)" }
           },
           summer: {
@@ -775,7 +803,7 @@
             startDate: "01.06",
             endDate: "31.08",
             effects: { particles: true },
-            decorations: { logoEmoji: "☀️", cardCorner: "🌊", specialBanner: "Летнее настроение!" },
+            decorations: { logoEmoji: "☀️", cardCorner: "🌊", specialBanner: "☀️ Летнее настроение! ☀️" },
             colors: { accent: "#00bfff", backgroundOverlay: "rgba(173,216,230,0.1)" }
           },
           autumn: {
@@ -785,7 +813,7 @@
             startDate: "01.09",
             endDate: "30.11",
             effects: { leaves: true },
-            decorations: { logoEmoji: "🍁", cardCorner: "🍂", specialBanner: "Осенняя пора!" },
+            decorations: { logoEmoji: "🍁", cardCorner: "🍂", specialBanner: "🍁 Осенняя пора! 🍁" },
             colors: { accent: "#ff8c00", backgroundOverlay: "rgba(210,180,140,0.1)" }
           },
           winter: {
@@ -795,7 +823,7 @@
             startDate: "01.12",
             endDate: "28.02",
             effects: { snow: true },
-            decorations: { logoEmoji: "🧊", cardCorner: "⛄", specialBanner: "Зимняя сказка!" },
+            decorations: { logoEmoji: "🧊", cardCorner: "⛄", specialBanner: "🧊 Зимняя сказка! 🧊" },
             colors: { accent: "#87ceeb", backgroundOverlay: "rgba(176,224,230,0.1)" }
           },
           birthday: {
@@ -803,7 +831,7 @@
             name: "День рождения сайта",
             auto: false,
             effects: { confetti: true },
-            decorations: { logoEmoji: "🎉", cardCorner: "🎂", specialBanner: "С Днем Рождения!" },
+            decorations: { logoEmoji: "🎉", cardCorner: "🎂", specialBanner: "🎉 С Днем Рождения! 🎉" },
             colors: { accent: "#ff69b4", backgroundOverlay: "rgba(255,105,180,0.1)" }
           },
           neon: {
@@ -811,7 +839,7 @@
             name: "Темная неоновая тема",
             auto: false,
             effects: {},
-            decorations: { logoEmoji: "✨", cardCorner: "💫", specialBanner: "Неоновая тема!" },
+            decorations: { logoEmoji: "✨", cardCorner: "💫", specialBanner: "✨ Неоновая тема! ✨" },
             colors: { accent: "#8a2be2", backgroundOverlay: "rgba(138,43,226,0.1)" }
           },
           anime: {
@@ -819,14 +847,60 @@
             name: "Аниме-тема",
             auto: false,
             effects: { hearts: true },
-            decorations: { logoEmoji: "💗", cardCorner: "😺", specialBanner: "Аниме режим!" },
+            decorations: { logoEmoji: "💗", cardCorner: "😺", specialBanner: "💗 Аниме режим! 💗" },
             colors: { accent: "#ff1493", backgroundOverlay: "rgba(255,20,147,0.1)" }
           }
         };
         
         this.currentTheme = null;
         this.manualTheme = null;
+        this.manualThemeExpiry = null;
+        this.autoMode = true;
         this.effectsContainer = document.getElementById('theme-effects');
+        
+        this.loadSettings();
+      }
+
+      async loadSettings() {
+        try {
+          // Пытаемся загрузить из localStorage
+          const saved = localStorage.getItem('themeSettings');
+          if (saved) {
+            const settings = JSON.parse(saved);
+            this.autoMode = settings.autoMode !== false;
+            this.manualTheme = settings.manualTheme || null;
+            this.manualThemeExpiry = settings.manualThemeExpiry || null;
+            
+            // Проверяем не истекла ли ручная тема
+            if (this.manualThemeExpiry && new Date() > new Date(this.manualThemeExpiry)) {
+              this.manualTheme = null;
+              this.manualThemeExpiry = null;
+              this.saveSettings();
+            }
+          }
+        } catch (e) {
+          console.warn('Ошибка загрузки настроек тем:', e);
+        }
+        
+        this.applyCurrentTheme();
+      }
+
+      async saveSettings() {
+        try {
+          const settings = {
+            autoMode: this.autoMode,
+            manualTheme: this.manualTheme,
+            manualThemeExpiry: this.manualThemeExpiry
+          };
+          localStorage.setItem('themeSettings', JSON.stringify(settings));
+          
+          // Также сохраняем в Firestore если доступно
+          if (window.adminPanel?.db) {
+            await window.adminPanel.db.collection('settings').doc('theme').set(settings);
+          }
+        } catch (e) {
+          console.warn('Ошибка сохранения настроек тем:', e);
+        }
       }
 
       getCurrentDate() {
@@ -856,6 +930,8 @@
       }
 
       detectAutoTheme() {
+        if (!this.autoMode) return null;
+        
         const currentDate = this.getCurrentDate();
         const activeThemes = [];
         
@@ -876,6 +952,18 @@
         if (seasonal) return seasonal;
         
         return activeThemes[0] || null;
+      }
+
+      applyCurrentTheme() {
+        let themeToApply = null;
+        
+        if (this.manualTheme) {
+          themeToApply = this.themes[this.manualTheme];
+        } else if (this.autoMode) {
+          themeToApply = this.detectAutoTheme();
+        }
+        
+        this.applyTheme(themeToApply);
       }
 
       applyTheme(theme) {
@@ -1019,7 +1107,7 @@
         for (let i = 0; i < 15; i++) {
           setTimeout(() => {
             const bat = document.createElement('div');
-            bat.className = 'particle';
+            bat.className = 'bat';
             bat.textContent = '🦇';
             bat.style.left = '-50px';
             bat.style.top = (Math.random() * 80 + 10) + '%';
@@ -1070,26 +1158,53 @@
         if (banner) banner.style.display = 'none';
       }
 
-      setManualTheme(themeId) {
-        this.manualTheme = this.themes[themeId];
-        this.applyTheme(this.manualTheme);
+      setManualTheme(themeId, days = null) {
+        this.manualTheme = themeId;
+        
+        if (days) {
+          const expiry = new Date();
+          expiry.setDate(expiry.getDate() + days);
+          this.manualThemeExpiry = expiry.toISOString();
+        } else {
+          this.manualThemeExpiry = null;
+        }
+        
+        this.saveSettings();
+        this.applyCurrentTheme();
       }
 
       disableManualTheme() {
         this.manualTheme = null;
-        const autoTheme = this.detectAutoTheme();
-        this.applyTheme(autoTheme);
+        this.manualThemeExpiry = null;
+        this.saveSettings();
+        this.applyCurrentTheme();
+      }
+
+      setAutoMode(enabled) {
+        this.autoMode = enabled;
+        this.saveSettings();
+        this.applyCurrentTheme();
       }
 
       getActiveTheme() {
-        return this.manualTheme || this.detectAutoTheme();
+        if (this.manualTheme) {
+          return {
+            theme: this.themes[this.manualTheme],
+            mode: 'manual',
+            expiry: this.manualThemeExpiry
+          };
+        } else if (this.autoMode) {
+          return {
+            theme: this.detectAutoTheme(),
+            mode: 'auto'
+          };
+        } else {
+          return { theme: null, mode: 'none' };
+        }
       }
 
       init() {
-        const activeTheme = this.getActiveTheme();
-        this.applyTheme(activeTheme);
-        
-        // Добавляем CSS анимации
+        this.applyCurrentTheme();
         this.addEffectAnimations();
       }
 
@@ -1206,6 +1321,12 @@
 
         document.getElementById("btnLogout").addEventListener("click", () => {
           this.showLoginScreen();
+        });
+
+        // Авто-режим тем
+        document.getElementById('autoThemeMode').addEventListener('change', (e) => {
+          this.themeSystem.setAutoMode(e.target.checked);
+          this.loadThemeControls();
         });
 
         // Модальное окно создания истории
@@ -1479,12 +1600,18 @@
 
       loadThemeControls() {
         const container = document.getElementById('themeControls');
-        const activeTheme = this.themeSystem.getActiveTheme();
+        const autoModeCheckbox = document.getElementById('autoThemeMode');
+        
+        // Устанавливаем состояние авто-режима
+        autoModeCheckbox.checked = this.themeSystem.autoMode;
+        
+        const activeThemeInfo = this.themeSystem.getActiveTheme();
         
         container.innerHTML = Object.values(this.themeSystem.themes).map(theme => {
-          const isActive = activeTheme && activeTheme.id === theme.id;
+          const isActive = activeThemeInfo.theme?.id === theme.id;
           const isAuto = this.themeSystem.detectAutoTheme()?.id === theme.id;
-          const isManual = this.themeSystem.manualTheme?.id === theme.id;
+          const isManual = this.themeSystem.manualTheme === theme.id;
+          const showSettings = isActive;
           
           return `
             <div class="theme-control ${isActive ? 'active' : ''}">
@@ -1503,9 +1630,9 @@
               </div>
               
               <div class="theme-controls-row">
-                <button class="btn btn-small ${isActive ? 'btn-success' : 'btn-secondary'}" 
+                <button class="btn btn-small ${isManual ? 'btn-success' : 'btn-secondary'}" 
                         onclick="adminPanel.toggleTheme('${theme.id}')">
-                  ${isActive ? '✅ Вкл' : '👁️ Включить'}
+                  ${isManual ? '✅ Вкл' : '👁️ Включить'}
                 </button>
                 
                 ${!theme.auto ? `
@@ -1516,18 +1643,38 @@
                 ` : ''}
                 
                 <button class="btn btn-small btn-secondary" 
-                        onclick="adminPanel.configureTheme('${theme.id}')">
+                        onclick="adminPanel.toggleThemeSettings('${theme.id}')">
                   ⚙️ Настроить
                 </button>
               </div>
               
-              ${isActive ? `
+              <div class="theme-settings ${showSettings ? 'active' : ''}" id="settings-${theme.id}">
+                <div style="margin-top: 10px;">
+                  <label>Включить на:</label>
+                  <select id="duration-${theme.id}" style="margin-left: 10px; padding: 4px;">
+                    <option value="1">1 день</option>
+                    <option value="3">3 дня</option>
+                    <option value="7">7 дней</option>
+                    <option value="30">30 дней</option>
+                    <option value="0">Постоянно</option>
+                  </select>
+                </div>
+                
                 <div style="margin-top: 10px;">
                   <label>Интенсивность эффектов:</label>
                   <input type="range" class="intensity-slider" min="1" max="10" value="5" 
                          onchange="adminPanel.setThemeIntensity('${theme.id}', this.value)">
                 </div>
-              ` : ''}
+                
+                ${isManual ? `
+                  <div style="margin-top: 10px;">
+                    <button class="btn btn-small btn-danger" 
+                            onclick="adminPanel.disableManualTheme()">
+                      🔄 Выключить ручную тему
+                    </button>
+                  </div>
+                ` : ''}
+              </div>
             </div>
           `;
         }).join('');
@@ -1537,13 +1684,22 @@
         const theme = this.themeSystem.themes[themeId];
         if (!theme) return;
         
-        if (this.themeSystem.manualTheme?.id === themeId) {
+        if (this.themeSystem.manualTheme === themeId) {
+          // Уже включена - отключаем
           this.themeSystem.disableManualTheme();
         } else {
-          this.themeSystem.setManualTheme(themeId);
+          // Включаем на выбранное количество дней
+          const durationSelect = document.getElementById(`duration-${themeId}`);
+          const days = durationSelect ? parseInt(durationSelect.value) : 7;
+          this.themeSystem.setManualTheme(themeId, days === 0 ? null : days);
         }
         
         this.loadThemeControls();
+      }
+
+      toggleThemeSettings(themeId) {
+        const settings = document.getElementById(`settings-${themeId}`);
+        settings.classList.toggle('active');
       }
 
       previewTheme(themeId) {
@@ -1552,15 +1708,15 @@
         
         this.themeSystem.applyTheme(theme);
         setTimeout(() => {
-          if (this.themeSystem.manualTheme?.id !== themeId) {
-            const activeTheme = this.themeSystem.getActiveTheme();
-            this.themeSystem.applyTheme(activeTheme);
+          if (this.themeSystem.manualTheme !== themeId) {
+            this.themeSystem.applyCurrentTheme();
           }
         }, 3000);
       }
 
-      configureTheme(themeId) {
-        alert(`Настройки темы "${this.themeSystem.themes[themeId]?.name}" будут доступны в следующем обновлении`);
+      disableManualTheme() {
+        this.themeSystem.disableManualTheme();
+        this.loadThemeControls();
       }
 
       setThemeIntensity(themeId, intensity) {
@@ -1570,6 +1726,16 @@
 
       createCustomTheme() {
         alert('Создание пользовательской темы будет доступно в следующем обновлении');
+      }
+
+      resetThemes() {
+        if (confirm('Сбросить все настройки тем? Будут включены стандартные настройки.')) {
+          this.themeSystem.disableManualTheme();
+          this.themeSystem.setAutoMode(true);
+          localStorage.removeItem('themeSettings');
+          this.loadThemeControls();
+          alert('✅ Настройки тем сброшены');
+        }
       }
 
       getStatusText(status) {
