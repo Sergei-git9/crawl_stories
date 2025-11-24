@@ -1246,7 +1246,7 @@
         this.stories = [];
         this.currentView = 'stories';
         this.adminPassword = "1111";
-        this.themeSystem = new ThemeSystem();
+        
         
         this.firebaseConfig = {
           apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
@@ -1273,7 +1273,7 @@
 
           this.setupEventListeners();
           this.showLoginScreen();
-          this.themeSystem.init();
+          
         } catch (error) {
           console.error("Ошибка инициализации:", error);
         }
@@ -1288,7 +1288,16 @@
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminInterface").style.display = "block";
         this.loadStories();
-        this.loadThemeControls();
+        
+        // Ждем пока themes-system.js загрузится и инициализируется
+        const waitForThemes = () => {
+          if (window.themesSystem) {
+            this.loadThemeControls();
+          } else {
+            setTimeout(waitForThemes, 50);
+          }
+        };
+        waitForThemes();
       }
 
       setupEventListeners() {
@@ -1605,13 +1614,19 @@
       }
 
       loadThemeControls() {
+        // ОБЯЗАТЕЛЬНО проверяем что window.themesSystem существует
+        if (!window.themesSystem) {
+          setTimeout(() => this.loadThemeControls(), 100);
+          return;
+        }
+
         const container = document.getElementById('themeControls');
         const autoModeCheckbox = document.getElementById('autoThemeMode');
         
         // Используем глобальную систему тем для синхронизации
-        const themes = window.themesSystem?.getAvailableThemes() || {};
-        const currentTheme = window.themesSystem?.getCurrentTheme();
-        const isManualMode = window.themesSystem?.isManualMode();
+        const themes = window.themesSystem.getAvailableThemes() || {};
+        const currentTheme = window.themesSystem.getCurrentTheme();
+        const isManualMode = window.themesSystem.isManualMode();
         
         container.innerHTML = Object.entries(themes).map(([themeKey, theme]) => {
           const isActive = isManualMode && currentTheme === themeKey;
