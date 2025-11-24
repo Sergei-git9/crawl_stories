@@ -151,6 +151,15 @@
       flex-wrap: wrap;
     }
 
+    /* THEME BANNER */
+    .theme-banner {
+      background: linear-gradient(135deg, var(--theme-accent, var(--accent-primary)), transparent);
+      padding: 10px 20px;
+      text-align: center;
+      font-weight: bold;
+      border-bottom: 1px solid var(--border-light);
+    }
+
     /* MAIN CONTENT */
     .main-content {
       max-width: 1200px;
@@ -173,11 +182,19 @@
       border: 1px solid var(--border-light);
       transition: border-color 0.3s;
       cursor: pointer;
+      position: relative;
     }
 
     .story-card:hover {
       border-color: rgba(255, 232, 31, 0.3);
       transform: translateY(-2px);
+    }
+
+    .story-card-corner {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 16px;
     }
 
     .story-header {
@@ -220,7 +237,7 @@
       color: #9e9e9e;
     }
 
-    .badge.working {
+    .badge.releasing {
       background: rgba(33, 150, 243, 0.1);
       color: #2196f3;
     }
@@ -420,29 +437,69 @@
       border: 1px solid var(--border-light);
     }
 
-    .theme-options {
+    .theme-controls {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 15px;
       margin-top: 15px;
     }
 
-    .theme-option {
+    .theme-control {
       background: var(--bg-secondary);
       padding: 15px;
       border-radius: 8px;
-      text-align: center;
-      cursor: pointer;
       border: 2px solid transparent;
       transition: all 0.3s;
     }
 
-    .theme-option:hover {
-      border-color: var(--accent-secondary);
+    .theme-control.active {
+      border-color: var(--accent-primary);
     }
 
-    .theme-option.active {
-      border-color: var(--accent-primary);
+    .theme-header {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .theme-name {
+      font-weight: bold;
+      color: var(--accent-primary);
+    }
+
+    .theme-dates {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .theme-controls-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .intensity-slider {
+      width: 100%;
+      margin: 10px 0;
+    }
+
+    /* EFFECTS CONTAINER */
+    #theme-effects {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .snowflake, .leaf, .petal, .particle {
+      position: absolute;
+      pointer-events: none;
+      user-select: none;
     }
 
     /* EMPTY STATES */
@@ -492,10 +549,20 @@
         text-align: left;
         width: 100%;
       }
+
+      .theme-controls {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- THEME EFFECTS CONTAINER -->
+  <div id="theme-effects"></div>
+
+  <!-- THEME BANNER -->
+  <div id="themeBanner" class="theme-banner" style="display: none;"></div>
+
   <!-- LOGIN SCREEN -->
   <div id="loginScreen" class="login-screen">
     <div class="login-card">
@@ -514,7 +581,7 @@
   <div id="adminInterface" class="admin-interface">
     <header>
       <div class="header-content">
-        <h1>⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES</h1>
+        <h1 id="siteLogo">⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES</h1>
         <div class="header-nav">
           <button id="btnCreateStory" class="btn btn-success">➕ Создать историю</button>
           <button id="btnStories" class="btn btn-secondary">📚 Истории</button>
@@ -560,24 +627,15 @@
         <h2>⚙️ Настройки сайта</h2>
         <div class="settings-grid">
           <div class="settings-card">
-            <h3>🎨 Темы оформления</h3>
-            <div class="theme-options">
-              <div class="theme-option active" data-theme="default">
-                <div style="font-size: 24px;">🌙</div>
-                <div>Тёмная тема</div>
-              </div>
-              <div class="theme-option" data-theme="light">
-                <div style="font-size: 24px;">☀️</div>
-                <div>Светлая тема</div>
-              </div>
-              <div class="theme-option" data-theme="newyear">
-                <div style="font-size: 24px;">❄️</div>
-                <div>Новый год</div>
-              </div>
-              <div class="theme-option" data-theme="halloween">
-                <div style="font-size: 24px;">🎃</div>
-                <div>Хэллоуин</div>
-              </div>
+            <h3>🎨 Управление темами</h3>
+            <div class="theme-controls" id="themeControls">
+              <!-- Themes will be loaded here -->
+            </div>
+            
+            <div style="margin-top: 20px;">
+              <button class="btn btn-success" onclick="adminPanel.createCustomTheme()">
+                🎨 Создать свою тему
+              </button>
             </div>
           </div>
         </div>
@@ -667,13 +725,414 @@
   </div>
 
   <script>
+    class ThemeSystem {
+      constructor() {
+        this.themes = {
+          new_year: {
+            id: "new_year",
+            name: "Новый год",
+            auto: true,
+            startDate: "20.12",
+            endDate: "10.01",
+            effects: { snow: true, particlesSpeed: "normal" },
+            decorations: { logoEmoji: "🎄", cardCorner: "❄️", specialBanner: "С Новым Годом!" },
+            colors: { accent: "#4fffdc", backgroundOverlay: "rgba(0,0,0,0.15)" }
+          },
+          christmas: {
+            id: "christmas",
+            name: "Рождество",
+            auto: true,
+            startDate: "05.01",
+            endDate: "08.01",
+            effects: { snow: true, particlesSpeed: "slow" },
+            decorations: { logoEmoji: "⭐", cardCorner: "🌟", specialBanner: "С Рождеством!" },
+            colors: { accent: "#ffd700", backgroundOverlay: "rgba(255,215,0,0.1)" }
+          },
+          halloween: {
+            id: "halloween",
+            name: "Хеллоуин",
+            auto: true,
+            startDate: "27.10",
+            endDate: "02.11",
+            effects: { bats: true, fog: true },
+            decorations: { logoEmoji: "🎃", cardCorner: "👻", specialBanner: "Счастливого Хеллоуина!" },
+            colors: { accent: "#ff8c00", backgroundOverlay: "rgba(128,0,128,0.1)" }
+          },
+          spring: {
+            id: "spring",
+            name: "Весна",
+            auto: true,
+            startDate: "01.03",
+            endDate: "31.05",
+            effects: { petals: true },
+            decorations: { logoEmoji: "🌸", cardCorner: "🌺", specialBanner: "Весна пришла!" },
+            colors: { accent: "#ff69b4", backgroundOverlay: "rgba(144,238,144,0.1)" }
+          },
+          summer: {
+            id: "summer",
+            name: "Лето",
+            auto: true,
+            startDate: "01.06",
+            endDate: "31.08",
+            effects: { particles: true },
+            decorations: { logoEmoji: "☀️", cardCorner: "🌊", specialBanner: "Летнее настроение!" },
+            colors: { accent: "#00bfff", backgroundOverlay: "rgba(173,216,230,0.1)" }
+          },
+          autumn: {
+            id: "autumn",
+            name: "Осень",
+            auto: true,
+            startDate: "01.09",
+            endDate: "30.11",
+            effects: { leaves: true },
+            decorations: { logoEmoji: "🍁", cardCorner: "🍂", specialBanner: "Осенняя пора!" },
+            colors: { accent: "#ff8c00", backgroundOverlay: "rgba(210,180,140,0.1)" }
+          },
+          winter: {
+            id: "winter",
+            name: "Зима",
+            auto: true,
+            startDate: "01.12",
+            endDate: "28.02",
+            effects: { snow: true },
+            decorations: { logoEmoji: "🧊", cardCorner: "⛄", specialBanner: "Зимняя сказка!" },
+            colors: { accent: "#87ceeb", backgroundOverlay: "rgba(176,224,230,0.1)" }
+          },
+          birthday: {
+            id: "birthday",
+            name: "День рождения сайта",
+            auto: false,
+            effects: { confetti: true },
+            decorations: { logoEmoji: "🎉", cardCorner: "🎂", specialBanner: "С Днем Рождения!" },
+            colors: { accent: "#ff69b4", backgroundOverlay: "rgba(255,105,180,0.1)" }
+          },
+          neon: {
+            id: "neon",
+            name: "Темная неоновая тема",
+            auto: false,
+            effects: {},
+            decorations: { logoEmoji: "✨", cardCorner: "💫", specialBanner: "Неоновая тема!" },
+            colors: { accent: "#8a2be2", backgroundOverlay: "rgba(138,43,226,0.1)" }
+          },
+          anime: {
+            id: "anime",
+            name: "Аниме-тема",
+            auto: false,
+            effects: { hearts: true },
+            decorations: { logoEmoji: "💗", cardCorner: "😺", specialBanner: "Аниме режим!" },
+            colors: { accent: "#ff1493", backgroundOverlay: "rgba(255,20,147,0.1)" }
+          }
+        };
+        
+        this.currentTheme = null;
+        this.manualTheme = null;
+        this.effectsContainer = document.getElementById('theme-effects');
+      }
+
+      getCurrentDate() {
+        const now = new Date();
+        return {
+          day: now.getDate(),
+          month: now.getMonth() + 1,
+          year: now.getFullYear()
+        };
+      }
+
+      isDateInRange(theme, currentDate) {
+        if (!theme.startDate || !theme.endDate) return false;
+        
+        const [startDay, startMonth] = theme.startDate.split('.').map(Number);
+        const [endDay, endMonth] = theme.endDate.split('.').map(Number);
+        
+        const current = currentDate.month * 100 + currentDate.day;
+        const start = startMonth * 100 + startDay;
+        const end = endMonth * 100 + endDay;
+        
+        if (start <= end) {
+          return current >= start && current <= end;
+        } else {
+          return current >= start || current <= end;
+        }
+      }
+
+      detectAutoTheme() {
+        const currentDate = this.getCurrentDate();
+        const activeThemes = [];
+        
+        for (const theme of Object.values(this.themes)) {
+          if (theme.auto && this.isDateInRange(theme, currentDate)) {
+            activeThemes.push(theme);
+          }
+        }
+        
+        // Приоритет: праздничные > сезонные > обычные
+        const holidayThemes = ['new_year', 'christmas', 'halloween', 'birthday'];
+        const seasonalThemes = ['spring', 'summer', 'autumn', 'winter'];
+        
+        const holiday = activeThemes.find(t => holidayThemes.includes(t.id));
+        if (holiday) return holiday;
+        
+        const seasonal = activeThemes.find(t => seasonalThemes.includes(t.id));
+        if (seasonal) return seasonal;
+        
+        return activeThemes[0] || null;
+      }
+
+      applyTheme(theme) {
+        if (!theme) {
+          this.clearTheme();
+          return;
+        }
+        
+        this.currentTheme = theme;
+        this.updateCSSVariables(theme);
+        this.updateDecorations(theme);
+        this.showBanner(theme);
+        this.createEffects(theme);
+        
+        console.log(`✅ Применена тема: ${theme.name}`);
+      }
+
+      updateCSSVariables(theme) {
+        const root = document.documentElement;
+        if (theme.colors?.accent) {
+          root.style.setProperty('--accent-primary', theme.colors.accent);
+        }
+      }
+
+      updateDecorations(theme) {
+        const logo = document.getElementById('siteLogo');
+        if (logo && theme.decorations?.logoEmoji) {
+          logo.innerHTML = `${theme.decorations.logoEmoji} АДМИН-ПАНЕЛЬ CRAWL.STORIES`;
+        }
+        
+        // Обновляем углы карточек историй
+        document.querySelectorAll('.story-card').forEach(card => {
+          let corner = card.querySelector('.story-card-corner');
+          if (!corner) {
+            corner = document.createElement('div');
+            corner.className = 'story-card-corner';
+            card.appendChild(corner);
+          }
+          corner.textContent = theme.decorations?.cardCorner || '';
+        });
+      }
+
+      showBanner(theme) {
+        const banner = document.getElementById('themeBanner');
+        if (banner && theme.decorations?.specialBanner) {
+          banner.textContent = theme.decorations.specialBanner;
+          banner.style.display = 'block';
+          banner.style.setProperty('--theme-accent', theme.colors?.accent);
+        } else if (banner) {
+          banner.style.display = 'none';
+        }
+      }
+
+      createEffects(theme) {
+        this.clearEffects();
+        
+        if (!theme.effects) return;
+        
+        if (theme.effects.snow) this.createSnowEffect();
+        if (theme.effects.leaves) this.createLeavesEffect();
+        if (theme.effects.petals) this.createPetalsEffect();
+        if (theme.effects.hearts) this.createHeartsEffect();
+        if (theme.effects.confetti) this.createConfettiEffect();
+        if (theme.effects.bats) this.createBatsEffect();
+        if (theme.effects.fog) this.createFogEffect();
+      }
+
+      createSnowEffect() {
+        for (let i = 0; i < 50; i++) {
+          setTimeout(() => {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.textContent = '❄';
+            snowflake.style.left = Math.random() * 100 + '%';
+            snowflake.style.fontSize = (8 + Math.random() * 12) + 'px';
+            snowflake.style.opacity = 0.3 + Math.random() * 0.7;
+            snowflake.style.animation = `fall ${3 + Math.random() * 5}s linear infinite`;
+            this.effectsContainer.appendChild(snowflake);
+          }, i * 100);
+        }
+      }
+
+      createLeavesEffect() {
+        for (let i = 0; i < 30; i++) {
+          setTimeout(() => {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf';
+            leaf.textContent = '🍁';
+            leaf.style.left = Math.random() * 100 + '%';
+            leaf.style.fontSize = (12 + Math.random() * 16) + 'px';
+            leaf.style.animation = `fall ${4 + Math.random() * 6}s linear infinite`;
+            this.effectsContainer.appendChild(leaf);
+          }, i * 150);
+        }
+      }
+
+      createPetalsEffect() {
+        for (let i = 0; i < 25; i++) {
+          setTimeout(() => {
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+            petal.textContent = '🌸';
+            petal.style.left = Math.random() * 100 + '%';
+            petal.style.fontSize = (10 + Math.random() * 14) + 'px';
+            petal.style.animation = `fall ${5 + Math.random() * 5}s linear infinite`;
+            this.effectsContainer.appendChild(petal);
+          }, i * 200);
+        }
+      }
+
+      createHeartsEffect() {
+        for (let i = 0; i < 20; i++) {
+          setTimeout(() => {
+            const heart = document.createElement('div');
+            heart.className = 'particle';
+            heart.textContent = '💗';
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.fontSize = (8 + Math.random() * 10) + 'px';
+            heart.style.animation = `fall ${6 + Math.random() * 4}s linear infinite`;
+            this.effectsContainer.appendChild(heart);
+          }, i * 250);
+        }
+      }
+
+      createConfettiEffect() {
+        const confettiChars = ['🎉', '🎊', '✨', '🌟'];
+        for (let i = 0; i < 40; i++) {
+          setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.className = 'particle';
+            confetti.textContent = confettiChars[Math.floor(Math.random() * confettiChars.length)];
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.fontSize = (10 + Math.random() * 12) + 'px';
+            confetti.style.animation = `fall ${2 + Math.random() * 3}s linear infinite`;
+            this.effectsContainer.appendChild(confetti);
+          }, i * 75);
+        }
+      }
+
+      createBatsEffect() {
+        for (let i = 0; i < 15; i++) {
+          setTimeout(() => {
+            const bat = document.createElement('div');
+            bat.className = 'particle';
+            bat.textContent = '🦇';
+            bat.style.left = '-50px';
+            bat.style.top = (Math.random() * 80 + 10) + '%';
+            bat.style.fontSize = (12 + Math.random() * 10) + 'px';
+            bat.style.animation = `fly ${8 + Math.random() * 4}s linear infinite`;
+            this.effectsContainer.appendChild(bat);
+          }, i * 1000);
+        }
+      }
+
+      createFogEffect() {
+        const fog = document.createElement('div');
+        fog.style.position = 'fixed';
+        fog.style.bottom = '0';
+        fog.style.left = '0';
+        fog.style.right = '0';
+        fog.style.height = '30%';
+        fog.style.background = 'linear-gradient(transparent, rgba(128, 128, 128, 0.3))';
+        fog.style.pointerEvents = 'none';
+        fog.style.zIndex = '9998';
+        document.body.appendChild(fog);
+      }
+
+      clearEffects() {
+        this.effectsContainer.innerHTML = '';
+        // Удаляем туман если есть
+        const fog = document.querySelector('div[style*="linear-gradient(transparent, rgba(128, 128, 128, 0.3)"]');
+        if (fog) fog.remove();
+      }
+
+      clearTheme() {
+        this.currentTheme = null;
+        this.clearEffects();
+        
+        // Восстанавливаем стандартные CSS переменные
+        const root = document.documentElement;
+        root.style.setProperty('--accent-primary', '#ffe81f');
+        
+        // Убираем декор
+        const logo = document.getElementById('siteLogo');
+        if (logo) logo.innerHTML = '⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES';
+        
+        document.querySelectorAll('.story-card-corner').forEach(corner => {
+          corner.remove();
+        });
+        
+        const banner = document.getElementById('themeBanner');
+        if (banner) banner.style.display = 'none';
+      }
+
+      setManualTheme(themeId) {
+        this.manualTheme = this.themes[themeId];
+        this.applyTheme(this.manualTheme);
+      }
+
+      disableManualTheme() {
+        this.manualTheme = null;
+        const autoTheme = this.detectAutoTheme();
+        this.applyTheme(autoTheme);
+      }
+
+      getActiveTheme() {
+        return this.manualTheme || this.detectAutoTheme();
+      }
+
+      init() {
+        const activeTheme = this.getActiveTheme();
+        this.applyTheme(activeTheme);
+        
+        // Добавляем CSS анимации
+        this.addEffectAnimations();
+      }
+
+      addEffectAnimations() {
+        if (!document.getElementById('theme-animations')) {
+          const style = document.createElement('style');
+          style.id = 'theme-animations';
+          style.textContent = `
+            @keyframes fall {
+              to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+              }
+            }
+            @keyframes fly {
+              0% {
+                transform: translateX(0) translateY(0);
+                opacity: 0;
+              }
+              10% {
+                opacity: 1;
+              }
+              90% {
+                opacity: 1;
+              }
+              100% {
+                transform: translateX(100vw) translateY(${Math.random() * 100 - 50}px);
+                opacity: 0;
+              }
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      }
+    }
+
     class AdminPanel {
       constructor() {
         this.stories = [];
         this.currentView = 'stories';
         this.adminPassword = "1111";
+        this.themeSystem = new ThemeSystem();
         
-        // Firebase конфигурация
         this.firebaseConfig = {
           apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
           authDomain: "crawl-stories.firebaseapp.com",
@@ -689,7 +1148,6 @@
 
       async init() {
         try {
-          // Инициализация Firebase
           if (typeof firebase !== 'undefined') {
             firebase.initializeApp(this.firebaseConfig);
             this.db = firebase.firestore();
@@ -700,6 +1158,7 @@
 
           this.setupEventListeners();
           this.showLoginScreen();
+          this.themeSystem.init();
         } catch (error) {
           console.error("Ошибка инициализации:", error);
         }
@@ -714,6 +1173,7 @@
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("adminInterface").style.display = "block";
         this.loadStories();
+        this.loadThemeControls();
       }
 
       setupEventListeners() {
@@ -796,13 +1256,6 @@
         document.getElementById('publishDate').addEventListener('input', (e) => {
           this.updateDatePrecision(e.target.value);
         });
-
-        // Темы оформления
-        document.querySelectorAll('.theme-option').forEach(option => {
-          option.addEventListener('click', (e) => {
-            this.selectTheme(e.currentTarget.dataset.theme);
-          });
-        });
       }
 
       handleLogin() {
@@ -830,6 +1283,8 @@
           this.loadStories();
         } else if (viewName === 'schedule') {
           this.loadSchedule();
+        } else if (viewName === 'settings') {
+          this.loadThemeControls();
         }
       }
 
@@ -970,6 +1425,7 @@
 
         container.innerHTML = this.stories.map(story => `
           <div class="story-card" onclick="adminPanel.openStoryConfig('${story.id}')">
+            <div class="story-card-corner"></div>
             <div class="story-header">
               <h3 class="story-title">${story.title}</h3>
               <div class="story-meta">
@@ -981,17 +1437,20 @@
             ${story.publishDate ? `<div class="story-date">📅 ${this.formatPublishDate(story.publishDate)}</div>` : ''}
           </div>
         `).join('');
+        
+        // Обновляем декор для текущей темы
+        if (this.themeSystem.currentTheme) {
+          this.themeSystem.updateDecorations(this.themeSystem.currentTheme);
+        }
       }
 
       openStoryConfig(storyId) {
-        // Открываем страницу конфигурации истории
         window.open(`admin_config.html?story=${storyId}`, '_blank');
       }
 
       async loadSchedule() {
         const container = document.getElementById('scheduleList');
         
-        // Фильтруем истории с датами публикации
         const scheduledStories = this.stories.filter(story => story.publishDate);
         
         if (scheduledStories.length === 0) {
@@ -1018,31 +1477,106 @@
         `).join('');
       }
 
-      selectTheme(theme) {
-        // Убираем активный класс у всех тем
-        document.querySelectorAll('.theme-option').forEach(option => {
-          option.classList.remove('active');
-        });
+      loadThemeControls() {
+        const container = document.getElementById('themeControls');
+        const activeTheme = this.themeSystem.getActiveTheme();
         
-        // Добавляем активный класс выбранной теме
-        document.querySelector(`[data-theme="${theme}"]`).classList.add('active');
-        
-        // Применяем тему (здесь будет логика применения темы ко всему сайту)
-        this.applyTheme(theme);
-        alert(`✅ Тема "${theme}" применена`);
+        container.innerHTML = Object.values(this.themeSystem.themes).map(theme => {
+          const isActive = activeTheme && activeTheme.id === theme.id;
+          const isAuto = this.themeSystem.detectAutoTheme()?.id === theme.id;
+          const isManual = this.themeSystem.manualTheme?.id === theme.id;
+          
+          return `
+            <div class="theme-control ${isActive ? 'active' : ''}">
+              <div class="theme-header">
+                <div>
+                  <div class="theme-name">${theme.decorations?.logoEmoji || '🎨'} ${theme.name}</div>
+                  ${theme.auto && theme.startDate ? 
+                    `<div class="theme-dates">Авто: ${theme.startDate} - ${theme.endDate}</div>` : 
+                    '<div class="theme-dates">Ручное включение</div>'
+                  }
+                </div>
+                <div>
+                  ${isAuto ? '<span style="color: var(--accent-primary); font-size: 12px;">🔄 Авто</span>' : ''}
+                  ${isManual ? '<span style="color: var(--accent-primary); font-size: 12px;">👆 Ручное</span>' : ''}
+                </div>
+              </div>
+              
+              <div class="theme-controls-row">
+                <button class="btn btn-small ${isActive ? 'btn-success' : 'btn-secondary'}" 
+                        onclick="adminPanel.toggleTheme('${theme.id}')">
+                  ${isActive ? '✅ Вкл' : '👁️ Включить'}
+                </button>
+                
+                ${!theme.auto ? `
+                  <button class="btn btn-small btn-info" 
+                          onclick="adminPanel.previewTheme('${theme.id}')">
+                    👀 Превью
+                  </button>
+                ` : ''}
+                
+                <button class="btn btn-small btn-secondary" 
+                        onclick="adminPanel.configureTheme('${theme.id}')">
+                  ⚙️ Настроить
+                </button>
+              </div>
+              
+              ${isActive ? `
+                <div style="margin-top: 10px;">
+                  <label>Интенсивность эффектов:</label>
+                  <input type="range" class="intensity-slider" min="1" max="10" value="5" 
+                         onchange="adminPanel.setThemeIntensity('${theme.id}', this.value)">
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
       }
 
-      applyTheme(theme) {
-        // Здесь будет логика применения темы ко всему сайту
-        console.log('Применена тема:', theme);
-        // В будущем здесь будет код для применения CSS переменных и т.д.
+      toggleTheme(themeId) {
+        const theme = this.themeSystem.themes[themeId];
+        if (!theme) return;
+        
+        if (this.themeSystem.manualTheme?.id === themeId) {
+          this.themeSystem.disableManualTheme();
+        } else {
+          this.themeSystem.setManualTheme(themeId);
+        }
+        
+        this.loadThemeControls();
+      }
+
+      previewTheme(themeId) {
+        const theme = this.themeSystem.themes[themeId];
+        if (!theme) return;
+        
+        this.themeSystem.applyTheme(theme);
+        setTimeout(() => {
+          if (this.themeSystem.manualTheme?.id !== themeId) {
+            const activeTheme = this.themeSystem.getActiveTheme();
+            this.themeSystem.applyTheme(activeTheme);
+          }
+        }, 3000);
+      }
+
+      configureTheme(themeId) {
+        alert(`Настройки темы "${this.themeSystem.themes[themeId]?.name}" будут доступны в следующем обновлении`);
+      }
+
+      setThemeIntensity(themeId, intensity) {
+        console.log(`Установлена интенсивность ${intensity} для темы ${themeId}`);
+        // Здесь будет логика изменения интенсивности эффектов
+      }
+
+      createCustomTheme() {
+        alert('Создание пользовательской темы будет доступно в следующем обновлении');
       }
 
       getStatusText(status) {
         const statuses = {
           'announcement': 'Анонс',
           'draft': 'Черновик',
-          'working': 'В работе',
+          'releasing': 'Выходит',
           'published': 'Опубликовано',
           'hidden': 'Скрыто'
         };
@@ -1066,6 +1600,7 @@
     // Инициализация админ-панели
     document.addEventListener('DOMContentLoaded', () => {
       window.adminPanel = new AdminPanel();
+      window.themeSystem = window.adminPanel.themeSystem;
     });
   </script>
 </body>
