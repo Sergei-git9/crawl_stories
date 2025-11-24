@@ -1324,10 +1324,16 @@
         });
 
         // Авто-режим тем
-        document.getElementById('autoThemeMode').addEventListener('change', (e) => {
-          this.themeSystem.setAutoMode(e.target.checked);
-          this.loadThemeControls();
-        });
+        if (document.getElementById('autoThemeMode')) {
+          document.getElementById('autoThemeMode').addEventListener('change', (e) => {
+            if (e.target.checked) {
+              window.themesSystem?.disableManualMode();
+            } else {
+              // Остаемся в ручном режиме
+            }
+            this.loadThemeControls();
+          });
+        }
 
         // Модальное окно создания истории
         document.getElementById("createStoryForm").addEventListener("submit", (e) => {
@@ -1602,78 +1608,40 @@
         const container = document.getElementById('themeControls');
         const autoModeCheckbox = document.getElementById('autoThemeMode');
         
-        // Устанавливаем состояние авто-режима
-        autoModeCheckbox.checked = this.themeSystem.autoMode;
+        // Используем глобальную систему тем для синхронизации
+        const themes = window.themesSystem?.getAvailableThemes() || {};
+        const currentTheme = window.themesSystem?.getCurrentTheme();
+        const isManualMode = window.themesSystem?.isManualMode();
         
-        const activeThemeInfo = this.themeSystem.getActiveTheme();
-        
-        container.innerHTML = Object.values(this.themeSystem.themes).map(theme => {
-          const isActive = activeThemeInfo.theme?.id === theme.id;
-          const isAuto = this.themeSystem.detectAutoTheme()?.id === theme.id;
-          const isManual = this.themeSystem.manualTheme === theme.id;
+        container.innerHTML = Object.entries(themes).map(([themeKey, theme]) => {
+          const isActive = isManualMode && currentTheme === themeKey;
+          const isManual = isManualMode && currentTheme === themeKey;
           const showSettings = isActive;
           
           return `
-            <div class="theme-control ${isActive ? 'active' : ''}">
-              <div class="theme-header">
+            <div class="theme-control ${isActive ? 'active' : ''}" style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border-light);">
+              <div class="theme-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <div>
-                  <div class="theme-name">${theme.decorations?.logoEmoji || '🎨'} ${theme.name}</div>
-                  ${theme.auto && theme.startDate ? 
-                    `<div class="theme-dates">Авто: ${theme.startDate} - ${theme.endDate}</div>` : 
-                    '<div class="theme-dates">Ручное включение</div>'
-                  }
+                  <div class="theme-name" style="font-weight: bold; font-size: 16px;">${theme.name}</div>
+                  <div class="theme-dates" style="font-size: 12px; color: var(--text-secondary);">Период: ${theme.startMonth}-${theme.startDay} по ${theme.endMonth}-${theme.endDay}</div>
                 </div>
                 <div>
-                  ${isAuto ? '<span style="color: var(--accent-primary); font-size: 12px;">🔄 Авто</span>' : ''}
-                  ${isManual ? '<span style="color: var(--accent-primary); font-size: 12px;">👆 Ручное</span>' : ''}
+                  ${isManual ? '<span style="color: var(--accent-primary); font-size: 12px; background: rgba(255,232,31,0.1); padding: 4px 8px; border-radius: 4px;">👆 Активна</span>' : ''}
                 </div>
               </div>
               
-              <div class="theme-controls-row">
+              <div class="theme-controls-row" style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <button class="btn btn-small ${isManual ? 'btn-success' : 'btn-secondary'}" 
-                        onclick="adminPanel.toggleTheme('${theme.id}')">
+                        onclick="window.themesSystem?.setManualTheme('${themeKey}'); document.getElementById('settingsView').innerHTML=''; setTimeout(() => window.adminPanel.loadThemeControls(), 100);"
+                        style="flex: 1; min-width: 100px;">
                   ${isManual ? '✅ Вкл' : '👁️ Включить'}
                 </button>
                 
-                ${!theme.auto ? `
-                  <button class="btn btn-small btn-info" 
-                          onclick="adminPanel.previewTheme('${theme.id}')">
-                    👀 Превью
-                  </button>
-                ` : ''}
-                
                 <button class="btn btn-small btn-secondary" 
-                        onclick="adminPanel.toggleThemeSettings('${theme.id}')">
-                  ⚙️ Настроить
+                        onclick="window.themesSystem?.disableManualMode(); setTimeout(() => window.adminPanel.loadThemeControls(), 100);"
+                        style="flex: 1; min-width: 100px;">
+                  🔄 Авто-режим
                 </button>
-              </div>
-              
-              <div class="theme-settings ${showSettings ? 'active' : ''}" id="settings-${theme.id}">
-                <div style="margin-top: 10px;">
-                  <label>Включить на:</label>
-                  <select id="duration-${theme.id}" style="margin-left: 10px; padding: 4px;">
-                    <option value="1">1 день</option>
-                    <option value="3">3 дня</option>
-                    <option value="7">7 дней</option>
-                    <option value="30">30 дней</option>
-                    <option value="0">Постоянно</option>
-                  </select>
-                </div>
-                
-                <div style="margin-top: 10px;">
-                  <label>Интенсивность эффектов:</label>
-                  <input type="range" class="intensity-slider" min="1" max="10" value="5" 
-                         onchange="adminPanel.setThemeIntensity('${theme.id}', this.value)">
-                </div>
-                
-                ${isManual ? `
-                  <div style="margin-top: 10px;">
-                    <button class="btn btn-small btn-danger" 
-                            onclick="adminPanel.disableManualTheme()">
-                      🔄 Выключить ручную тему
-                    </button>
-                  </div>
-                ` : ''}
               </div>
             </div>
           `;
@@ -1681,41 +1649,29 @@
       }
 
       toggleTheme(themeId) {
-        const theme = this.themeSystem.themes[themeId];
-        if (!theme) return;
-        
-        if (this.themeSystem.manualTheme === themeId) {
-          // Уже включена - отключаем
-          this.themeSystem.disableManualTheme();
+        // Используем глобальную систему для синхронизации
+        if (window.themesSystem?.getCurrentTheme() === themeId) {
+          window.themesSystem.disableManualMode();
         } else {
-          // Включаем на выбранное количество дней
-          const durationSelect = document.getElementById(`duration-${themeId}`);
-          const days = durationSelect ? parseInt(durationSelect.value) : 7;
-          this.themeSystem.setManualTheme(themeId, days === 0 ? null : days);
+          window.themesSystem?.setManualTheme(themeId);
         }
-        
         this.loadThemeControls();
       }
 
       toggleThemeSettings(themeId) {
         const settings = document.getElementById(`settings-${themeId}`);
-        settings.classList.toggle('active');
+        if (settings) settings.classList.toggle('active');
       }
 
       previewTheme(themeId) {
-        const theme = this.themeSystem.themes[themeId];
-        if (!theme) return;
-        
-        this.themeSystem.applyTheme(theme);
+        window.themesSystem?.setManualTheme(themeId);
         setTimeout(() => {
-          if (this.themeSystem.manualTheme !== themeId) {
-            this.themeSystem.applyCurrentTheme();
-          }
+          window.themesSystem?.disableManualMode();
         }, 3000);
       }
 
       disableManualTheme() {
-        this.themeSystem.disableManualTheme();
+        window.themesSystem?.disableManualMode();
         this.loadThemeControls();
       }
 
