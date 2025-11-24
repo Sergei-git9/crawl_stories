@@ -1,0 +1,108 @@
+СРОЧНО ПОЧИНИ ОТОБРАЖЕНИЕ ИСТОРИЙ НА ГЛАВНОЙ СТРАНИЦЕ index.html
+
+ПРОБЛЕМА:
+Истории создаются в админке (admin.html) и сохраняются в Firebase, но НЕ ПОКАЗЫВАЮТСЯ на главной странице index.html
+
+ЗАДАЧА:
+Добавить на index.html полный функционал для:
+1. ✅ Подключения Firebase 
+2. ✅ Загрузки историй из Firestore
+3. ✅ Отображения историй в красивом grid
+4. ✅ Фильтрации по статусам (published, releasing)
+5. ✅ Работы системы тем
+
+ТРЕБОВАНИЯ:
+- Использовать ТУ ЖЕ конфигурацию Firebase что и в admin.html
+- Показывать только истории со статусами: 'published', 'releasing'
+- Сохранить дизайн и стили как в админке
+- Не сломать систему тем
+- Добавить обработку ошибок
+
+КОНКРЕТНОЕ ЗАДАНИЕ:
+Добавить в index.html между тегами <script> и </script> этот код:
+
+```javascript
+// Конфигурация Firebase (такая же как в админке)
+const firebaseConfig = {
+  apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
+  authDomain: "crawl-stories.firebaseapp.com",
+  projectId: "crawl-stories", 
+  storageBucket: "crawl-stories.firebasestorage.app",
+  messagingSenderId: "886479757650",
+  appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
+  measurementId: "G-SGC2HF0455",
+};
+
+class MainPage {
+  constructor() {
+    this.stories = [];
+    this.db = null;
+  }
+
+  async init() {
+    try {
+      // Инициализация Firebase
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        this.db = firebase.firestore();
+        console.log("🔥 Firebase инициализирован на главной странице");
+      }
+
+      // Загрузка историй
+      await this.loadStories();
+      
+    } catch (error) {
+      console.error("Ошибка инициализации:", error);
+    }
+  }
+
+  async loadStories() {
+    try {
+      if (!this.db) {
+        console.warn("Firebase недоступен");
+        return;
+      }
+
+      const snapshot = await this.db.collection('stories')
+        .where('status', 'in', ['published', 'releasing'])
+        .orderBy('createdAt', 'desc')
+        .get();
+      
+      this.stories = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      this.renderStories();
+      
+    } catch (error) {
+      console.error('Ошибка загрузки историй:', error);
+    }
+  }
+
+  renderStories() {
+    const container = document.getElementById('storiesList');
+    if (!container) return;
+    
+    if (this.stories.length === 0) {
+      container.innerHTML = '<div class="empty-state">Нет опубликованных историй</div>';
+      return;
+    }
+
+    container.innerHTML = this.stories.map(story => `
+      <div class="story-card">
+        <h3>${story.title}</h3>
+        <p>${story.description || 'Описание отсутствует'}</p>
+        <div class="story-meta">
+          <span class="badge">${story.status}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// Автоматическая инициализация
+document.addEventListener('DOMContentLoaded', () => {
+  window.mainPage = new MainPage();
+  window.mainPage.init();
+});

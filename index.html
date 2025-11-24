@@ -79,8 +79,8 @@
     async function loadStories() {
       try {
         const snap = await db.collection("stories")
-          .where("visibility", "==", "public")
-          .orderBy("firstEpisodeDate", "desc")
+          .where("status", "in", ["published", "releasing"])
+          .orderBy("createdAt", "desc")
           .get();
 
         const container = document.getElementById("stories");
@@ -92,8 +92,8 @@
         container.innerHTML = ""; // очистим "Загрузка"
         snap.forEach(doc => {
           const s = doc.data();
-          const statusClass = s.status === "announced" ? "new" : s.status === "finished" ? "finished" : "ongoing";
-          const statusText = s.status === "announced" ? "Новинка" : s.status === "finished" ? "Закончена" : "В процессе";
+          const statusClass = s.status === "published" ? "new" : s.status === "releasing" ? "ongoing" : "finished";
+          const statusText = s.status === "published" ? "Опубликована" : s.status === "releasing" ? "Выходит" : "Закончена";
 
           const card = document.createElement("a");
           card.href = `story-info.html?id=${doc.id}`;
