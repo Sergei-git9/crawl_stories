@@ -620,29 +620,31 @@
         </div>
       </div>
 
-     <div id="scheduleView" style="display: none;">
-  <h2>📅 График публикаций</h2>
-  
-  <!-- ВКЛАДКИ -->
-  <div class="tabs-container" style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
-    <button class="tab active" data-tab="episodes" style="padding: 10px 20px; background: var(--accent-primary); color: var(--bg-primary); border: none; border-radius: 8px; cursor: pointer;">
-      📖 Эпизоды
-    </button>
-    <button class="tab" data-tab="stories" style="padding: 10px 20px; background: transparent; color: var(--text-secondary); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer;">
-      📅 Истории
-    </button>
-  </div>
-  
-  <!-- ЭПИЗОДЫ -->
-  <div id="episodesSchedule" class="schedule-list">
-    <div class="loading">Загрузка эпизодов...</div>
-  </div>
-  
-  <!-- ИСТОРИИ -->
-  <div id="storiesSchedule" class="schedule-list" style="display: none;">
-    <div class="loading">Загрузка историй...</div>
-  </div>
-</div>
+      <!-- SCHEDULE VIEW -->
+      <div id="scheduleView" style="display: none;">
+        <h2>📅 График публикаций</h2>
+        
+        <!-- ВКЛАДКИ -->
+        <div class="tabs-container" style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
+          <button class="tab active" data-tab="episodes" style="padding: 10px 20px; background: var(--accent-primary); color: var(--bg-primary); border: none; border-radius: 8px; cursor: pointer;">
+            📖 Эпизоды
+          </button>
+          <button class="tab" data-tab="stories" style="padding: 10px 20px; background: transparent; color: var(--text-secondary); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer;">
+            📅 Истории
+          </button>
+        </div>
+        
+        <!-- ЭПИЗОДЫ -->
+        <div id="episodesSchedule" class="schedule-list">
+          <div class="loading">Загрузка эпизодов...</div>
+        </div>
+        
+        <!-- ИСТОРИИ -->
+        <div id="storiesSchedule" class="schedule-list" style="display: none;">
+          <div class="loading">Загрузка историй...</div>
+        </div>
+      </div>
+
       <!-- IMPORT VIEW -->
       <div id="importView" style="display: none;">
         <h2>📥 Импорт готовой истории</h2>
@@ -1258,8 +1260,6 @@
         this.stories = [];
         this.currentView = 'stories';
         this.adminPassword = "1111";
-        this.setupScheduleTabs();
-        
         
         this.firebaseConfig = {
           apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
@@ -1431,189 +1431,185 @@
         if (viewName === 'stories') {
           this.loadStories();
         } else if (viewName === 'schedule') {
-  this.loadEpisodesSchedule();
-  setTimeout(() => {
-    this.setupScheduleTabs();
-  }, 100);
-}
-        }
-      
-setupScheduleTabs() {
-  const tabs = document.querySelectorAll('#scheduleView .tab');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      // Убрать активный класс
-      tabs.forEach(t => {
-        t.style.background = 'transparent';
-        t.style.color = 'var(--text-secondary)';
-        t.style.border = '1px solid var(--border-light)';
-      });
-      
-      // Добавить активный класс
-      tab.style.background = 'var(--accent-primary)';
-      tab.style.color = 'var(--bg-primary)';
-      tab.style.border = 'none';
-      
-      // Переключить контент
-      const tabName = tab.dataset.tab;
-      document.getElementById('episodesSchedule').style.display = 'none';
-      document.getElementById('storiesSchedule').style.display = 'none';
-      document.getElementById(tabName + 'Schedule').style.display = 'block';
-      
-      // Загрузить данные
-      if (tabName === 'episodes') {
-        this.loadEpisodesSchedule();
-      } else {
-        this.loadStoriesSchedule();
-      }
-    });
-  });
-}
-
-async loadEpisodesSchedule() {
-  try {
-    const container = document.getElementById('episodesSchedule');
-    container.innerHTML = '<div class="loading">Загрузка эпизодов...</div>';
-    
-    if (!this.db) {
-      container.innerHTML = '<div class="empty-state">Firebase недоступен</div>';
-      return;
-    }
-    
-    const episodesSnapshot = await this.db.collection('episodes')
-      .where('status', 'in', ['scheduled', 'published'])
-      .get();
-    
-    if (episodesSnapshot.empty) {
-      container.innerHTML = '<div class="empty-state">Нет запланированных эпизодов</div>';
-      return;
-    }
-    
-    const episodesWithStories = await Promise.all(
-      episodesSnapshot.docs.map(async (doc) => {
-        const episode = { id: doc.id, ...doc.data() };
-        try {
-          const storyDoc = await this.db.collection('stories').doc(episode.storyId).get();
-          episode.storyTitle = storyDoc.exists ? storyDoc.data().title : 'Неизвестная история';
-        } catch (e) {
-          episode.storyTitle = 'Ошибка загрузки';
-        }
-        return episode;
-      })
-    );
-    
-    container.innerHTML = episodesWithStories.map(episode => {
-      const publishDate = episode.publishDate ? 
-        (episode.publishDate.toDate ? episode.publishDate.toDate() : new Date(episode.publishDate)) : 
-        new Date();
-      
-      return `
-        <div class="schedule-item">
-          <div class="schedule-info">
-            <h4>${episode.storyTitle} #${episode.episodeNumber} - ${episode.title}</h4>
-            <p>${episode.description || 'Без описания'}</p>
-          </div>
-          <div class="schedule-date">
-            <input type="datetime-local" 
-                   value="${publishDate.toISOString().slice(0, 16)}"
-                   onchange="adminPanel.updateEpisodeDate('${episode.id}', this.value)"
-                   style="padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);">
-            <div class="publish-status">${episode.status === 'published' ? '✅ Опубликован' : '⏳ Запланирован'}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
-    
-  } catch (error) {
-    console.error('Ошибка загрузки эпизодов:', error);
-    document.getElementById('episodesSchedule').innerHTML = '<div class="empty-state">Ошибка загрузки эпизодов</div>';
-  }
-}
-
-async loadStoriesSchedule() {
-  try {
-    const container = document.getElementById('storiesSchedule');
-    
-    // Истории без эпизодов и с статусом анонс
-    const storiesForAnnounce = this.stories.filter(story => 
-      (story.episodesCount === 0 || !story.episodesCount) && 
-      story.status === 'announcement'
-    );
-    
-    if (storiesForAnnounce.length === 0) {
-      container.innerHTML = '<div class="empty-state">Нет историй для планирования анонсов</div>';
-      return;
-    }
-    
-    container.innerHTML = storiesForAnnounce.map(story => {
-      let currentDate = '';
-      if (story.publishDate) {
-        try {
-          if (story.publishDate.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
-            const [day, month, year] = story.publishDate.split('.');
-            currentDate = `${year}-${month}-${day}`;
-          }
-        } catch (e) {}
-      }
-      
-      return `
-        <div class="schedule-item">
-          <div class="schedule-info">
-            <h4>${story.title}</h4>
-            <p>${story.description || 'Без описания'}</p>
-          </div>
-          <div class="schedule-date">
-            <input type="date" 
-                   value="${currentDate}"
-                   onchange="adminPanel.updateStoryAnnounceDate('${story.id}', this.value)"
-                   style="padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);"
-                   placeholder="Задать дату анонса">
-            <div class="publish-status">${story.publishDate ? '📅 Запланирован' : '⏳ Без даты'}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
-    
-  } catch (error) {
-    console.error('Ошибка загрузки историй:', error);
-    document.getElementById('storiesSchedule').innerHTML = '<div class="empty-state">Ошибка загрузки историй</div>';
-  }
-}
-
-async updateEpisodeDate(episodeId, newDate) {
-  try {
-    await this.db.collection('episodes').doc(episodeId).update({
-      publishDate: new Date(newDate),
-      updatedAt: new Date()
-    });
-    alert('✅ Дата эпизода обновлена!');
-    this.loadEpisodesSchedule();
-  } catch (error) {
-    console.error('Ошибка:', error);
-    alert('❌ Ошибка обновления даты эпизода');
-  }
-}
-
-async updateStoryAnnounceDate(storyId, newDate) {
-  try {
-    const date = new Date(newDate);
-    const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
-    
-    await this.db.collection('stories').doc(storyId).update({
-      publishDate: formattedDate,
-      updatedAt: new Date()
-    });
-    
-    alert('✅ Дата анонса установлена!');
-    this.loadStoriesSchedule();
-    
-  } catch (error) {
-    console.error('Ошибка:', error);
-    alert('❌ Ошибка установки даты анонса');
-  }
-}
-      else if (viewName === 'settings') {
+          this.loadEpisodesSchedule();
+          this.setupScheduleTabs();
+        } else if (viewName === 'settings') {
           this.loadThemeControls();
+        }
+      }
+
+      setupScheduleTabs() {
+        const tabs = document.querySelectorAll('#scheduleView .tab');
+        tabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            // Убрать активный класс
+            tabs.forEach(t => {
+              t.style.background = 'transparent';
+              t.style.color = 'var(--text-secondary)';
+              t.style.border = '1px solid var(--border-light)';
+            });
+            
+            // Добавить активный класс
+            tab.style.background = 'var(--accent-primary)';
+            tab.style.color = 'var(--bg-primary)';
+            tab.style.border = 'none';
+            
+            // Переключить контент
+            const tabName = tab.dataset.tab;
+            document.getElementById('episodesSchedule').style.display = 'none';
+            document.getElementById('storiesSchedule').style.display = 'none';
+            document.getElementById(tabName + 'Schedule').style.display = 'block';
+            
+            // Загрузить данные
+            if (tabName === 'episodes') {
+              this.loadEpisodesSchedule();
+            } else {
+              this.loadStoriesSchedule();
+            }
+          });
+        });
+      }
+
+      async loadEpisodesSchedule() {
+        try {
+          const container = document.getElementById('episodesSchedule');
+          container.innerHTML = '<div class="loading">Загрузка эпизодов...</div>';
+          
+          if (!this.db) {
+            container.innerHTML = '<div class="empty-state">Firebase недоступен</div>';
+            return;
+          }
+          
+          const episodesSnapshot = await this.db.collection('episodes')
+            .where('status', 'in', ['scheduled', 'published'])
+            .get();
+          
+          if (episodesSnapshot.empty) {
+            container.innerHTML = '<div class="empty-state">Нет запланированных эпизодов</div>';
+            return;
+          }
+          
+          const episodesWithStories = await Promise.all(
+            episodesSnapshot.docs.map(async (doc) => {
+              const episode = { id: doc.id, ...doc.data() };
+              try {
+                const storyDoc = await this.db.collection('stories').doc(episode.storyId).get();
+                episode.storyTitle = storyDoc.exists ? storyDoc.data().title : 'Неизвестная история';
+              } catch (e) {
+                episode.storyTitle = 'Ошибка загрузки';
+              }
+              return episode;
+            })
+          );
+          
+          container.innerHTML = episodesWithStories.map(episode => {
+            const publishDate = episode.publishDate ? 
+              (episode.publishDate.toDate ? episode.publishDate.toDate() : new Date(episode.publishDate)) : 
+              new Date();
+            
+            return `
+              <div class="schedule-item">
+                <div class="schedule-info">
+                  <h4>${episode.storyTitle} #${episode.episodeNumber} - ${episode.title}</h4>
+                  <p>${episode.description || 'Без описания'}</p>
+                </div>
+                <div class="schedule-date">
+                  <input type="datetime-local" 
+                         value="${publishDate.toISOString().slice(0, 16)}"
+                         onchange="adminPanel.updateEpisodeDate('${episode.id}', this.value)"
+                         style="padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);">
+                  <div class="publish-status">${episode.status === 'published' ? '✅ Опубликован' : '⏳ Запланирован'}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+          
+        } catch (error) {
+          console.error('Ошибка загрузки эпизодов:', error);
+          document.getElementById('episodesSchedule').innerHTML = '<div class="empty-state">Ошибка загрузки эпизодов</div>';
+        }
+      }
+
+      async loadStoriesSchedule() {
+        try {
+          const container = document.getElementById('storiesSchedule');
+          
+          // Истории без эпизодов и с статусом анонс
+          const storiesForAnnounce = this.stories.filter(story => 
+            (story.episodesCount === 0 || !story.episodesCount) && 
+            story.status === 'announcement'
+          );
+          
+          if (storiesForAnnounce.length === 0) {
+            container.innerHTML = '<div class="empty-state">Нет историй для планирования анонсов</div>';
+            return;
+          }
+          
+          container.innerHTML = storiesForAnnounce.map(story => {
+            let currentDate = '';
+            if (story.publishDate) {
+              try {
+                if (story.publishDate.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+                  const [day, month, year] = story.publishDate.split('.');
+                  currentDate = `${year}-${month}-${day}`;
+                }
+              } catch (e) {}
+            }
+            
+            return `
+              <div class="schedule-item">
+                <div class="schedule-info">
+                  <h4>${story.title}</h4>
+                  <p>${story.description || 'Без описания'}</p>
+                </div>
+                <div class="schedule-date">
+                  <input type="date" 
+                         value="${currentDate}"
+                         onchange="adminPanel.updateStoryAnnounceDate('${story.id}', this.value)"
+                         style="padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);"
+                         placeholder="Задать дату анонса">
+                  <div class="publish-status">${story.publishDate ? '📅 Запланирован' : '⏳ Без даты'}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+          
+        } catch (error) {
+          console.error('Ошибка загрузки историй:', error);
+          document.getElementById('storiesSchedule').innerHTML = '<div class="empty-state">Ошибка загрузки историй</div>';
+        }
+      }
+
+      async updateEpisodeDate(episodeId, newDate) {
+        try {
+          await this.db.collection('episodes').doc(episodeId).update({
+            publishDate: new Date(newDate),
+            updatedAt: new Date()
+          });
+          alert('✅ Дата эпизода обновлена!');
+          this.loadEpisodesSchedule();
+        } catch (error) {
+          console.error('Ошибка:', error);
+          alert('❌ Ошибка обновления даты эпизода');
+        }
+      }
+
+      async updateStoryAnnounceDate(storyId, newDate) {
+        try {
+          const date = new Date(newDate);
+          const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+          
+          await this.db.collection('stories').doc(storyId).update({
+            publishDate: formattedDate,
+            updatedAt: new Date()
+          });
+          
+          alert('✅ Дата анонса установлена!');
+          this.loadStoriesSchedule();
+          
+        } catch (error) {
+          console.error('Ошибка:', error);
+          alert('❌ Ошибка установки даты анонса');
         }
       }
 
@@ -1777,35 +1773,6 @@ async updateStoryAnnounceDate(storyId, newDate) {
 
       openStoryConfig(storyId) {
         window.open(`admin_config.html?story=${storyId}`, '_blank');
-      }
-
-      async loadSchedule() {
-        const container = document.getElementById('scheduleList');
-        
-        const scheduledStories = this.stories.filter(story => story.publishDate);
-        
-        if (scheduledStories.length === 0) {
-          container.innerHTML = `
-            <div class="empty-state">
-              <div class="icon">📅</div>
-              <p>Нет запланированных публикаций</p>
-            </div>
-          `;
-          return;
-        }
-
-        container.innerHTML = scheduledStories.map(story => `
-          <div class="schedule-item">
-            <div class="schedule-info">
-              <h4>${story.title}</h4>
-              <p>${story.description || 'Без описания'}</p>
-            </div>
-            <div class="schedule-date">
-              <div class="publish-date">${this.formatPublishDate(story.publishDate)}</div>
-              <div class="publish-status">${this.getStatusText(story.status)}</div>
-            </div>
-          </div>
-        `).join('');
       }
 
       loadThemeControls() {
