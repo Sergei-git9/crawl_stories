@@ -1548,6 +1548,8 @@
       renderStories() {
         const container = document.getElementById('storiesList');
         
+        if (!container) return;
+        
         if (this.stories.length === 0) {
           container.innerHTML = `
             <div class="empty-state">
@@ -1574,8 +1576,8 @@
           </div>
         `).join('');
         
-        // Обновляем декор для текущей темы
-        if (this.themeSystem.currentTheme) {
+        // БЕЗОПАСНОЕ ОБНОВЛЕНИЕ ДЕКОРАЦИЙ
+        if (this.themeSystem && this.themeSystem.currentTheme) {
           this.themeSystem.updateDecorations(this.themeSystem.currentTheme);
         }
       }
