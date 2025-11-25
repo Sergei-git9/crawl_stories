@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CRAWL.STORIES</title>
   <style>
     :root{--bg:#020205;--card:#0b0b0f;--text:#fff;--muted:#9aa0a6;--accent:#FFE81F;--border:rgba(255,255,255,0.1)}
@@ -20,7 +20,7 @@
     .cover{width:100%;height:200px;background:linear-gradient(135deg,#1a1a1a,#0f0f14);display:flex;align-items:center;justify-content:center;color:#444;font-size:40px;font-weight:bold}
     .info{padding:1rem}
     .title{font-size:18px;font-weight:bold;margin-bottom:8px}
-    .desc{font-size:14px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+    .desc{font-size:14px;color:var(--muted);margin-bottom:12px}
     .status{display:inline-block;padding:4px 10px;background:rgba(255,232,31,.2);color:var(--accent);border:1px solid var(--accent);border-radius:6px;font-weight:bold;font-size:12px}
     footer{background:rgba(2,2,5,.95);padding:2rem;text-align:center;border-top:1px solid var(--border);color:var(--muted);font-size:14px}
     footer a{color:var(--accent);text-decoration:none;margin:0 10px}
@@ -40,7 +40,7 @@
     <button class="btn" data-filter="finished">Закончены</button>
     <button class="btn" data-filter="abandoned">Брошены</button>
   </div>
-  <div id="grid"></div>
+  <div id="grid">Загрузка историй...</div>
 </main>
 
 <footer>
@@ -48,73 +48,71 @@
   <div><a href="about.html">О проекте</a> • <a href="privacy.html">Конфиденциальность</a></div>
 </footer>
 
-<!-- Подключаем авторизацию -->
-<script type="module" src="auth-system.js"></script>
+<script src="auth-system.js"></script>
+<script src="themes-system.js"></script>
 
-<!-- Основной скрипт страницы -->
-<script type="module">
-  import { db } from './auth-system.js';
+<script>
+// Ждём, пока db будет доступен
+const waitForDb = setInterval(() => {
+  if (window.db) {
+    clearInterval(waitForDb);
+    loadStories();
+  }
+}, 100);
 
-  class MainPage {
-    constructor() { this.stories = []; }
-    async init() {
-      await this.load();
-      this.setup();
-      this.render();
-    }
-    async load() {
-      const snap = await db.collection("stories").get();
-      this.stories = snap.docs.map(d => ({id: d.id, ...d.data()}))
-        .filter(s => s.status !== "draft" && s.visibility !== "hidden");
-    }
-    setup() {
-      document.getElementById("search").addEventListener("input", () => this.render());
-      document.querySelectorAll(".btn").forEach(b => b.addEventListener("click", () => {
-        document.querySelectorAll(".btn").forEach(x => x.classList.remove("active"));
-        b.classList.add("active");
-        this.render();
-      }));
-    }
-    getStatus(s) {
-      if (s.status === "announcement") return "Анонс";
-      if (s.status === "new") return "Новинка";
-      if (s.status === "finished") return "Закончена";
-      if (s.status === "abandoned") return "Брошена";
-      return "Выходит";
-    }
-    render() {
-      const q = document.getElementById("search").value.toLowerCase();
-      const f = document.querySelector(".btn.active").dataset.filter;
-      const list = this.stories.filter(s => {
+async function loadStories() {
+  try {
+    const snap = await db.collection("stories").get();
+    const stories = snap.docs.map(d => ({id: d.id, ...d.data()}))
+      .filter(s => s.status !== "draft" && s.visibility !== "hidden");
+
+    const grid = document.getElementById("grid");
+    const search = document.getElementById("search");
+
+    const render = () => {
+      const q = search.value.toLowerCase();
+      const active = document.querySelector(".btn.active").dataset.filter;
+      const filtered = stories.filter(s => {
         const match = (s.title||"").toLowerCase().includes(q) || (s.description||"").toLowerCase().includes(q);
         if (!match) return false;
-        const st = this.getStatus(s);
-        return f === "all" || 
-               (f === "announcement" && st === "Анонс") ||
-               (f === "new" && st === "Новинка") ||
-               (f === "releasing" && st === "Выходит") ||
-               (f === "finished" && st === "Закончена") ||
-               (f === "abandoned" && st === "Брошена");
+        const status = s.status === "announcement" ? "Анонс" :
+                       s.status === "new" ? "Новинка" :
+                       s.status === "finished" ? "Закончена" :
+                       s.status === "abandoned" ? "Брошена" : "Выходит";
+        return active === "all" || 
+               (active === "announcement" && status === "Анонс") ||
+               (active === "new" && status === "Новинка") ||
+               (active === "releasing" && status === "Выходит") ||
+               (active === "finished" && status === "Закончена") ||
+               (active === "abandoned" && status === "Брошена");
       });
 
-      const grid = document.getElementById("grid");
-      grid.innerHTML = list.map(s => `
+      grid.innerHTML = filtered.map(s => `
         <a href="story-info.html?id=${s.id}" class="card">
-          ${s.cover ? `<img src="${s.cover}" class="cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">` : ''}
+          ${s.cover ? `<img src="${s.cover}" class="cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
           <div class="cover" style="display:${s.cover?'none':'flex'}">CS</div>
           <div class="info">
             <div class="title">${s.title || "Без названия"}</div>
             <div class="desc">${(s.description||"").substring(0,120)}...</div>
-            <div class="status">${this.getStatus(s)}</div>
+            <div class="status">${s.status === "announcement" ? "Анонс" : s.status === "new" ? "Новинка" : s.status === "finished" ? "Закончена" : s.status === "abandoned" ? "Брошена" : "Выходит"}</div>
           </div>
         </a>
       `).join("") || "<div style='color:#999;padding:3rem;text-align:center'>Ничего не найдено</div>";
-    }
+    };
+
+    search.addEventListener("input", render);
+    document.querySelectorAll(".btn").forEach(b => b.addEventListener("click", () => {
+      document.querySelectorAll(".btn").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      render();
+    }));
+
+    render();
+  } catch (e) {
+    document.getElementById("grid").innerHTML = "Ошибка загрузки историй";
+    console.error(e);
   }
-
-  new MainPage().init();
+}
 </script>
-
-<script src="themes-system.js"></script>
 </body>
 </html>
