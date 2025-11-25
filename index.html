@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta nameあれば="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CRAWL.STORIES — интерактивные чат-истории</title>
+  <meta name="description" content="Чат-истории в формате переписки. Анонсы, новинки, выходящие и завершённые сюжеты." />
 
-  <!-- ТВОЙ РЕАЛЬНЫЙ FIREBASE КОНФИГ -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
@@ -27,218 +28,191 @@
       --bg: #020205;
       --card: #0b0b0f;
       --text: #ffffff;
+      --muted: #9aa0a6;
       --accent: #FFE81F;
-      --gray: #9aa0a6;
       --border: rgba(255,255,255,0.1);
     }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--bg); color:var(--text); font-family:'Courier New',monospace; min-height:100vh; }
-    header { height:70px; background:rgba(2,2,5,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 20px; }
-    .logo { display:flex; align-items:center; gap:12px; cursor:pointer; }
-    .logo-box { width:48px; height:48px; background:#1a1a1a; border:2px solid #333; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px; color:#fff; }
-    .logo-text { font-size:24px; font-weight:900; letter-spacing:0.5px; color:#FFE81F; }
-    .menu-btn { font-size:30px; cursor:pointer; color:#fff; }
-    .login { color:var(--accent); cursor:pointer; font-weight:600; padding:8px 16px; border:1px solid var(--accent); border-radius:8px; transition:0.2s; }
-    .login:hover { background:var(--accent); color:#000; }
-    .container { max-width:1300px; margin:0 auto; padding:20px; }
-    .page-title { font-size:32px; color:var(--accent); margin:30px 0 20px; }
-    .stories { display:grid; gap:22px; }
-    .story { display:flex; background:var(--card); border-radius:16px; overflow:hidden; height:170px; text-decoration:none; color:inherit; transition:0.3s; }
-    .story:hover { transform:translateY(-8px); box-shadow:0 16px 40px rgba(255,232,31,0.25); }
-    .cover { width:135px; flex-shrink:0; }
-    .cover img { width:100%; height:100%; object-fit:cover; }
-    .info { padding:18px; flex:1; display:flex; flex-direction:column; justify-content:space-between; }
-    .title { font-size:19px; font-weight:700; margin-bottom:8px; }
-    .status { padding:5px 12px; border-radius:8px; font-size:11px; font-weight:700; display:inline-block; }
-    .new { background:#e91e63; color:#fff; }
-    .ongoing { background:#ff9800; color:#fff; }
-    .finished { background:#4caf50; color:#fff; }
-    .genres { font-size:12.5px; color:var(--gray); margin:6px 0; }
-    .desc { font-size:13.8px; color:var(--gray); line-height:1.48; opacity:0.92; }
-    
-    .tabs-container {
-      display: flex;
-      gap: 10px;
-      margin: 20px 0;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
+    body { background:var(--bg); color:var(--text); font-family:'Courier New',monospace; min-height:100vh; display:flex; flex-direction:column; }
+    header { position:sticky; top:0; z-index:100; background:rgba(2,2,5,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; }
+    .logo { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text); }
+    .logo-box { width:48px; height:48px; background:#1a1a1a; border:2px solid #333; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px; }
+    .logo-text { font-size:24px; font-weight:900; color:var(--accent); }
 
-    .tab {
-      padding: 10px 18px;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--gray);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-size: 14px;
-      font-weight: 600;
-    }
+    main { flex:1; padding:2rem 1.5rem; max-width:1200px; margin:0 auto; width:100%; }
+    .search { margin-bottom:2rem; }
+    input { width:100%; padding:14px; background:var(--card); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:16px; }
 
-    .tab:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
+    .filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:2rem; }
+    .btn { padding:8px 16px; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:14px; }
+    .btn.active { background:var(--accent); color:#000; font-weight:bold; }
 
-    .tab.active {
-      background: var(--accent);
-      color: #000;
-      border-color: var(--accent);
-    }
+    #grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1.5rem; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:all 0.3s; cursor:pointer; }
+    .card:hover { transform:translateY(-8px); box-shadow:0 12px 30px rgba(255,232,31,0.25); border-color:var(--accent); }
+    .cover { width:100%; height:200px; object-fit:cover; background:#111; }
+    .info { padding:1rem; }
+    .title { font-size:18px; font-weight:bold; margin-bottom:8px; }
+    .desc { font-size:14px; color:var(--muted); margin-bottom:12px; line-height:1.5; }
+    .meta { font-size:13px; color:var(--muted); }
+    .status { display:inline-block; padding:4px 10px; background:rgba(255,232,31,0.2); color:var(--accent); border:1px solid var(--accent); border-radius:6px; font-weight:bold; font-size:12px; }
+    .new-tag { background:#ff4757; color:white; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:6px; }
 
-    .empty-state {
-      text-align: center;
-      color: var(--gray);
-      padding: 60px 20px;
-      font-size: 18px;
-    }
+    footer { background:rgba(2,2,5,0.95); padding:2rem; text-align:center; border-top:1px solid var(--border); color:var(--muted); font-size:14px; }
+    footer a { color:var(--accent); text-decoration:none; margin:0 10px; }
+    .empty { text-align:center; padding:4rem; color:var(--muted); font-size:18px; }
 
-    @media (max-width:768px) { .story { height:150px; } .cover { width:110px; } .title { font-size:17px; } }
+    @media (max-width:768px) { header, main { padding:1rem; } .logo-text { font-size:20px; } }
   </style>
 </head>
 <body>
-  <header>
-    <div class="menu-btn">Menu</div>
-    <div class="logo" onclick="location.reload()">
-      <div class="logo-box">C</div>
-      <div class="logo-text">CRAWL.STORIES</div>
-    </div>
-    <div class="login" onclick="location.href='admin.html'">Вход</div>
-  </header>
 
-  <div id="seasonal-effects" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;"></div>
+<header>
+  <a href="/" class="logo">
+    <div class="logo-box">CS</div>
+    <div class="logo-text">CRAWL.STORIES</div>
+  </a>
+</header>
 
-  <div class="container">
-    <h1 class="page-title">Для вас</h1>
-    
-    <div class="tabs-container">
-      <button class="tab active" data-status="all">📢 Все</button>
-      <button class="tab" data-status="announcement">📅 Анонсы</button>
-      <button class="tab" data-status="new">🆕 Новинки</button>
-      <button class="tab" data-status="releasing">🚀 Выходит</button>
-      <button class="tab" data-status="finished">✅ Закончены</button>
-      <button class="tab" data-status="abandoned">💔 Брошены</button>
-    </div>
-
-    <div class="stories" id="storiesList">Загрузка историй...</div>
+<main>
+  <div class="search">
+    <input type="text" id="search" placeholder="Поиск по названию или описанию..." />
   </div>
 
-  <script>
-    class MainPage {
-      constructor() {
-        this.stories = [];
-        this.allStories = [];
-        this.db = db;
-        this.currentFilter = 'all';
-      }
+  <div class="filters">
+    <button class="btn active" data-filter="all">Все</button>
+    <button class="btn" data-filter="announcement">Анонсы</button>
+    <button class="btn" data-filter="new">Новинки</button>
+    <button class="btn" data-filter="releasing">Выходит</button>
+    <button class="btn" data-filter="finished">Закончены</button>
+    <button class="btn" data-filter="abandoned">Брошены</button>
+  </div>
 
-      async init() {
-        await this.loadAllStories();
-        this.setupTabs();
-        this.renderStories();
-      }
+  <div id="grid"></div>
+  <div class="empty" id="empty" style="display:none">Ничего не найдено</div>
+</main>
 
-      async loadAllStories() {
-        try {
-          const snap = await this.db.collection("stories")
-            .orderBy("createdAt", "desc")
-            .get();
+<footer>
+  <div>© 2025 CRAWL.STORIES</div>
+  <div>
+    <a href="about.html">О проекте</a> •
+    <a href="privacy.html">Конфиденциальность</a> •
+    <a href="contact.html">Контакты</a>
+  </div>
+</footer>
 
-          this.allStories = snap.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
+<script>
+  class MainPage {
+    constructor() { this.stories = []; }
 
-          this.stories = this.allStories;
-        } catch (err) {
-          console.error('Ошибка загрузки историй:', err);
-          document.getElementById("storiesList").innerHTML = "<div class='empty-state'>⚠️ Ошибка загрузки историй</div>";
-        }
-      }
+    async init() {
+      await this.loadStories();
+      this.setupFilters();
+      this.render();
+    }
 
-      setupTabs() {
-        document.querySelectorAll('.tab').forEach(tab => {
-          tab.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            this.currentFilter = tab.dataset.status;
-            this.renderStories();
-          });
-        });
-      }
-
-      getFilteredStories() {
-        if (this.currentFilter === 'all') {
-          return this.allStories.filter(story => 
-            story.status && story.status !== 'hidden' && story.status !== 'draft'
-          );
-        } else {
-          return this.allStories.filter(story => story.status === this.currentFilter);
-        }
-      }
-
-      getStatusClass(status) {
-        if (status === 'new' || status === 'announcement') return 'new';
-        if (status === 'releasing' || status === 'published') return 'ongoing';
-        if (status === 'finished') return 'finished';
-        return 'ongoing';
-      }
-
-      getStatusText(status) {
-        const statuses = {
-          'announcement': '📅 Анонс',
-          'new': '🆕 Новинка', 
-          'releasing': '🚀 Выходит',
-          'finished': '✅ Закончена',
-          'abandoned': '💔 Брошена',
-          'published': '📢 Опубликована',
-          'draft': '✏️ Черновик',
-          'hidden': '👻 Скрыта'
-        };
-        return statuses[status] || status;
-      }
-
-      renderStories() {
-        const container = document.getElementById('storiesList');
-        if (!container) return;
+    async loadStories() {
+      const snap = await db.collection("stories").get();
+      this.stories = snap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(s => s.status !== "draft" && s.visibility !== "hidden");
+      
+      // Загружаем эпизоды для определения реального статуса
+      for (let story of this.stories) {
+        const eps = await db.collection("episodes")
+          .where("storyId", "==", story.id)
+          .orderBy("episodeNumber")
+          .get();
         
-        const filteredStories = this.getFilteredStories();
-        
-        if (filteredStories.length === 0) {
-          container.innerHTML = '<div class="empty-state">📭 Нет историй для этого фильтра</div>';
-          return;
-        }
-
-        container.innerHTML = '';
-        filteredStories.forEach(story => {
-          const card = document.createElement("a");
-          card.href = `story-info.html?id=${story.id}`;
-          card.className = "story";
-          card.innerHTML = `
-            <div class="cover">
-              <img src="${story.cover || 'https://via.placeholder.com/135x170/111/333?text=CRAWL'}" alt="${story.title || 'Без названия'}">
-            </div>
-            <div class="info">
-              <div>
-                <div class="title">${story.title || "Без названия"}</div>
-                <span class="status ${this.getStatusClass(story.status)}">${this.getStatusText(story.status)}</span>
-                ${story.genres ? `<div class="genres">${story.genres.join(" • ")}</div>` : ""}
-              </div>
-              <div class="desc">${(story.description || "Описание скоро появится...").substring(0,160)}${(story.description||"").length > 160 ? "..." : ""}</div>
-            </div>
-          `;
-          container.appendChild(card);
-        });
+        story.episodes = eps.docs.map(d => ({ id: d.id, ...d.data() }));
+        story.publishedEpisodes = story.episodes.filter(e => e.status === "published");
+        story.firstPublished = story.publishedEpisodes[0];
+        story.lastPublished = story.publishedEpisodes.slice(-1)[0];
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      window.mainPage = new MainPage();
-      window.mainPage.init();
-    });
-  </script>
+    getDisplayStatus(story) {
+      if (story.status === "announcement" && story.firstEpisodeDate) {
+        const date = story.firstEpisodeDate.toDate();
+        if (date > new Date()) return { text: "Анонс", date: date };
+      }
+      if (story.firstPublished) {
+        if (story.status === "finished") return { text: "Закончена" };
+        if (story.status === "abandoned") return { text: "Брошена" };
+        return { text: "Выходит" };
+      }
+      return { text: "Анонс" };
+    }
 
-  <script src="themes-system.js"></script>
+    formatDate(date) {
+      if (!date) return "";
+      const d = date.toDate ? date.toDate() : date;
+      return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
+    }
+
+    setupFilters() {
+      document.getElementById("search").addEventListener("input", () => this.render());
+      document.querySelectorAll(".btn").forEach(b => {
+        b.addEventListener("click", () => {
+          document.querySelectorAll(".btn").forEach(x => x.classList.remove("active"));
+          b.classList.add("active");
+          this.render();
+        });
+      });
+    }
+
+    render() {
+      const query = document.getElementById("search").value.toLowerCase();
+      const filter = document.querySelector(".btn.active").dataset.filter;
+
+      let list = this.stories.filter(s => {
+        const matchSearch = s.title?.toLowerCase().includes(query) || s.description?.toLowerCase().includes(query);
+        if (!matchSearch) return false;
+
+        if (filter === "all") return true;
+        if (filter === "announcement") return this.getDisplayStatus(s).text === "Анонс";
+        if (filter === "new") return s.status === "new";
+        if (filter === "releasing") return this.getDisplayStatus(s).text === "Выходит";
+        if (filter === "finished") return s.status === "finished";
+        if (filter === "abandoned") return s.status === "abandoned";
+        return false;
+      });
+
+      const grid = document.getElementById("grid");
+      const empty = document.getElementById("empty");
+
+      if (list.length === 0) {
+        grid.innerHTML = ""; empty.style.display = "block"; return;
+      }
+      empty.style.display = "none";
+
+      grid.innerHTML = list.map(s => {
+        const status = this.getDisplayStatus(s);
+        const dateText = status.date ? this.formatDate(status.date) : (s.firstPublished ? this.formatDate(s.firstPublished.publishDate) : "");
+
+        return `
+          <a href="story-info.html?id=${s.id}" class="card">
+            <img src="${s.cover || 'https://via.placeholder.com/300x400/111/333?text=CRAWL'}" 
+                 onerror="this.src='https://via.placeholder.com/300x400/111/333?text=CRAWL'" 
+                 class="cover" alt="${s.title}">
+            <div class="info">
+              <div class="title">${s.title}</div>
+              <div class="desc">${s.description || "Описание скоро появится..."}</div>
+              <div class="meta">
+                <span class="status">${status.text}</span>
+                ${dateText ? `<br>Дата: ${dateText}` : ""}
+                ${s.plannedEpisodes ? `<br>Эпизодов: ${s.publishedEpisodes.length}/${s.plannedEpisodes}` : ""}
+              </div>
+            </div>
+          </a>
+        `;
+      }).join("");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => new MainPage().init());
+</script>
+
+<script src="themes-system.js"></script>
 </body>
 </html>
