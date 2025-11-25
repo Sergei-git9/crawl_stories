@@ -721,11 +721,15 @@
             <label>Примерное количество эпизодов</label>
             <input type="number" id="plannedEpisodes" min="0" placeholder="Не указано">
           </div>
-          <div class="form-group">
-            <label>Дата начала публикации</label>
-            <input type="text" id="publishDate" placeholder="ДД.ММ.ГГГГ, ММ.ГГГГ или ГГГГ">
-            <div class="date-precision" id="datePrecision"></div>
-          </div>
+         <div class="form-group">
+  <label>Точная дата и время публикации (по Киеву)</label>
+  <input type="datetime-local" id="publishDate" step="60">
+  <small style="color:#b2ff59; display:block; margin-top:8px;">
+    Оставь пустым — история опубликуется сразу<br>
+    Укажи будущее время — будет статус "Анонс" до этого момента<br>
+    Пример: 31 декабря 23:55 — выйдет ровно в Новый год!
+  </small>
+</div>
         </div>
 
         <div class="form-group">
