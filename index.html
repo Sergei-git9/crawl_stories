@@ -8,22 +8,17 @@
     :root{--bg:#020205;--card:#0b0b0f;--text:#fff;--muted:#9aa0a6;--accent:#FFE81F;--border:rgba(255,255,255,0.1)}
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column}
-    header{position:sticky;top:0;z-index:1000;background:rgba(2,2,5,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;}
+    header{position:sticky;top:0;z-index:100;background:rgba(2,2,5,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
     main{flex:1;padding:2rem 1.5rem;max-width:1200px;margin:0 auto;width:100%}
-    .search input{width:100%;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:16px;margin-bottom:1.5rem}
-    .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:2rem}
-    .btn{padding:8px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer}
-    .btn.active{background:var(--accent);color:#000;font-weight:bold}
-    #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .3s;cursor:pointer}
-    .card:hover{transform:translateY(-8px);box-shadow:0 12px 30px rgba(255,232,31,.25);border-color:var(--accent)}
-    .cover{width:100%;height:200px;background:linear-gradient(135deg,#1a1a1a,#0f0f14);display:flex;align-items:center;justify-content:center;color:#444;font-size:40px;font-weight:bold}
+    #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;margin-top:2rem}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:.3s}
+    .card:hover{transform:translateY(-8px);box-shadow:0 10px 30px rgba(255,232,31,.3);border-color:var(--accent)}
+    .cover{width:100%;height:200px;background:#111;display:flex;align-items:center;justify-content:center;color:#555;font-size:40px;font-weight:bold}
     .info{padding:1rem}
     .title{font-size:18px;font-weight:bold;margin-bottom:8px}
     .desc{font-size:14px;color:var(--muted);margin-bottom:12px}
-    .status{display:inline-block;padding:4px 10px;background:rgba(255,232,31,.2);color:var(--accent);border:1px solid var(--accent);border-radius:6px;font-weight:bold;font-size:12px}
-    footer{background:rgba(2,2,5,.95);padding:2rem;text-align:center;border-top:1px solid var(--border);color:var(--muted);font-size:14px}
-    footer a{color:var(--accent);text-decoration:none;margin:0 10px}
+    .status{display:inline-block;padding:4px 10px;background:rgba(255,232,31,.2);color:var(--accent);border:1px solid var(--accent);border-radius:6px;font-size:12px;font-weight:bold}
+    footer{background:rgba(2,2,5,.95);padding:2rem;text-align:center;color:var(--muted);border-top:1px solid var(--border)}
   </style>
 </head>
 <body>
@@ -31,88 +26,38 @@
 <header></header>
 
 <main>
-  <div class="search"><input type="text" id="search" placeholder="Поиск..."></div>
-  <div class="filters">
-    <button class="btn active" data-filter="all">Все</button>
-    <button class="btn" data-filter="announcement">Анонсы</button>
-    <button class="btn" data-filter="new">Новинки</button>
-    <button class="btn" data-filter="releasing">Выходит</button>
-    <button class="btn" data-filter="finished">Закончены</button>
-    <button class="btn" data-filter="abandoned">Брошены</button>
-  </div>
-  <div id="grid">Загрузка историй...</div>
+  <h1 style="text-align:center;margin-bottom:2rem;color:#FFE81F">CRAWL.STORIES</h1>
+  <div id="grid">Загрузка...</div>
 </main>
 
 <footer>
   <div>© 2025 CRAWL.STORIES</div>
-  <div><a href="about.html">О проекте</a> • <a href="privacy.html">Конфиденциальность</a></div>
 </footer>
 
-<script src="auth-system.js"></script>
+<script src="auth.js"></script>
 <script src="themes-system.js"></script>
 
 <script>
-// Ждём, пока db будет доступен
-const waitForDb = setInterval(() => {
-  if (window.db) {
-    clearInterval(waitForDb);
-    loadStories();
-  }
-}, 100);
+// Ждём Firebase
+setTimeout(() => {
+  if (!window.db) { document.getElementById('grid').innerHTML = 'Ошибка загрузки'; return; }
 
-async function loadStories() {
-  try {
-    const snap = await db.collection("stories").get();
+  db.collection("stories").get().then(snap => {
     const stories = snap.docs.map(d => ({id: d.id, ...d.data()}))
-      .filter(s => s.status !== "draft" && s.visibility !== "hidden");
+      .filter(s => s.status !== "draft");
 
-    const grid = document.getElementById("grid");
-    const search = document.getElementById("search");
-
-    const render = () => {
-      const q = search.value.toLowerCase();
-      const active = document.querySelector(".btn.active").dataset.filter;
-      const filtered = stories.filter(s => {
-        const match = (s.title||"").toLowerCase().includes(q) || (s.description||"").toLowerCase().includes(q);
-        if (!match) return false;
-        const status = s.status === "announcement" ? "Анонс" :
-                       s.status === "new" ? "Новинка" :
-                       s.status === "finished" ? "Закончена" :
-                       s.status === "abandoned" ? "Брошена" : "Выходит";
-        return active === "all" || 
-               (active === "announcement" && status === "Анонс") ||
-               (active === "new" && status === "Новинка") ||
-               (active === "releasing" && status === "Выходит") ||
-               (active === "finished" && status === "Закончена") ||
-               (active === "abandoned" && status === "Брошена");
-      });
-
-      grid.innerHTML = filtered.map(s => `
-        <a href="story-info.html?id=${s.id}" class="card">
-          ${s.cover ? `<img src="${s.cover}" class="cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-          <div class="cover" style="display:${s.cover?'none':'flex'}">CS</div>
-          <div class="info">
-            <div class="title">${s.title || "Без названия"}</div>
-            <div class="desc">${(s.description||"").substring(0,120)}...</div>
-            <div class="status">${s.status === "announcement" ? "Анонс" : s.status === "new" ? "Новинка" : s.status === "finished" ? "Закончена" : s.status === "abandoned" ? "Брошена" : "Выходит"}</div>
-          </div>
-        </a>
-      `).join("") || "<div style='color:#999;padding:3rem;text-align:center'>Ничего не найдено</div>";
-    };
-
-    search.addEventListener("input", render);
-    document.querySelectorAll(".btn").forEach(b => b.addEventListener("click", () => {
-      document.querySelectorAll(".btn").forEach(x => x.classList.remove("active"));
-      b.classList.add("active");
-      render();
-    }));
-
-    render();
-  } catch (e) {
-    document.getElementById("grid").innerHTML = "Ошибка загрузки историй";
-    console.error(e);
-  }
-}
+    document.getElementById('grid').innerHTML = stories.map(s => `
+      <a href="story-info.html?id=${s.id}" class="card">
+        <div class="cover">CS</div>
+        <div class="info">
+          <div class="title">${s.title || "Без названия"}</div>
+          <div class="desc">${s.description || ""}</div>
+          <div class="status">${s.status === "announcement" ? "Анонс" : s.status === "new" ? "Новинка" : "Выходит"}</div>
+        </div>
+      </a>
+    `).join("") || "Нет историй";
+  });
+}, 2000);
 </script>
 </body>
 </html>
