@@ -4,90 +4,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CRAWL.STORIES — интерактивные чат-истории</title>
-
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
-      authDomain: "crawl-stories.firebaseapp.com",
-      projectId: "crawl-stories",
-      storageBucket: "crawl-stories.firebasestorage.app",
-      messagingSenderId: "886479757650",
-      appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
-      measurementId: "G-SGC2HF0455"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-  </script>
-
   <style>
-    :root {
-      --bg: #020205;
-      --card: #0b0b0f;
-      --text: #ffffff;
-      --muted: #9aa0a6;
-      --accent: #FFE81F;
-      --border: rgba(255,255,255,0.1);
-    }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--bg); color:var(--text); font-family:'Courier New',monospace; min-height:100vh; display:flex; flex-direction:column; }
-    header { position:sticky; top:0; z-index:100; background:rgba(2,2,5,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; }
-    .logo { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text); }
-    .logo-box { width:48px; height:48px; background:#1a1a1a; border:2px solid #333; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px; }
-    .logo-text { font-size:24px; font-weight:900; color:var(--accent); }
-
-    main { flex:1; padding:2rem 1.5rem; max-width:1200px; margin:0 auto; width:100%; }
-    .search { margin-bottom:2rem; }
-    input { width:100%; padding:14px; background:var(--card); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:16px; }
-
-    .filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:2rem; }
-    .btn { padding:8px 16px; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:14px; }
-    .btn.active { background:var(--accent); color:#000; font-weight:bold; }
-
-    #grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1.5rem; }
-    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; transition:all 0.3s; cursor:pointer; position:relative; }
-    .card:hover { transform:translateY(-8px); box-shadow:0 12px 30px rgba(255,232,31,0.25); border-color:var(--accent); }
-    
-    .cover {
-      width:100%;
-      height:200px;
-      background: linear-gradient(135deg, #1a1a1a 0%, #0f0f14 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #444;
-      font-size: 40px;
-      font-weight: bold;
-      letter-spacing: 2px;
-    }
-
-    .info { padding:1rem; }
-    .title { font-size:18px; font-weight:bold; margin-bottom:8px; }
-    .desc { font-size:14px; color:var(--muted); margin-bottom:12px; line-height:1.5; }
-    .meta { font-size:13px; color:var(--muted); }
-    .status { display:inline-block; padding:4px 10px; background:rgba(255,232,31,0.2); color:var(--accent); border:1px solid var(--accent); border-radius:6px; font-weight:bold; font-size:12px; }
-
-    footer { background:rgba(2,2,5,0.95); padding:2rem; text-align:center; border-top:1px solid var(--border); color:var(--muted); font-size:14px; }
-    footer a { color:var(--accent); text-decoration:none; margin:0 10px; }
-    .empty { text-align:center; padding:4rem; color:var(--muted); font-size:18px; }
+    :root{--bg:#020205;--card:#0b0b0f;--text:#fff;--muted:#9aa0a6;--accent:#FFE81F;--border:rgba(255,255,255,0.1)}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column}
+    main{flex:1;padding:2rem 1.5rem;max-width:1200px;margin:0 auto;width:100%}
+    .search input{width:100%;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:16px;margin-bottom:1.5rem}
+    .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:2rem}
+    .btn{padding:8px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer}
+    .btn.active{background:var(--accent);color:#000;font-weight:bold}
+    #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all .3s;cursor:pointer;position:relative}
+    .card:hover{transform:translateY(-8px);box-shadow:0 12px 30px rgba(255,232,31,.25);border-color:var(--accent)}
+    .cover{width:100%;height:200px;background:linear-gradient(135deg,#1a1a1a,#0f0f14);display:flex;align-items:center;justify-content:center;color:#444;font-size:40px;font-weight:bold}
+    .info{padding:1rem}
+    .title{font-size:18px;font-weight:bold;margin-bottom:8px}
+    .desc{font-size:14px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+    .status{display:inline-block;padding:4px 10px;background:rgba(255,232,31,.2);color:var(--accent);border:1px solid var(--accent);border-radius:6px;font-weight:bold;font-size:12px}
+    footer{background:rgba(2,2,5,.95);padding:2rem;text-align:center;border-top:1px solid var(--border);color:var(--muted);font-size:14px}
+    footer a{color:var(--accent);text-decoration:none;margin:0 10px}
+    .empty{text-align:center;padding:4rem;color:var(--muted);font-size:18px}
   </style>
 </head>
 <body>
 
-<header>
-  <a href="/" class="logo">
-    <div class="logo-box">CS</div>
-    <div class="logo-text">CRAWL.STORIES</div>
-  </a>
-</header>
+<header></header>
 
 <main>
-  <div class="search">
-    <input type="text" id="search" placeholder="Поиск по названию или описанию..." />
-  </div>
-
+  <div class="search"><input type="text" id="search" placeholder="Поиск по названию или описанию..."></div>
   <div class="filters">
     <button class="btn active" data-filter="all">Все</button>
     <button class="btn" data-filter="announcement">Анонсы</button>
@@ -96,130 +40,62 @@
     <button class="btn" data-filter="finished">Закончены</button>
     <button class="btn" data-filter="abandoned">Брошены</button>
   </div>
-
   <div id="grid"></div>
   <div class="empty" id="empty" style="display:none">Ничего не найдено</div>
 </main>
 
 <footer>
   <div>© 2025 CRAWL.STORIES</div>
-  <div>
-    <a href="about.html">О проекте</a> •
-    <a href="privacy.html">Конфиденциальность</a> •
-    <a href="contact.html">Контакты</a>
-  </div>
+  <div><a href="about.html">О проекте</a> • <a href="privacy.html">Конфиденциальность</a> • <a href="contact.html">Контакты</a></div>
 </footer>
 
+<script src="auth-system.js"></script>
 <script>
-  class MainPage {
-    constructor() { this.stories = []; }
-
-    async init() {
-      await this.loadStories();
-      this.setupFilters();
-      this.render();
-    }
-
-    async loadStories() {
-      try {
-        const snap = await db.collection("stories").get();
-        this.stories = snap.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(s => s.status !== "draft" && s.visibility !== "hidden");
-      } catch (e) { console.error(e); }
-    }
-
-    getStatusDisplay(story) {
-      // Приоритет: то, что стоит в базе — святое
-      if (story.status === "announcement") return { text: "Анонс", color: "#ff9500" };
-      if (story.status === "new") return { text: "Новинка", color: "#ff3b30" };
-      if (story.status === "finished") return { text: "Закончена", color: "#34c759" };
-      if (story.status === "abandoned") return { text: "Брошена", color: "#ff3b30" };
-      if (story.status === "releasing") return { text: "Выходит", color: "#007aff" };
-      
-      // Если статус не задан — считаем по дате первого эпизода
-      if (story.firstEpisodeDate) {
-        const date = story.firstEpisodeDate.toDate();
-        if (date > new Date()) return { text: "Анонс", color: "#ff9500" };
-      }
-      
-      return { text: "Выходит", color: "#007aff" };
-    }
-
-    formatDate(d) {
-      if (!d) return "";
-      const date = d.toDate ? d.toDate() : d;
-      return date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
-    }
-
-    setupFilters() {
-      document.getElementById("search").addEventListener("input", () => this.render());
-      document.querySelectorAll(".btn").forEach(b => {
-        b.addEventListener("click", () => {
-          document.querySelectorAll(".btn").forEach(x => x.classList.remove("active"));
-          b.classList.add("active");
-          this.render();
-        });
-      });
-    }
-
-    render() {
-      const query = document.getElementById("search").value.toLowerCase();
-      const filter = document.querySelector(".btn.active").dataset.filter;
-
-      const list = this.stories.filter(s => {
-        const matchSearch = (s.title || "").toLowerCase().includes(query) || 
-                           (s.description || "").toLowerCase().includes(query);
-        if (!matchSearch) return false;
-
-        const status = this.getStatusDisplay(s).text;
-
-        if (filter === "all") return true;
-        if (filter === "announcement" && status === "Анонс") return true;
-        if (filter === "new" && status === "Новинка") return true;
-        if (filter === "releasing" && status === "Выходит") return true;
-        if (filter === "finished" && status === "Закончена") return true;
-        if (filter === "abandoned" && status === "Брошена") return true;
-        return false;
-      });
-
-      const grid = document.getElementById("grid");
-      const empty = document.getElementById("empty");
-
-      if (list.length === 0) {
-        grid.innerHTML = ""; empty.style.display = "block"; return;
-      }
-      empty.style.display = "none";
-
-      grid.innerHTML = list.map(s => {
-        const status = this.getStatusDisplay(s);
-        const dateText = s.firstEpisodeDate ? this.formatDate(s.firstEpisodeDate) : "";
-
-        return `
-          <a href="story-info.html?id=${s.id}" class="card">
-            ${s.cover 
-              ? `<img src="${s.cover}" class="cover" alt="${s.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">`
-              : ""
-            }
-            <div class="cover" style="display:${s.cover ? 'none' : 'flex'}">CS</div>
-            <div class="info">
-              <div class="title">${s.title || "Без названия"}</div>
-              <div class="desc">${s.description || "Скоро здесь будет описание..."}</div>
-              <div class="meta">
-                <span class="status">${status.text}</span>
-                ${dateText ? `<br>Старт: ${dateText}` : ""}
-                ${s.plannedEpisodes ? `<br>Эпизодов: 0/${s.plannedEpisodes}` : ""}
-              </div>
-            </div>
-          </a>
-        `;
-      }).join("");
-    }
+class MainPage {
+  constructor() { this.stories = []; }
+  async init() { await this.load(); this.setup(); this.render(); }
+  async load() {
+    const snap = await db.collection("stories").get();
+    this.stories = snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.status!=="draft" && s.visibility!=="hidden");
   }
-
-  document.addEventListener("DOMContentLoaded", () => new MainPage().init());
+  setup() {
+    document.getElementById("search").addEventListener("input",()=>this.render());
+    document.querySelectorAll(".btn").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");this.render()}));
+  }
+  getStatus(s){
+    if(s.status==="announcement") return "Анонс";
+    if(s.status==="new") return "Новинка";
+    if(s.status==="finished") return "Закончена";
+    if(s.status==="abandoned") return "Брошена";
+    return "Выходит";
+  }
+  render(){
+    const q=document.getElementById("search").value.toLowerCase();
+    const f=document.querySelector(".btn.active").dataset.filter;
+    let list=this.stories.filter(s=>{
+      const search=(s.title||"").toLowerCase().includes(q)||(s.description||"").toLowerCase().includes(q);
+      if(!search) return false;
+      const st=this.getStatus(s);
+      return f==="all"|| (f==="announcement"&&st==="Анонс") || (f==="new"&&st==="Новинка") || (f==="releasing"&&st==="Выходит") || (f==="finished"&&st==="Закончена") || (f==="abandoned"&&st==="Брошена");
+    });
+    const grid=document.getElementById("grid");
+    if(list.length===0){grid.innerHTML="";document.getElementById("empty").style.display="block";return;}
+    document.getElementById("empty").style.display="none";
+    grid.innerHTML=list.map(s=>`
+      <a href="story-info.html?id=${s.id}" class="card">
+        ${s.cover?`<img src="${s.cover}" class="cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
+        <div class="cover" style="display:${s.cover?'none':'flex'}">CS</div>
+        <div class="info">
+          <div class="title">${s.title||"Без названия"}</div>
+          <div class="desc">${(s.description||"").substring(0,120)}...</div>
+          <div><span class="status">${this.getStatus(s)}</span></div>
+        </div>
+      </a>
+    `).join("");
+  }
+}
+document.addEventListener("DOMContentLoaded",()=>new MainPage().init());
 </script>
-
 <script src="themes-system.js"></script>
 </body>
 </html>
