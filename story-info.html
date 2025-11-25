@@ -120,8 +120,9 @@
                           story.status === "finished" ? "Закончена" : "В процессе";
 
         return `
-          <img src="${story.cover || 'https://via.placeholder.com/600x800/111/333?text=CRAWL'}" class="cover" alt="${story.title}">
-          <h1 class="title">${story.title || "Без названия"}</h1>
+<img src="${story.cover || 'assets/images/default-cover.jpg'}" 
+     onerror="this.src='assets/images/default-cover.jpg'" 
+     alt="${story.title || 'Без названия'}" class="cover">          <h1 class="title">${story.title || "Без названия"}</h1>
           <p class="desc">${story.description || "Описание отсутствует"}</p>
 
           <div class="meta">
@@ -130,11 +131,14 @@
               <div class="stat-value">${statusText}</div>
             </div>
             <div class="stat">
-              <div class="stat-label">ЭПИЗОДОВ</div>
-              <div class="stat-value">${episodes.length}/${story.plannedEpisodes || '?'}</div>
-            </div>
-          </div>
-
+  <div class="stat-label">СТАТУС</div>
+  <div class="stat-value">
+    ${story.status === 'announcement' ? 'Анонс' : 
+      story.status === 'published' ? 'Опубликовано' :
+      story.status === 'finished' ? 'Завершена' : story.status}
+    ${story.publishDate ? `<br><small>Дата: ${new Date(story.publishDate.toDate()).toLocaleString('ru-RU')}</small>` : ''}
+  </div>
+</div>
           ${episodes.length > 0 ? `
             <a href="reader.html?episode=${episodes[0].id}&story=${this.storyId}" class="read-btn">Начать читать →</a>
           ` : ''}
