@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Админ-панель CRAWL.STORIES</title>
 
-  <!-- Firebase -->
+  <!-- Firebase v9 Compat -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
 
   <style>
     :root {
@@ -16,1902 +16,320 @@
       --bg-secondary: #0b0b0f;
       --bg-card: #0b0b0f;
       --accent-primary: #ffe81f;
-      --accent-secondary: #6366f1;
       --text-primary: #ffffff;
       --text-secondary: #9aa0a6;
-      --text-muted: #7f8c8d;
-      --border-light: rgba(255, 255, 255, 0.1);
+      --border-light: rgba(255,255,255,0.1);
       --font-mono: "Courier New", monospace;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-family: var(--font-mono);
-      min-height: 100vh;
-    }
-
-    /* LOGIN SCREEN */
-    .login-screen {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .login-card {
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-
-    .login-card h2 {
-      color: var(--accent-primary);
-      margin-bottom: 30px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-      text-align: left;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--text-secondary);
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border-light);
-      background: #05050a;
-      color: #ddd;
-      font-family: var(--font-mono);
-      font-size: 14px;
-    }
-
-    /* BUTTONS */
-    button {
-      background: var(--accent-primary);
-      color: var(--bg-primary);
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-family: var(--font-mono);
-      font-weight: bold;
-      transition: opacity 0.3s;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .btn-small {
-      padding: 8px 16px;
-      font-size: 12px;
-    }
-
-    .btn-secondary {
-      background: transparent;
-      color: var(--accent-primary);
-      border: 1px solid var(--border-light);
-    }
-
-    .btn-danger {
-      background: #ff4444;
-      color: white;
-    }
-
-    .btn-success {
-      background: #4caf50;
-      color: white;
-    }
-
-    .btn-info {
-      background: var(--accent-secondary);
-      color: white;
-    }
-
-    /* ADMIN INTERFACE */
-    .admin-interface {
-      display: none;
-      min-height: 100vh;
-    }
-
-    header {
-      padding: 15px 20px;
-      border-bottom: 1px solid var(--border-light);
-      background: rgba(2, 2, 5, 0.95);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .header-nav {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    /* THEME BANNER */
-    .theme-banner {
-      background: linear-gradient(135deg, var(--theme-accent, var(--accent-primary)), transparent);
-      padding: 10px 20px;
-      text-align: center;
-      font-weight: bold;
-      border-bottom: 1px solid var(--border-light);
-      animation: slideDown 0.5s ease-out;
-    }
-
-    @keyframes slideDown {
-      from { transform: translateY(-100%); }
-      to { transform: translateY(0); }
-    }
-
-    /* MAIN CONTENT */
-    .main-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    /* STORIES GRID */
-    .stories-grid {
-      display: grid;
-      gap: 20px;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      margin-top: 20px;
-    }
-
-    .story-card {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid var(--border-light);
-      transition: border-color 0.3s;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .story-card:hover {
-      border-color: rgba(255, 232, 31, 0.3);
-      transform: translateY(-2px);
-    }
-
-    .story-card-corner {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 16px;
-    }
-
-    .story-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
-      gap: 10px;
-    }
-
-    .story-title {
-      color: var(--accent-primary);
-      font-size: 18px;
-      margin: 0;
-      line-height: 1.3;
-      flex: 1;
-    }
-
-    .story-meta {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .badge {
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      white-space: nowrap;
-      font-weight: bold;
-    }
-
-    .badge.announcement {
-      background: rgba(255, 193, 7, 0.1);
-      color: #ffc107;
-    }
-
-    .badge.draft {
-      background: rgba(158, 158, 158, 0.1);
-      color: #9e9e9e;
-    }
-
-    .badge.releasing {
-      background: rgba(33, 150, 243, 0.1);
-      color: #2196f3;
-    }
-
-    .badge.published {
-      background: rgba(76, 175, 80, 0.1);
-      color: #4caf50;
-    }
-
-    .badge.hidden {
-      background: rgba(158, 158, 158, 0.1);
-      color: #9e9e9e;
-      border: 1px dashed #9e9e9e;
-    }
-
-    .story-desc {
-      color: var(--text-secondary);
-      margin-bottom: 15px;
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    .story-date {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 8px;
-    }
-
-    /* MODALS */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-content {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 30px;
-      max-width: 600px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
-      border: 1px solid var(--border-light);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .modal-title {
-      color: var(--accent-primary);
-      font-size: 20px;
-    }
-
-    .close-modal {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 24px;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-bottom: 15px;
-    }
-
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border-light);
-      background: #05050a;
-      color: #ddd;
-      font-family: var(--font-mono);
-      font-size: 14px;
-    }
-
-    .form-group textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .checkbox-group input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-    }
-
-    .checkbox-group label {
-      margin: 0;
-      color: var(--text-secondary);
-      font-size: 14px;
-    }
-
-    .genres-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .drop-zone {
-      border: 2px dashed var(--accent-primary);
-      border-radius: 8px;
-      padding: 30px;
-      text-align: center;
-      color: var(--text-secondary);
-      margin: 10px 0;
-      transition: all 0.3s;
-      cursor: pointer;
-    }
-
-    .drop-zone:hover {
-      background: rgba(255, 232, 31, 0.1);
-    }
-
-    .drop-zone.active {
-      background: rgba(255, 232, 31, 0.1);
-      border-color: var(--accent-primary);
-    }
-
-    .date-precision {
-      font-size: 12px;
-      color: var(--accent-primary);
-      margin-top: 5px;
-    }
-
-    /* SCHEDULE */
-    .schedule-list {
-      margin-top: 20px;
-    }
-
-    .schedule-item {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 10px;
-      border: 1px solid var(--border-light);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .schedule-info {
-      flex: 1;
-    }
-
-    .schedule-date {
-      text-align: right;
-      min-width: 200px;
-    }
-
-    .publish-date {
-      color: var(--accent-primary);
-      font-weight: bold;
-    }
-
-    .publish-status {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    /* SETTINGS */
-    .settings-grid {
-      display: grid;
-      gap: 20px;
-      margin-top: 20px;
-    }
-
-    .settings-card {
-      background: var(--bg-card);
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid var(--border-light);
-    }
-
-    .theme-controls {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .theme-control {
-      background: var(--bg-secondary);
-      padding: 15px;
-      border-radius: 8px;
-      border: 2px solid transparent;
-      transition: all 0.3s;
-    }
-
-    .theme-control.active {
-      border-color: var(--accent-primary);
-    }
-
-    .theme-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
-    }
-
-    .theme-name {
-      font-weight: bold;
-      color: var(--accent-primary);
-    }
-
-    .theme-dates {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .theme-controls-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .intensity-slider {
-      width: 100%;
-      margin: 10px 0;
-    }
-
-    .theme-settings {
-      margin-top: 10px;
-      padding: 10px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 6px;
-      display: none;
-    }
-
-    .theme-settings.active {
-      display: block;
-    }
-
-    /* EFFECTS CONTAINER */
-    #theme-effects {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 9999;
-    }
-
-    .snowflake, .leaf, .petal, .particle, .bat {
-      position: absolute;
-      pointer-events: none;
-      user-select: none;
-    }
-
-    /* EMPTY STATES */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-secondary);
-    }
-
-    .empty-state .icon {
-      font-size: 48px;
-      margin-bottom: 20px;
-    }
-
-    /* LOADING */
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: var(--text-secondary);
-    }
-
-    @media (max-width: 768px) {
-      .header-content {
-        flex-direction: column;
-        gap: 15px;
-      }
-
-      .header-nav {
-        justify-content: center;
-      }
-
-      .stories-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-
-      .schedule-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-
-      .schedule-date {
-        text-align: left;
-        width: 100%;
-      }
-
-      .theme-controls {
-        grid-template-columns: 1fr;
-      }
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-mono); min-height: 100vh; }
+    .hidden { display: none !important; }
+    .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+    .empty-state .icon { font-size: 48px; margin-bottom: 20px; }
+
+    header { padding: 15px 20px; background: rgba(2,2,5,0.95); border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 100; }
+    .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .header-nav { display: flex; gap: 10px; flex-wrap: wrap; }
+    button { background: var(--accent-primary); color: #000; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    button:hover { opacity: 0.9; }
+    .btn-secondary { background: transparent; color: var(--accent-primary); border: 1px solid var(--border-light); }
+    .btn-danger { background: #ff4444; color: white; }
+    .btn-small { padding: 8px 16px; font-size: 12px; }
+
+    .main-content { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .stories-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); margin-top: 20px; }
+    .story-card { background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border-light); cursor: pointer; transition: all 0.3s; }
+    .story-card:hover { border-color: rgba(255,232,31,0.3); transform: translateY(-2px); }
+    .story-title { color: var(--accent-primary); font-size: 18px; margin-bottom: 8px; }
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+    .badge.announcement { background: rgba(255,193,7,0.1); color: #ffc107; }
+
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--bg-card); border-radius: 12px; padding: 30px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-light); }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; color: var(--text-secondary); }
+    input, textarea, select { width: 100%; padding: 12px; background: #05050a; border: 1px solid var(--border-light); border-radius: 8px; color: #ddd; font-family: var(--font-mono); }
+    textarea { min-height: 100px; resize: vertical; }
+    .drop-zone { border: 2px dashed var(--accent-primary); border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; }
+    .drop-zone.active { background: rgba(255,232,31,0.1); }
+    .genres-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+    .checkbox-group { display: flex; align-items: center; gap: 8px; }
   </style>
 </head>
 <body>
-  <!-- THEME EFFECTS CONTAINER -->
-  <div id="theme-effects"></div>
 
-  <!-- THEME BANNER -->
-  <div id="themeBanner" class="theme-banner" style="display: none;"></div>
-
-  <!-- LOGIN SCREEN -->
-  <div id="loginScreen" class="login-screen">
-    <div class="login-card">
-      <h2>🔐 Вход в админ-панель</h2>
-      <form id="loginForm">
-        <div class="form-group">
-          <label>Пароль администратора</label>
-          <input type="password" id="adminPassword" required />
-        </div>
-        <button type="submit">Войти в админку</button>
-      </form>
-    </div>
+  <div id="authScreen" class="loading">
+    <h2>Перевірка прав доступу...</h2>
   </div>
 
-  <!-- ADMIN INTERFACE -->
-  <div id="adminInterface" class="admin-interface">
+  <div id="adminInterface" class="hidden">
     <header>
       <div class="header-content">
-        <h1 id="siteLogo">⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES</h1>
+        <h1>Админ-панель CRAWL.STORIES</h1>
         <div class="header-nav">
-          <button id="btnCreateStory" class="btn btn-success">➕ Создать историю</button>
-          <button id="btnStories" class="btn btn-secondary">📚 Истории</button>
-          <button id="btnSchedule" class="btn btn-secondary">📅 График</button>
-          <button id="btnImport" class="btn btn-info">📥 Импорт готовой истории</button>
-          <button id="btnSettings" class="btn btn-secondary">⚙️ Настройки</button>
-          <button id="btnLogout" class="btn btn-danger">🚪 Выйти</button>
+          <button id="btnCreateStory">Создать анонс</button>
+          <button id="btnStories" class="btn-secondary">Истории</button>
+          <button id="btnSchedule" class="btn-secondary">График</button>
+          <button id="btnSettings" class="btn-secondary">Настройки</button>
+          <button id="btnLogout" class="btn-danger">Выйти</button>
         </div>
       </div>
     </header>
 
     <div class="main-content">
-      <!-- STORIES VIEW -->
       <div id="storiesView">
-        <h2>📚 Все истории</h2>
-        <div id="storiesList" class="stories-grid">
-          <div class="loading">Загрузка историй...</div>
-        </div>
+        <h2>Все истории</h2>
+        <div id="storiesList" class="stories-grid"><div class="loading">Загрузка...</div></div>
       </div>
 
-      <!-- SCHEDULE VIEW -->
-      <div id="scheduleView" style="display: none;">
-        <h2>📅 График публикаций</h2>
-        
-        <!-- ВКЛАДКИ -->
-        <div class="tabs-container" style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
-          <button class="tab active" data-tab="episodes" style="padding: 10px 20px; background: var(--accent-primary); color: var(--bg-primary); border: none; border-radius: 8px; cursor: pointer;">
-            📖 Эпизоды
-          </button>
-          <button class="tab" data-tab="stories" style="padding: 10px 20px; background: transparent; color: var(--text-secondary); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer;">
-            📅 Истории
-          </button>
-        </div>
-        
-        <!-- ЭПИЗОДЫ -->
-        <div id="episodesSchedule" class="schedule-list">
-          <div class="loading">Загрузка эпизодов...</div>
-        </div>
-        
-        <!-- ИСТОРИИ -->
-        <div id="storiesSchedule" class="schedule-list" style="display: none;">
-          <div class="loading">Загрузка историй...</div>
-        </div>
-      </div>
-
-      <!-- IMPORT VIEW -->
-      <div id="importView" style="display: none;">
-        <h2>📥 Импорт готовой истории</h2>
-        <div class="empty-state">
-          <div class="icon">📥</div>
-          <p>Функция импорта будет реализована в следующем обновлении</p>
-        </div>
-      </div>
-
-      <!-- SETTINGS VIEW -->
-      <div id="settingsView" style="display: none;">
-        <h2>⚙️ Настройки сайта</h2>
-        <div class="settings-grid">
-          <div class="settings-card">
-            <h3>🎨 Управление темами</h3>
-            <div style="margin-bottom: 20px;">
-              <div class="checkbox-group">
-                <input type="checkbox" id="autoThemeMode" checked>
-                <label for="autoThemeMode">🔄 Автоматическое переключение тем по датам</label>
-              </div>
-            </div>
-            
-            <div class="theme-controls" id="themeControls">
-              <!-- Themes will be loaded here -->
-            </div>
-            
-            <div style="margin-top: 20px;">
-              <button class="btn btn-success" onclick="adminPanel.createCustomTheme()">
-                🎨 Создать свою тему
-              </button>
-              <button class="btn btn-secondary" onclick="adminPanel.resetThemes()" style="margin-left: 10px;">
-                🔄 Сбросить все темы
-              </button>
-            </div>
-          </div>
-        </div>
+      <div id="scheduleView" class="hidden">
+        <h2>График публикаций</h2>
+        <div id="scheduleList" class="stories-grid"><div class="loading">Загрузка...</div></div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: CREATE STORY -->
+  <!-- MODAL: Создать анонс -->
   <div id="createStoryModal" class="modal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">➕ Создать историю</h3>
-        <button class="close-modal">&times;</button>
-      </div>
-      
+      <h3>Создать анонс истории</h3>
       <form id="createStoryForm">
         <div class="form-group">
-          <label>Название истории *</label>
-          <input type="text" id="storyTitle" required placeholder="Введите название истории">
+          <label>Название *</label>
+          <input type="text" id="storyTitle" required>
         </div>
 
         <div class="form-group">
-          <label>Обложка истории</label>
-          <div class="drop-zone" id="coverDropZone">
-            <div>📁 Перетащите файл сюда</div>
-            <div style="font-size: 12px; margin-top: 8px;">или кликните для выбора</div>
-            <input type="file" id="coverFile" accept="image/*" style="display: none;">
-          </div>
-          <div id="coverPreview" style="display: none; margin-top: 10px;">
-            <img id="coverPreviewImg" style="max-width: 200px; border-radius: 8px;">
+          <label>Обложка</label>
+          <div class="drop-zone" id="coverDropZone">Перетащите или кликните</div>
+          <input type="file" id="coverFile" accept="image/*" hidden>
+          <div id="coverPreview" style="display:none; margin-top:10px;">
+            <img id="coverPreviewImg" style="max-width:100%; border-radius:8px;">
           </div>
         </div>
 
         <div class="form-group">
-          <label>Краткое описание</label>
-          <textarea id="storyDescription" rows="3" placeholder="Опишите сюжет истории..."></textarea>
+          <label>Описание</label>
+          <textarea id="storyDescription"></textarea>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Примерное количество эпизодов</label>
-            <input type="number" id="plannedEpisodes" min="0" placeholder="Не указано">
-          </div>
-         <div class="form-group">
-  <label>Точная дата и время публикации (по Киеву)</label>
-  <input type="datetime-local" id="publishDate" step="60">
-  <small style="color:#b2ff59; display:block; margin-top:8px;">
-    Оставь пустым — история опубликуется сразу<br>
-    Укажи будущее время — будет статус "Анонс" до этого момента<br>
-    Пример: 31 декабря 23:55 — выйдет ровно в Новый год!
-  </small>
-</div>
+        <div class="form-group">
+          <label>Планируемое кол-во эпизодов</label>
+          <input type="number" id="plannedEpisodes" min="1">
         </div>
 
         <div class="form-group">
           <label>Жанры</label>
           <div class="genres-container">
-            <div class="checkbox-group">
-              <input type="checkbox" id="genreFantasy" value="fantasy">
-              <label for="genreFantasy">🧙 Фэнтези</label>
-            </div>
-            <div class="checkbox-group">
-              <input type="checkbox" id="genreScifi" value="sci-fi">
-              <label for="genreScifi">🚀 Научная фантастика</label>
-            </div>
-            <div class="checkbox-group">
-              <input type="checkbox" id="genreHorror" value="horror">
-              <label for="genreHorror">👻 Хоррор</label>
-            </div>
-            <div class="checkbox-group">
-              <input type="checkbox" id="genreAdventure" value="adventure">
-              <label for="genreAdventure">🗺️ Приключения</label>
-            </div>
-            <div class="checkbox-group">
-              <input type="checkbox" id="genreMystery" value="mystery">
-              <label for="genreMystery">🕵️ Мистика</label>
-            </div>
-            <div class="checkbox-group">
-              <input type="checkbox" id="genreRomance" value="romance">
-              <label for="genreRomance">💖 Романтика</label>
-            </div>
+            <div class="checkbox-group"><input type="checkbox" value="fantasy" id="g1"><label for="g1">Фэнтези</label></div>
+            <div class="checkbox-group"><input type="checkbox" value="sci-fi" id="g2"><label for="g2">Научная фантастика</label></div>
+            <div class="checkbox-group"><input type="checkbox" value="horror" id="g3"><label for="g3">Хоррор</label></div>
+            <div class="checkbox-group"><input type="checkbox" value="adventure" id="g4"><label for="g4">Приключения</label></div>
+            <div class="checkbox-group"><input type="checkbox" value="romance" id="g5"><label for="g5">Романтика</label></div>
+            <div class="checkbox-group"><input type="checkbox" value="mystery" id="g6"><label for="g6">Мистика</label></div>
           </div>
+          <input type="text" placeholder="Свой жанр..." id="customGenre" style="margin-top:10px;">
         </div>
 
-        <div class="form-actions" style="display: flex; gap: 10px; margin-top: 20px;">
-          <button type="button" class="btn btn-secondary" id="btnCancelStory">❌ Отмена</button>
-          <button type="submit" class="btn btn-success">✅ Создать анонс</button>
+        <div class="form-group">
+          <label>Дата выхода первого эпизода (по Киеву)</label>
+          <input type="text" id="publishDateInput" placeholder="31.12.2025 или 12.2025 или 2026 или 2025-12-31T20:00">
+          <small style="color:#b2ff59;">
+            • 31.12.2025 20:00 — точная дата и время<br>
+            • 12.2025 — декабрь 2025<br>
+            • 2026 — весь 2026 год<br>
+            • пусто — сразу в "Анонс"
+          </small>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:20px;">
+          <button type="button" id="btnCancel" class="btn-secondary">Отмена</button>
+          <button type="submit">Создать анонс</button>
         </div>
       </form>
     </div>
   </div>
 
   <script>
-    class ThemeSystem {
-      constructor() {
-        this.themes = {
-          new_year: {
-            id: "new_year",
-            name: "Новый год",
-            auto: true,
-            startDate: "20.12",
-            endDate: "10.01",
-            effects: { snow: true, particlesSpeed: "normal" },
-            decorations: { logoEmoji: "🎄", cardCorner: "❄️", specialBanner: "🎄 С Новым Годом! 🎄" },
-            colors: { accent: "#4fffdc", backgroundOverlay: "rgba(0,0,0,0.15)" }
-          },
-          christmas: {
-            id: "christmas",
-            name: "Рождество",
-            auto: true,
-            startDate: "05.01",
-            endDate: "08.01",
-            effects: { snow: true, particlesSpeed: "slow" },
-            decorations: { logoEmoji: "⭐", cardCorner: "🌟", specialBanner: "⭐ С Рождеством! ⭐" },
-            colors: { accent: "#ffd700", backgroundOverlay: "rgba(255,215,0,0.1)" }
-          },
-          halloween: {
-            id: "halloween",
-            name: "Хеллоуин",
-            auto: true,
-            startDate: "27.10",
-            endDate: "02.11",
-            effects: { bats: true, fog: true },
-            decorations: { logoEmoji: "🎃", cardCorner: "👻", specialBanner: "🎃 Счастливого Хеллоуина! 🎃" },
-            colors: { accent: "#ff8c00", backgroundOverlay: "rgba(128,0,128,0.1)" }
-          },
-          spring: {
-            id: "spring",
-            name: "Весна",
-            auto: true,
-            startDate: "01.03",
-            endDate: "31.05",
-            effects: { petals: true },
-            decorations: { logoEmoji: "🌸", cardCorner: "🌺", specialBanner: "🌸 Весна пришла! 🌸" },
-            colors: { accent: "#ff69b4", backgroundOverlay: "rgba(144,238,144,0.1)" }
-          },
-          summer: {
-            id: "summer",
-            name: "Лето",
-            auto: true,
-            startDate: "01.06",
-            endDate: "31.08",
-            effects: { particles: true },
-            decorations: { logoEmoji: "☀️", cardCorner: "🌊", specialBanner: "☀️ Летнее настроение! ☀️" },
-            colors: { accent: "#00bfff", backgroundOverlay: "rgba(173,216,230,0.1)" }
-          },
-          autumn: {
-            id: "autumn",
-            name: "Осень",
-            auto: true,
-            startDate: "01.09",
-            endDate: "30.11",
-            effects: { leaves: true },
-            decorations: { logoEmoji: "🍁", cardCorner: "🍂", specialBanner: "🍁 Осенняя пора! 🍁" },
-            colors: { accent: "#ff8c00", backgroundOverlay: "rgba(210,180,140,0.1)" }
-          },
-          winter: {
-            id: "winter",
-            name: "Зима",
-            auto: true,
-            startDate: "01.12",
-            endDate: "28.02",
-            effects: { snow: true },
-            decorations: { logoEmoji: "🧊", cardCorner: "⛄", specialBanner: "🧊 Зимняя сказка! 🧊" },
-            colors: { accent: "#87ceeb", backgroundOverlay: "rgba(176,224,230,0.1)" }
-          },
-          birthday: {
-            id: "birthday",
-            name: "День рождения сайта",
-            auto: false,
-            effects: { confetti: true },
-            decorations: { logoEmoji: "🎉", cardCorner: "🎂", specialBanner: "🎉 С Днем Рождения! 🎉" },
-            colors: { accent: "#ff69b4", backgroundOverlay: "rgba(255,105,180,0.1)" }
-          },
-          neon: {
-            id: "neon",
-            name: "Темная неоновая тема",
-            auto: false,
-            effects: {},
-            decorations: { logoEmoji: "✨", cardCorner: "💫", specialBanner: "✨ Неоновая тема! ✨" },
-            colors: { accent: "#8a2be2", backgroundOverlay: "rgba(138,43,226,0.1)" }
-          },
-          anime: {
-            id: "anime",
-            name: "Аниме-тема",
-            auto: false,
-            effects: { hearts: true },
-            decorations: { logoEmoji: "💗", cardCorner: "😺", specialBanner: "💗 Аниме режим! 💗" },
-            colors: { accent: "#ff1493", backgroundOverlay: "rgba(255,20,147,0.1)" }
-          }
-        };
-        
-        this.currentTheme = null;
-        this.manualTheme = null;
-        this.manualThemeExpiry = null;
-        this.autoMode = true;
-        this.effectsContainer = document.getElementById('theme-effects');
-        
-        this.loadSettings();
+    const firebaseConfig = {
+      apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
+      authDomain: "crawl-stories.firebaseapp.com",
+      projectId: "crawl-stories",
+      storageBucket: "crawl-stories.firebasestorage.app",
+      messagingSenderId: Straightforward, no BS — вот твой **идеальный admin.html**
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const OFFICIAL_ADMIN_UID = "jKY1OmyNPphIgm2YFGTJyLwr0uC3";
+
+    let currentUser = null;
+
+    // === ЗАЩИТА ===
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        alert("Требуется вход в аккаунт");
+        location.href = "/";
+        return;
       }
 
-      async loadSettings() {
-        try {
-          // Пытаемся загрузить из localStorage
-          const saved = localStorage.getItem('themeSettings');
-          if (saved) {
-            const settings = JSON.parse(saved);
-            this.autoMode = settings.autoMode !== false;
-            this.manualTheme = settings.manualTheme || null;
-            this.manualThemeExpiry = settings.manualThemeExpiry || null;
-            
-            // Проверяем не истекла ли ручная тема
-            if (this.manualThemeExpiry && new Date() > new Date(this.manualThemeExpiry)) {
-              this.manualTheme = null;
-              this.manualThemeExpiry = null;
-              this.saveSettings();
-            }
-          }
-        } catch (e) {
-          console.warn('Ошибка загрузки настроек тем:', e);
-        }
-        
-        this.applyCurrentTheme();
+      currentUser = user;
+
+      const adminDoc = await db.collection("admins").doc(user.uid).get();
+      const isOfficial = user.uid === OFFICIAL_ADMIN_UID;
+
+      if (!adminDoc.exists && !isOfficial) {
+        alert("Доступ запрещён. Ты не админ.");
+        auth.signOut();
+        location.href = "/";
+        return;
       }
 
-      async saveSettings() {
-        try {
-          const settings = {
-            autoMode: this.autoMode,
-            manualTheme: this.manualTheme,
-            manualThemeExpiry: this.manualThemeExpiry
-          };
-          localStorage.setItem('themeSettings', JSON.stringify(settings));
-          
-          // Также сохраняем в Firestore если доступно
-          if (window.adminPanel?.db) {
-            await window.adminPanel.db.collection('settings').doc('theme').set(settings);
-          }
-        } catch (e) {
-          console.warn('Ошибка сохранения настроек тем:', e);
-        }
-      }
-
-      getCurrentDate() {
-        const now = new Date();
-        return {
-          day: now.getDate(),
-          month: now.getMonth() + 1,
-          year: now.getFullYear()
-        };
-      }
-
-      isDateInRange(theme, currentDate) {
-        if (!theme.startDate || !theme.endDate) return false;
-        
-        const [startDay, startMonth] = theme.startDate.split('.').map(Number);
-        const [endDay, endMonth] = theme.endDate.split('.').map(Number);
-        
-        const current = currentDate.month * 100 + currentDate.day;
-        const start = startMonth * 100 + startDay;
-        const end = endMonth * 100 + endDay;
-        
-        if (start <= end) {
-          return current >= start && current <= end;
-        } else {
-          return current >= start || current <= end;
-        }
-      }
-
-      detectAutoTheme() {
-        if (!this.autoMode) return null;
-        
-        const currentDate = this.getCurrentDate();
-        const activeThemes = [];
-        
-        for (const theme of Object.values(this.themes)) {
-          if (theme.auto && this.isDateInRange(theme, currentDate)) {
-            activeThemes.push(theme);
-          }
-        }
-        
-        // Приоритет: праздничные > сезонные > обычные
-        const holidayThemes = ['new_year', 'christmas', 'halloween', 'birthday'];
-        const seasonalThemes = ['spring', 'summer', 'autumn', 'winter'];
-        
-        const holiday = activeThemes.find(t => holidayThemes.includes(t.id));
-        if (holiday) return holiday;
-        
-        const seasonal = activeThemes.find(t => seasonalThemes.includes(t.id));
-        if (seasonal) return seasonal;
-        
-        return activeThemes[0] || null;
-      }
-
-      applyCurrentTheme() {
-        let themeToApply = null;
-        
-        if (this.manualTheme) {
-          themeToApply = this.themes[this.manualTheme];
-        } else if (this.autoMode) {
-          themeToApply = this.detectAutoTheme();
-        }
-        
-        this.applyTheme(themeToApply);
-      }
-
-      applyTheme(theme) {
-        if (!theme) {
-          this.clearTheme();
-          return;
-        }
-        
-        this.currentTheme = theme;
-        this.updateCSSVariables(theme);
-        this.updateDecorations(theme);
-        this.showBanner(theme);
-        this.createEffects(theme);
-        
-        console.log(`✅ Применена тема: ${theme.name}`);
-      }
-
-      updateCSSVariables(theme) {
-        const root = document.documentElement;
-        if (theme.colors?.accent) {
-          root.style.setProperty('--accent-primary', theme.colors.accent);
-        }
-      }
-
-      updateDecorations(theme) {
-        const logo = document.getElementById('siteLogo');
-        if (logo && theme.decorations?.logoEmoji) {
-          logo.innerHTML = `${theme.decorations.logoEmoji} АДМИН-ПАНЕЛЬ CRAWL.STORIES`;
-        }
-        
-        // Обновляем углы карточек историй
-        document.querySelectorAll('.story-card').forEach(card => {
-          let corner = card.querySelector('.story-card-corner');
-          if (!corner) {
-            corner = document.createElement('div');
-            corner.className = 'story-card-corner';
-            card.appendChild(corner);
-          }
-          corner.textContent = theme.decorations?.cardCorner || '';
-        });
-      }
-
-      showBanner(theme) {
-        const banner = document.getElementById('themeBanner');
-        if (banner && theme.decorations?.specialBanner) {
-          banner.textContent = theme.decorations.specialBanner;
-          banner.style.display = 'block';
-          banner.style.setProperty('--theme-accent', theme.colors?.accent);
-        } else if (banner) {
-          banner.style.display = 'none';
-        }
-      }
-
-      createEffects(theme) {
-        this.clearEffects();
-        
-        if (!theme.effects) return;
-        
-        if (theme.effects.snow) this.createSnowEffect();
-        if (theme.effects.leaves) this.createLeavesEffect();
-        if (theme.effects.petals) this.createPetalsEffect();
-        if (theme.effects.hearts) this.createHeartsEffect();
-        if (theme.effects.confetti) this.createConfettiEffect();
-        if (theme.effects.bats) this.createBatsEffect();
-        if (theme.effects.fog) this.createFogEffect();
-      }
-
-      createSnowEffect() {
-        for (let i = 0; i < 50; i++) {
-          setTimeout(() => {
-            const snowflake = document.createElement('div');
-            snowflake.className = 'snowflake';
-            snowflake.textContent = '❄';
-            snowflake.style.left = Math.random() * 100 + '%';
-            snowflake.style.fontSize = (8 + Math.random() * 12) + 'px';
-            snowflake.style.opacity = 0.3 + Math.random() * 0.7;
-            snowflake.style.animation = `fall ${3 + Math.random() * 5}s linear infinite`;
-            this.effectsContainer.appendChild(snowflake);
-          }, i * 100);
-        }
-      }
-
-      createLeavesEffect() {
-        for (let i = 0; i < 30; i++) {
-          setTimeout(() => {
-            const leaf = document.createElement('div');
-            leaf.className = 'leaf';
-            leaf.textContent = '🍁';
-            leaf.style.left = Math.random() * 100 + '%';
-            leaf.style.fontSize = (12 + Math.random() * 16) + 'px';
-            leaf.style.animation = `fall ${4 + Math.random() * 6}s linear infinite`;
-            this.effectsContainer.appendChild(leaf);
-          }, i * 150);
-        }
-      }
-
-      createPetalsEffect() {
-        for (let i = 0; i < 25; i++) {
-          setTimeout(() => {
-            const petal = document.createElement('div');
-            petal.className = 'petal';
-            petal.textContent = '🌸';
-            petal.style.left = Math.random() * 100 + '%';
-            petal.style.fontSize = (10 + Math.random() * 14) + 'px';
-            petal.style.animation = `fall ${5 + Math.random() * 5}s linear infinite`;
-            this.effectsContainer.appendChild(petal);
-          }, i * 200);
-        }
-      }
-
-      createHeartsEffect() {
-        for (let i = 0; i < 20; i++) {
-          setTimeout(() => {
-            const heart = document.createElement('div');
-            heart.className = 'particle';
-            heart.textContent = '💗';
-            heart.style.left = Math.random() * 100 + '%';
-            heart.style.fontSize = (8 + Math.random() * 10) + 'px';
-            heart.style.animation = `fall ${6 + Math.random() * 4}s linear infinite`;
-            this.effectsContainer.appendChild(heart);
-          }, i * 250);
-        }
-      }
-
-      createConfettiEffect() {
-        const confettiChars = ['🎉', '🎊', '✨', '🌟'];
-        for (let i = 0; i < 40; i++) {
-          setTimeout(() => {
-            const confetti = document.createElement('div');
-            confetti.className = 'particle';
-            confetti.textContent = confettiChars[Math.floor(Math.random() * confettiChars.length)];
-            confetti.style.left = Math.random() * 100 + '%';
-            confetti.style.fontSize = (10 + Math.random() * 12) + 'px';
-            confetti.style.animation = `fall ${2 + Math.random() * 3}s linear infinite`;
-            this.effectsContainer.appendChild(confetti);
-          }, i * 75);
-        }
-      }
-
-      createBatsEffect() {
-        for (let i = 0; i < 15; i++) {
-          setTimeout(() => {
-            const bat = document.createElement('div');
-            bat.className = 'bat';
-            bat.textContent = '🦇';
-            bat.style.left = '-50px';
-            bat.style.top = (Math.random() * 80 + 10) + '%';
-            bat.style.fontSize = (12 + Math.random() * 10) + 'px';
-            bat.style.animation = `fly ${8 + Math.random() * 4}s linear infinite`;
-            this.effectsContainer.appendChild(bat);
-          }, i * 1000);
-        }
-      }
-
-      createFogEffect() {
-        const fog = document.createElement('div');
-        fog.style.position = 'fixed';
-        fog.style.bottom = '0';
-        fog.style.left = '0';
-        fog.style.right = '0';
-        fog.style.height = '30%';
-        fog.style.background = 'linear-gradient(transparent, rgba(128, 128, 128, 0.3))';
-        fog.style.pointerEvents = 'none';
-        fog.style.zIndex = '9998';
-        document.body.appendChild(fog);
-      }
-
-      clearEffects() {
-        this.effectsContainer.innerHTML = '';
-        // Удаляем туман если есть
-        const fog = document.querySelector('div[style*="linear-gradient(transparent, rgba(128, 128, 128, 0.3)"]');
-        if (fog) fog.remove();
-      }
-
-      clearTheme() {
-        this.currentTheme = null;
-        this.clearEffects();
-        
-        // Восстанавливаем стандартные CSS переменные
-        const root = document.documentElement;
-        root.style.setProperty('--accent-primary', '#ffe81f');
-        
-        // Убираем декор
-        const logo = document.getElementById('siteLogo');
-        if (logo) logo.innerHTML = '⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES';
-        
-        document.querySelectorAll('.story-card-corner').forEach(corner => {
-          corner.remove();
-        });
-        
-        const banner = document.getElementById('themeBanner');
-        if (banner) banner.style.display = 'none';
-      }
-
-      setManualTheme(themeId, days = null) {
-        this.manualTheme = themeId;
-        
-        if (days) {
-          const expiry = new Date();
-          expiry.setDate(expiry.getDate() + days);
-          this.manualThemeExpiry = expiry.toISOString();
-        } else {
-          this.manualThemeExpiry = null;
-        }
-        
-        this.saveSettings();
-        this.applyCurrentTheme();
-      }
-
-      disableManualTheme() {
-        this.manualTheme = null;
-        this.manualThemeExpiry = null;
-        this.saveSettings();
-        this.applyCurrentTheme();
-      }
-
-      setAutoMode(enabled) {
-        this.autoMode = enabled;
-        this.saveSettings();
-        this.applyCurrentTheme();
-      }
-
-      getActiveTheme() {
-        if (this.manualTheme) {
-          return {
-            theme: this.themes[this.manualTheme],
-            mode: 'manual',
-            expiry: this.manualThemeExpiry
-          };
-        } else if (this.autoMode) {
-          return {
-            theme: this.detectAutoTheme(),
-            mode: 'auto'
-          };
-        } else {
-          return { theme: null, mode: 'none' };
-        }
-      }
-
-      init() {
-        this.applyCurrentTheme();
-        this.addEffectAnimations();
-      }
-
-      addEffectAnimations() {
-        if (!document.getElementById('theme-animations')) {
-          const style = document.createElement('style');
-          style.id = 'theme-animations';
-          style.textContent = `
-            @keyframes fall {
-              to {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 0;
-              }
-            }
-            @keyframes fly {
-              0% {
-                transform: translateX(0) translateY(0);
-                opacity: 0;
-              }
-              10% {
-                opacity: 1;
-              }
-              90% {
-                opacity: 1;
-              }
-              100% {
-                transform: translateX(100vw) translateY(${Math.random() * 100 - 50}px);
-                opacity: 0;
-              }
-            }
-          `;
-          document.head.appendChild(style);
-        }
-      }
-    }
-
-    class AdminPanel {
-      constructor() {
-        this.stories = [];
-        this.currentView = 'stories';
-        this.adminPassword = "1111";
-        
-        this.firebaseConfig = {
-          apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
-          authDomain: "crawl-stories.firebaseapp.com",
-          projectId: "crawl-stories",
-          storageBucket: "crawl-stories.firebasestorage.app",
-          messagingSenderId: "886479757650",
-          appId: "1:886479757650:web:194ad1dd2d02c959bdda8b",
-          measurementId: "G-SGC2HF0455",
-        };
-
-        this.init();
-      }
-
-      async init() {
-        try {
-          if (typeof firebase !== 'undefined') {
-            firebase.initializeApp(this.firebaseConfig);
-            this.db = firebase.firestore();
-            console.log("🔥 Firebase инициализирован");
-          } else {
-            console.warn("Firebase не загружен, используется режим демо");
-          }
-
-          this.setupEventListeners();
-          this.showLoginScreen();
-          
-        } catch (error) {
-          console.error("Ошибка инициализации:", error);
-        }
-      }
-
-      showLoginScreen() {
-        document.getElementById("loginScreen").style.display = "flex";
-        document.getElementById("adminInterface").style.display = "none";
-      }
-
-      showAdminInterface() {
-        document.getElementById("loginScreen").style.display = "none";
-        document.getElementById("adminInterface").style.display = "block";
-        this.loadStories();
-        
-        // Ждем пока themes-system.js загрузится и инициализируется
-        const waitForThemes = () => {
-          if (window.themesSystem) {
-            this.loadThemeControls();
-          } else {
-            setTimeout(waitForThemes, 50);
-          }
-        };
-        waitForThemes();
-      }
-
-      setupEventListeners() {
-        // Логин
-        document.getElementById("loginForm").addEventListener("submit", (e) => {
-          e.preventDefault();
-          this.handleLogin();
-        });
-
-        // Навигация
-        document.getElementById("btnCreateStory").addEventListener("click", () => {
-          this.showCreateStoryModal();
-        });
-
-        document.getElementById("btnStories").addEventListener("click", () => {
-          this.showView('stories');
-        });
-
-        document.getElementById("btnSchedule").addEventListener("click", () => {
-          this.showView('schedule');
-        });
-
-        document.getElementById("btnImport").addEventListener("click", () => {
-          this.showView('import');
-        });
-
-        document.getElementById("btnSettings").addEventListener("click", () => {
-          this.showView('settings');
-        });
-
-        document.getElementById("btnLogout").addEventListener("click", () => {
-          this.showLoginScreen();
-        });
-
-        // Авто-режим тем
-        if (document.getElementById('autoThemeMode')) {
-          document.getElementById('autoThemeMode').addEventListener('change', (e) => {
-            if (e.target.checked) {
-              window.themesSystem?.disableManualMode();
-            } else {
-              // Остаемся в ручном режиме
-            }
-            this.loadThemeControls();
-          });
-        }
-
-        // Модальное окно создания истории
-        document.getElementById("createStoryForm").addEventListener("submit", (e) => {
-          e.preventDefault();
-          this.createStory();
-        });
-
-        document.getElementById("btnCancelStory").addEventListener("click", () => {
-          this.hideModal('createStoryModal');
-        });
-
-        document.querySelector("#createStoryModal .close-modal").addEventListener("click", () => {
-          this.hideModal('createStoryModal');
-        });
-
-        // Drag & drop для обложки
-        const dropZone = document.getElementById('coverDropZone');
-        const fileInput = document.getElementById('coverFile');
-
-        dropZone.addEventListener('click', () => {
-          fileInput.click();
-        });
-
-        fileInput.addEventListener('change', (e) => {
-          this.handleCoverSelect(e.target.files[0]);
-        });
-
-        dropZone.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          dropZone.classList.add('active');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-          dropZone.classList.remove('active');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-          e.preventDefault();
-          dropZone.classList.remove('active');
-          const file = e.dataTransfer.files[0];
-          if (file && file.type.startsWith('image/')) {
-            this.handleCoverSelect(file);
-          }
-        });
-
-        // Определение точности даты
-        document.getElementById('publishDate').addEventListener('input', (e) => {
-          this.updateDatePrecision(e.target.value);
-        });
-      }
-
-      handleLogin() {
-        const password = document.getElementById("adminPassword").value;
-        if (password === this.adminPassword) {
-          this.showAdminInterface();
-        } else {
-          alert("❌ Неверный пароль");
-        }
-      }
-
-      showView(viewName) {
-        // Скрыть все вью
-        document.getElementById('storiesView').style.display = 'none';
-        document.getElementById('scheduleView').style.display = 'none';
-        document.getElementById('importView').style.display = 'none';
-        document.getElementById('settingsView').style.display = 'none';
-
-        // Показать выбранную вью
-        document.getElementById(viewName + 'View').style.display = 'block';
-        this.currentView = viewName;
-
-        // Загрузить данные если нужно
-        if (viewName === 'stories') {
-          this.loadStories();
-        } else if (viewName === 'schedule') {
-          this.loadEpisodesSchedule();
-          this.setupScheduleTabs();
-        } else if (viewName === 'settings') {
-          this.loadThemeControls();
-        }
-      }
-
-      setupScheduleTabs() {
-        const tabs = document.querySelectorAll('#scheduleView .tab');
-        tabs.forEach(tab => {
-          tab.addEventListener('click', () => {
-            // Убрать активный класс
-            tabs.forEach(t => {
-              t.style.background = 'transparent';
-              t.style.color = 'var(--text-secondary)';
-              t.style.border = '1px solid var(--border-light)';
-            });
-            
-            // Добавить активный класс
-            tab.style.background = 'var(--accent-primary)';
-            tab.style.color = 'var(--bg-primary)';
-            tab.style.border = 'none';
-            
-            // Переключить контент
-            const tabName = tab.dataset.tab;
-            document.getElementById('episodesSchedule').style.display = 'none';
-            document.getElementById('storiesSchedule').style.display = 'none';
-            document.getElementById(tabName + 'Schedule').style.display = 'block';
-            
-            // Загрузить данные
-            if (tabName === 'episodes') {
-              this.loadEpisodesSchedule();
-            } else {
-              this.loadStoriesSchedule();
-            }
-          });
-        });
-      }
-
-      async loadEpisodesSchedule() {
-        try {
-          const container = document.getElementById('episodesSchedule');
-          container.innerHTML = '<div class="loading">Загрузка эпизодов...</div>';
-          
-          if (!this.db) {
-            container.innerHTML = '<div class="empty-state">Firebase недоступен</div>';
-            return;
-          }
-          
-          const episodesSnapshot = await this.db.collection('episodes')
-            .where('status', 'in', ['scheduled', 'published'])
-            .get();
-          
-          if (episodesSnapshot.empty) {
-            container.innerHTML = '<div class="empty-state">Нет запланированных эпизодов</div>';
-            return;
-          }
-          
-          const episodesWithStories = await Promise.all(
-            episodesSnapshot.docs.map(async (doc) => {
-              const episode = { id: doc.id, ...doc.data() };
-              try {
-                const storyDoc = await this.db.collection('stories').doc(episode.storyId).get();
-                episode.storyTitle = storyDoc.exists ? storyDoc.data().title : 'Неизвестная история';
-              } catch (e) {
-                episode.storyTitle = 'Ошибка загрузки';
-              }
-              return episode;
-            })
-          );
-          
-          container.innerHTML = episodesWithStories.map(episode => {
-            const publishDate = episode.publishDate ? 
-              (episode.publishDate.toDate ? episode.publishDate.toDate() : new Date(episode.publishDate)) : 
-              new Date();
-            
-            return `
-              <div class="schedule-item">
-                <div class="schedule-info">
-                  <h4>${episode.storyTitle} #${episode.episodeNumber} - ${episode.title}</h4>
-                  <p>${episode.description || 'Без описания'}</p>
-                </div>
-                <div class="schedule-date">
-                  <input type="datetime-local" 
-                         value="${publishDate.toISOString().slice(0, 16)}"
-                         onchange="adminPanel.updateEpisodeDate('${episode.id}', this.value)"
-                         style="padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);">
-                  <div class="publish-status">${episode.status === 'published' ? '✅ Опубликован' : '⏳ Запланирован'}</div>
-                </div>
-              </div>
-            `;
-          }).join('');
-          
-        } catch (error) {
-          console.error('Ошибка загрузки эпизодов:', error);
-          document.getElementById('episodesSchedule').innerHTML = '<div class="empty-state">Ошибка загрузки эпизодов</div>';
-        }
-      }
-
-      async loadStoriesSchedule() {
-        try {
-          const container = document.getElementById('storiesSchedule');
-          
-          // Истории без эпизодов и с статусом анонс
-          const storiesForAnnounce = this.stories.filter(story => 
-            (story.episodesCount === 0 || !story.episodesCount) && 
-            story.status === 'announcement'
-          );
-          
-          if (storiesForAnnounce.length === 0) {
-            container.innerHTML = '<div class="empty-state">Нет историй для планирования анонсов</div>';
-            return;
-          }
-          
-          container.innerHTML = storiesForAnnounce.map(story => {
-            let currentDate = '';
-            if (story.publishDate) {
-              try {
-                if (story.publishDate.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
-                  const [day, month, year] = story.publishDate.split('.');
-                  currentDate = `${year}-${month}-${day}`;
-                }
-              } catch (e) {}
-            }
-            
-            return `
-              <div class="schedule-item">
-                <div class="schedule-info">
-                  <h4>${story.title}</h4>
-                  <p>${story.description || 'Без описания'}</p>
-                </div>
-                <div class="schedule-date">
-                  <input type="date" 
-                         value="${currentDate}"
-                         onchange="adminPanel.updateStoryAnnounceDate('${story.id}', this.value)"
-                         style="padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);"
-                         placeholder="Задать дату анонса">
-                  <div class="publish-status">${story.publishDate ? '📅 Запланирован' : '⏳ Без даты'}</div>
-                </div>
-              </div>
-            `;
-          }).join('');
-          
-        } catch (error) {
-          console.error('Ошибка загрузки историй:', error);
-          document.getElementById('storiesSchedule').innerHTML = '<div class="empty-state">Ошибка загрузки историй</div>';
-        }
-      }
-
-      async updateEpisodeDate(episodeId, newDate) {
-        try {
-          await this.db.collection('episodes').doc(episodeId).update({
-            publishDate: new Date(newDate),
-            updatedAt: new Date()
-          });
-          alert('✅ Дата эпизода обновлена!');
-          this.loadEpisodesSchedule();
-        } catch (error) {
-          console.error('Ошибка:', error);
-          alert('❌ Ошибка обновления даты эпизода');
-        }
-      }
-
-      async updateStoryAnnounceDate(storyId, newDate) {
-        try {
-          const date = new Date(newDate);
-          const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
-          
-          await this.db.collection('stories').doc(storyId).update({
-            publishDate: formattedDate,
-            updatedAt: new Date()
-          });
-          
-          alert('✅ Дата анонса установлена!');
-          this.loadStoriesSchedule();
-          
-        } catch (error) {
-          console.error('Ошибка:', error);
-          alert('❌ Ошибка установки даты анонса');
-        }
-      }
-
-      showCreateStoryModal() {
-        document.getElementById('createStoryModal').style.display = 'flex';
-        document.getElementById('createStoryForm').reset();
-        document.getElementById('coverPreview').style.display = 'none';
-        document.getElementById('datePrecision').textContent = '';
-      }
-
-      hideModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-      }
-
-      handleCoverSelect(file) {
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const preview = document.getElementById('coverPreview');
-          const img = document.getElementById('coverPreviewImg');
-          img.src = e.target.result;
-          preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      }
-
-      updateDatePrecision(dateString) {
-        const precisionEl = document.getElementById('datePrecision');
-        if (!dateString.trim()) {
-          precisionEl.textContent = '';
-          return;
-        }
-
-        // Проверяем формат даты
-        if (dateString.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
-          precisionEl.textContent = '✅ точная дата';
-        } else if (dateString.match(/^\d{2}\.\d{4}$/)) {
-          precisionEl.textContent = '📅 месяц запланирован';
-        } else if (dateString.match(/^\d{4}$/)) {
-          precisionEl.textContent = '📅 год запланирован';
-        } else {
-          precisionEl.textContent = '❌ неверный формат (используйте ДД.ММ.ГГГГ, ММ.ГГГГ или ГГГГ)';
-        }
-      }
-
-      async createStory() {
-        const title = document.getElementById('storyTitle').value.trim();
-        const description = document.getElementById('storyDescription').value.trim();
-        const plannedEpisodes = document.getElementById('plannedEpisodes').value;
-        const publishDate = document.getElementById('publishDate').value.trim();
-
-        if (!title) {
-          alert('❌ Введите название истории');
-          return;
-        }
-
-        // Собираем выбранные жанры
-        const genres = [];
-        document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
-          genres.push(checkbox.value);
-        });
-
-        try {
-          const storyData = {
-            title: title,
-            description: description,
-            coverUrl: document.getElementById('coverPreviewImg').src || '',
-            plannedEpisodes: plannedEpisodes ? parseInt(plannedEpisodes) : null,
-            publishDate: publishDate || null,
-            genres: genres,
-            status: 'announcement',
-            episodesCount: 0,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          };
-
-          if (this.db) {
-            const docRef = await this.db.collection('stories').add(storyData);
-            console.log('✅ История создана:', docRef.id);
-          } else {
-            // Демо-режим
-            storyData.id = 'demo-' + Date.now();
-            this.stories.push(storyData);
-          }
-
-          this.hideModal('createStoryModal');
-          this.loadStories();
-          alert('✅ Анонс истории создан!');
-        } catch (error) {
-          console.error('Ошибка создания истории:', error);
-          alert('❌ Ошибка создания истории');
-        }
-      }
-
-      async loadStories() {
-        try {
-          if (this.db) {
-            const snapshot = await this.db.collection('stories').orderBy('createdAt', 'desc').get();
-            this.stories = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
-          }
-
-          this.renderStories();
-        } catch (error) {
-          console.error('Ошибка загрузки историй:', error);
-          // Демо-данные
-          this.stories = [
-            {
-              id: 'demo-1',
-              title: 'Пример истории',
-              description: 'Это демонстрационная история',
-              status: 'announcement',
-              publishDate: '12.2024',
-              episodesCount: 0,
-              createdAt: new Date()
-            }
-          ];
-          this.renderStories();
-        }
-      }
-
-      renderStories() {
-        const container = document.getElementById('storiesList');
-        
-        if (!container) return;
-        
-        if (this.stories.length === 0) {
-          container.innerHTML = `
-            <div class="empty-state">
-              <div class="icon">📚</div>
-              <p>Историй пока нет</p>
-              <p>Создайте первую историю</p>
-            </div>
-          `;
-          return;
-        }
-
-        container.innerHTML = this.stories.map(story => `
-          <div class="story-card" onclick="adminPanel.openStoryConfig('${story.id}')">
-            <div class="story-card-corner"></div>
-            <div class="story-header">
-              <h3 class="story-title">${story.title}</h3>
-              <div class="story-meta">
-                <span class="badge ${story.status}">${this.getStatusText(story.status)}</span>
-                ${story.episodesCount > 0 ? `<span class="badge">📊 ${story.episodesCount} эп.</span>` : ''}
-              </div>
-            </div>
-            <p class="story-desc">${story.description || 'Описание отсутствует'}</p>
-            ${story.publishDate ? `<div class="story-date">📅 ${this.formatPublishDate(story.publishDate)}</div>` : ''}
-          </div>
-        `).join('');
-        
-        // БЕЗОПАСНОЕ ОБНОВЛЕНИЕ ДЕКОРАЦИЙ
-        if (this.themeSystem && this.themeSystem.currentTheme) {
-          this.themeSystem.updateDecorations(this.themeSystem.currentTheme);
-        }
-      }
-
-      openStoryConfig(storyId) {
-        window.open(`admin_config.html?story=${storyId}`, '_blank');
-      }
-
-      loadThemeControls() {
-        // ОБЯЗАТЕЛЬНО проверяем что window.themesSystem существует
-        if (!window.themesSystem) {
-          setTimeout(() => this.loadThemeControls(), 100);
-          return;
-        }
-
-        const container = document.getElementById('themeControls');
-        const autoModeCheckbox = document.getElementById('autoThemeMode');
-        
-        // Если контейнер не найден - ждем и пробуем снова
-        if (!container) {
-          setTimeout(() => this.loadThemeControls(), 100);
-          return;
-        }
-        
-        // Используем глобальную систему тем для синхронизации
-        const themes = window.themesSystem.getAvailableThemes() || {};
-        const currentTheme = window.themesSystem.getCurrentTheme();
-        const isManualMode = window.themesSystem.isManualMode();
-        
-        container.innerHTML = Object.entries(themes).map(([themeKey, theme]) => {
-          const isActive = isManualMode && currentTheme === themeKey;
-          const isManual = isManualMode && currentTheme === themeKey;
-          const showSettings = isActive;
-          
-          return `
-            <div class="theme-control ${isActive ? 'active' : ''}" style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border-light);">
-              <div class="theme-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <div>
-                  <div class="theme-name" style="font-weight: bold; font-size: 16px;">${theme.name}</div>
-                  <div class="theme-dates" style="font-size: 12px; color: var(--text-secondary);">Период: ${theme.startMonth}-${theme.startDay} по ${theme.endMonth}-${theme.endDay}</div>
-                </div>
-                <div>
-                  ${isManual ? '<span style="color: var(--accent-primary); font-size: 12px; background: rgba(255,232,31,0.1); padding: 4px 8px; border-radius: 4px;">👆 Активна</span>' : ''}
-                </div>
-              </div>
-              
-              <div class="theme-controls-row" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-small ${isManual ? 'btn-success' : 'btn-secondary'}" 
-                        onclick="window.themesSystem?.setManualTheme('${themeKey}'); document.getElementById('settingsView').innerHTML=''; setTimeout(() => window.adminPanel.loadThemeControls(), 100);"
-                        style="flex: 1; min-width: 100px;">
-                  ${isManual ? '✅ Вкл' : '👁️ Включить'}
-                </button>
-                
-                <button class="btn btn-small btn-secondary" 
-                        onclick="window.themesSystem?.disableManualMode(); setTimeout(() => window.adminPanel.loadThemeControls(), 100);"
-                        style="flex: 1; min-width: 100px;">
-                  🔄 Авто-режим
-                </button>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      toggleTheme(themeId) {
-        // Используем глобальную систему для синхронизации
-        if (window.themesSystem?.getCurrentTheme() === themeId) {
-          window.themesSystem.disableManualMode();
-        } else {
-          window.themesSystem?.setManualTheme(themeId);
-        }
-        this.loadThemeControls();
-      }
-
-      toggleThemeSettings(themeId) {
-        const settings = document.getElementById(`settings-${themeId}`);
-        if (settings) settings.classList.toggle('active');
-      }
-
-      previewTheme(themeId) {
-        window.themesSystem?.setManualTheme(themeId);
-        setTimeout(() => {
-          window.themesSystem?.disableManualMode();
-        }, 3000);
-      }
-
-      disableManualTheme() {
-        window.themesSystem?.disableManualMode();
-        this.loadThemeControls();
-      }
-
-      setThemeIntensity(themeId, intensity) {
-        console.log(`Установлена интенсивность ${intensity} для темы ${themeId}`);
-        // Здесь будет логика изменения интенсивности эффектов
-      }
-
-      createCustomTheme() {
-        alert('Создание пользовательской темы будет доступно в следующем обновлении');
-      }
-
-      resetThemes() {
-        if (confirm('Сбросить все настройки тем? Будут включены стандартные настройки.')) {
-          this.themeSystem.disableManualTheme();
-          this.themeSystem.setAutoMode(true);
-          localStorage.removeItem('themeSettings');
-          this.loadThemeControls();
-          alert('✅ Настройки тем сброшены');
-        }
-      }
-
-      getStatusText(status) {
-        const statuses = {
-          'announcement': 'Анонс',
-          'draft': 'Черновик',
-          'releasing': 'Выходит',
-          'published': 'Опубликовано',
-          'hidden': 'Скрыто'
-        };
-        return statuses[status] || status;
-      }
-
-      formatPublishDate(dateString) {
-        if (dateString.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
-          return `Запланировано: ${dateString}`;
-        } else if (dateString.match(/^\d{2}\.\d{4}$/)) {
-          const [month, year] = dateString.split('.');
-          const monthNames = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
-          return `Запланировано на ${monthNames[parseInt(month) - 1]} ${year}`;
-        } else if (dateString.match(/^\d{4}$/)) {
-          return `Запланировано на ${dateString}`;
-        }
-        return dateString;
-      }
-    }
-
-    // Инициализация админ-панели
-    document.addEventListener('DOMContentLoaded', () => {
-      window.adminPanel = new AdminPanel();
-      window.themeSystem = window.adminPanel.themeSystem;
+      // Админ вошёл
+      document.getElementById("authScreen").classList.add("hidden");
+      document.getElementById("adminInterface").classList.remove("hidden");
+      loadStories();
+      loadSchedule();
     });
+
+    // Выход
+    document.getElementById("btnLogout").onclick = () => auth.signOut();
+
+    // Создание анонса
+    document.getElementById("btnCreateStory").onclick = () => {
+      document.getElementById("createStoryModal").classList.add("active");
+    };
+
+    document.getElementById("btnCancel").onclick = () => {
+      document.getElementById("createStoryModal").classList.remove("active");
+    };
+
+    document.getElementById("createStoryModal").onclick = (e) => {
+      if (e.target === document.getElementById("createStoryModal")) {
+        document.getElementById("createStoryModal").classList.remove("active");
+      }
+    };
+
+    // Drag & drop обложки
+    const dropZone = document.getElementById("coverDropZone");
+    const fileInput = document.getElementById("coverFile");
+    dropZone.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => handleCover(e.target.files[0]);
+
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add("active"); };
+    dropZone.ondragleave = () => dropZone.classList.remove("active");
+    dropZone.ondrop = (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("active");
+      if (e.dataTransfer.files[0]) handleCover(e.dataTransfer.files[0]);
+    };
+
+    function handleCover(file) {
+      if (!file?.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById("coverPreviewImg").src = e.target.result;
+        document.getElementById("coverPreview").style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Парсинг гибкой даты
+    function parseFlexibleDate(str) {
+      if (!str.trim()) return null;
+
+      // Точная дата и время
+      if (str.includes("T") || str.match(/^\d{4}-\d{2}-\d{2}/)) {
+        return firebase.firestore.Timestamp.fromDate(new Date(str));
+      }
+
+      const parts = str.trim().split(".");
+      if (parts.length === 1) return parts[0]; // только год
+      if (parts.length === 2) return `${parts[0].padStart(2,"0")}.${parts[1]}`; // месяц.год
+      if (parts.length === 3) return `${parts[0].padStart(2,"0")}.${parts[1].padStart(2,"0")}.${parts[2]}`; // дд.мм.гггг
+
+      return null;
+    }
+
+    // Создание истории
+    document.getElementById("createStoryForm").onsubmit = async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById("storyTitle").value.trim();
+      if (!title) return alert("Название обязательно");
+
+      const genres = [];
+      document.querySelectorAll('input[type="checkbox"]:checked').forEach(ch => genres.push(ch.value));
+      const custom = document.getElementById("customGenre").value.trim();
+      if (custom) genres.push(custom);
+
+      const flexibleDate = parseFlexibleDate(document.getElementById("publishDateInput").value);
+
+      const storyData = {
+        title,
+        description: document.getElementById("storyDescription").value.trim(),
+        cover: document.getElementById("coverPreviewImg").src || null,
+        plannedEpisodes: parseInt(document.getElementById("plannedEpisodes").value) || null,
+        firstEpisodeDate: flexibleDate ? (typeof flexibleDate === "string" ? flexibleDate : flexibleDate) : null,
+        genres,
+        status: "announcement",
+        visibility: "visible",
+        episodesCount: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        await db.collection("stories").add(storyData);
+        alert("Анонс создан!");
+        document.getElementById("createStoryModal").classList.remove("active");
+        loadStories();
+      } catch (err) {
+        console.error(err);
+        alert("Ошибка создания");
+      }
+    };
+
+    // Загрузка историй
+    async function loadStories() {
+      const snap = await db.collection("stories").orderBy("createdAt", "desc").get();
+      const list = document.getElementById("storiesList");
+      if (snap.empty) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">Пусто</div><p>Нет историй</p></div>`;
+        return;
+      }
+
+      list.innerHTML = snap.docs.map(doc => {
+        const s = doc.data();
+        return `
+          <div class="story-card" onclick="location.href='admin_config.html?story=${doc.id}'">
+            <h3 class="story-title">${s.title}</h3>
+            <p>${s.description || "Без описания"}</p>
+            <span class="badge announcement">Анонс</span>
+            ${s.firstEpisodeDate ? `<small>Старт: ${s.firstEpisodeDate}</small>` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Загрузка графика (просто анонсы)
+    async function loadSchedule() {
+      // можно расширить позже
+    }
+
+    // Навигация
+    document.getElementById("btnStories").onclick = () => {
+      document.getElementById("storiesView").classList.remove("hidden");
+      document.getElementById("scheduleView").classList.add("hidden");
+    };
+    document.getElementById("btnSchedule").onclick = () => {
+      document.getElementById("storiesView").classList.add("hidden");
+      document.getElementById("scheduleView").classList.remove("hidden");
+      loadSchedule();
+    };
   </script>
-  <script src="themes-system.js"></script>
 </body>
 </html>
