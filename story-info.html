@@ -2,13 +2,13 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Информация о истории — CRAWL.STORIES</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Информация об истории — CRAWL.STORIES</title>
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-  
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyANC4K0-xI-9SvrpoiOp4v-N2XLvCQCALg",
@@ -28,146 +28,309 @@
       --bg-primary: #020205;
       --bg-secondary: #0b0b0f;
       --text-primary: #ffffff;
-      --text-secondary: #9aa0a6;
-      --accent-primary: #FFE81F;
-      --border-light: rgba(255,255,255,0.1);
+      --text-secondary: #a7a7a7;
+      --accent: #ffdd3c;
+      --card: #111118;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg-primary); color: var(--text-primary); font-family: "Courier New", monospace; min-height: 100vh; }
-    
-    /* ШАПКА */
+
+    * { box-sizing: border-box; }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      margin: 0;
+      font-family: "Inter", sans-serif;
+    }
+
     header {
-      height: 70px; background: rgba(2,2,5,0.95); backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border-light); position: sticky; top: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+      height: 60px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 99;
     }
-    .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-    .logo-box { width: 48px; height: 48px; background: #1a1a1a; border: 2px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; }
-    .logo-text { font-size: 24px; font-weight: 900; color: var(--accent-primary); }
-    .back-btn { font-size: 28px; cursor: pointer; color: #fff; }
 
-    /* КОНТЕНТ */
-    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-    .cover { width: 100%; max-width: 600px; border-radius: 16px; margin: 30px auto; display: block; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
-    .title { font-size: 36px; color: var(--accent-primary); text-align: center; margin: 20px 0; font-weight: 900; }
-    .desc { font-size: 17px; line-height: 1.7; color: #ccc; text-align: center; margin: 30px 0; max-width: 800px; margin-left: auto; margin-right: auto; }
-    .meta { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin: 30px 0; }
-    .stat { text-align: center; }
-    .stat-label { font-size: 13px; color: var(--text-secondary); }
-    .stat-value { font-size: 20px; font-weight: bold; color: var(--accent-primary); }
-    .read-btn { display: block; width: 340px; margin: 40px auto; padding: 18px; background: var(--accent-primary); color: #000; text-align: center; font-weight: bold; border-radius: 16px; font-size: 22px; text-decoration: none; transition: 0.3s; }
-    .read-btn:hover { background: #fff; transform: scale(1.05); }
+    .back-btn {
+      font-size: 26px;
+      cursor: pointer;
+      margin-right: 15px;
+    }
 
-    .episodes-section h2 { color: var(--accent-primary); text-align: center; margin: 50px 0 20px; font-size: 28px; }
-    .episodes-list { display: grid; gap: 12px; }
-    .episode-item { background: var(--bg-secondary); padding: 18px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
-    .episode-item:hover { background: #111; transform: translateX(8px); }
-    .episode-number { font-weight: bold; font-size: 16px; }
-    .episode-title { margin: 6px 0; font-size: 18px; }
-    .episode-date { font-size: 13px; color: var(--text-secondary); }
+    .logo-text {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .story-top {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .cover {
+      width: 260px;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+    }
+
+    .info {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+
+    .status {
+      margin: 10px 0 20px;
+      padding: 10px 14px;
+      background: var(--card);
+      border-radius: 10px;
+      font-size: 16px;
+      color: var(--accent);
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .desc {
+      margin: 25px 0;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      font-size: 16px;
+    }
+
+    h2.block-title {
+      font-size: 22px;
+      margin: 35px 0 15px;
+      color: var(--accent);
+    }
+
+    /* Персонажи */
+    .characters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+    }
+
+    .char-card {
+      background: var(--card);
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .char-img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+
+    .char-name {
+      font-weight: 700;
+    }
+
+    .char-role {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Эпизоды */
+    .episodes-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .episode {
+      background: var(--card);
+      padding: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.08);
+      position: relative;
+      transition: 0.2s;
+    }
+
+    .episode:hover {
+      background: #14141e;
+      transform: translateX(4px);
+    }
+
+    .episode-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .episode-date {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .new-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff3c3c;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* Мобильная адаптация */
+    @media (max-width: 600px) {
+      .story-top { flex-direction: column; }
+      .cover { width: 100%; }
+      .title { font-size: 26px; }
+      .status { font-size: 14px; }
+    }
   </style>
 </head>
+
 <body>
 
-  <div id="seasonal-effects" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;"></div>
-  <!-- ШАПКА -->
-  <header>
-    <div class="back-btn" onclick="history.back()">←</div>
-    <div class="logo" onclick="location.href='index.html'">
-      <div class="logo-box">C</div>
-      <div class="logo-text">CRAWL.STORIES</div>
-    </div>
-    <div></div>
-  </header>
+<header>
+  <div class="back-btn" onclick="history.back()">←</div>
+  <div class="logo-text">CRAWL.STORIES</div>
+</header>
 
-  <div class="container" id="content">
-    <div style="text-align:center;padding:100px;color:#999">Загрузка...</div>
-  </div>
-
-  <script>
-    class StoryInfo {
-      constructor() {
-        this.urlParams = new URLSearchParams(location.search);
-        this.storyId = this.urlParams.get('id');
-        if (!this.storyId) {
-          this.showError("История не найдена");
-          return;
-        }
-        this.loadStory();
-      }
-
-      async loadStory() {
-        try {
-          const storyDoc = await db.collection("stories").doc(this.storyId).get();
-          if (!storyDoc.exists) throw new Error("История не найдена");
-          const story = storyDoc.data();
-
-          const episodesSnap = await db.collection("episodes")
-            .where("storyId", "==", this.storyId)
-            .orderBy("episodeNumber")
-            .get();
-          const episodes = episodesSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-
-          document.getElementById('content').innerHTML = this.render(story, episodes);
-        } catch (err) {
-          console.error(err);
-          this.showError("Ошибка загрузки");
-        }
-      }
-
-      render(story, episodes) {
-        const statusText = story.status === "announced" ? "Новинка" :
-                          story.status === "finished" ? "Закончена" : "В процессе";
-
-        return `
-<img src="${story.cover || 'assets/images/default-cover.jpg'}" 
-     onerror="this.src='assets/images/default-cover.jpg'" 
-     alt="${story.title || 'Без названия'}" class="cover">          <h1 class="title">${story.title || "Без названия"}</h1>
-          <p class="desc">${story.description || "Описание отсутствует"}</p>
-
-          <div class="meta">
-            <div class="stat">
-              <div class="stat-label">СТАТУС</div>
-              <div class="stat-value">${statusText}</div>
-            </div>
-            <div class="stat">
-  <div class="stat-label">СТАТУС</div>
-  <div class="stat-value">
-    ${story.status === 'announcement' ? 'Анонс' : 
-      story.status === 'published' ? 'Опубликовано' :
-      story.status === 'finished' ? 'Завершена' : story.status}
-    ${story.publishDate ? `<br><small>Дата: ${new Date(story.publishDate.toDate()).toLocaleString('ru-RU')}</small>` : ''}
-  </div>
+<div id="content" class="container">
+  <div style="text-align:center;padding:100px 0;color:#777;">Загрузка...</div>
 </div>
-          ${episodes.length > 0 ? `
-            <a href="reader.html?episode=${episodes[0].id}&story=${this.storyId}" class="read-btn">Начать читать →</a>
-          ` : ''}
 
-          <div class="episodes-section">
-            <h2>Эпизоды</h2>
-            <div class="episodes-list">
-              ${episodes.map(ep => `
-                <div class="episode-item" onclick="location.href='reader.html?episode=${ep.id}&story=${this.storyId}'">
-                  <div class="episode-number">Эпизод ${ep.episodeNumber || '—'}</div>
-                  <div class="episode-title">${ep.title || 'Без названия'}</div>
-                  ${ep.publishDate ? `<div class="episode-date">📅 ${new Date(ep.publishDate.toDate ? ep.publishDate.toDate() : ep.publishDate).toLocaleDateString('ru-RU')}</div>` : ''}
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
+<script>
+class StoryInfo {
+  constructor() {
+    const params = new URLSearchParams(location.search);
+    this.storyId = params.get("id");
+    if (!this.storyId) return this.error("История не найдена");
+    this.load();
+  }
 
-      showError(message) {
-        document.getElementById('content').innerHTML = `<h1 style="text-align:center;color:#e91e63;padding:100px">${message}</h1>`;
-      }
+  async load() {
+    try {
+      const doc = await db.collection("stories").doc(this.storyId).get();
+      if (!doc.exists) return this.error("История не найдена");
+
+      const story = doc.data();
+
+      const epsSnap = await db.collection("episodes")
+        .where("storyId", "==", this.storyId)
+        .orderBy("episodeNumber")
+        .get();
+
+      const episodes = epsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      document.getElementById("content").innerHTML = this.render(story, episodes);
+    } catch (e) {
+      console.error(e);
+      this.error("Ошибка загрузки");
+    }
+  }
+
+  formatDate(ts) {
+    if (!ts) return "";
+    const d = ts.toDate();
+    return d.toLocaleDateString("ru-RU", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  }
+
+  getStatus(story, episodes) {
+    const ann = story.announcementDate ? this.formatDate(story.announcementDate) : null;
+
+    if (episodes.length === 0) {
+      return ann ? `Анонс на ${ann}` : "Анонс";
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      new StoryInfo();
-    });
-  </script>
+    const first = this.formatDate(episodes[0].publishDate);
+    const last = this.formatDate(episodes[episodes.length - 1].publishDate);
 
-  <script src="themes-system.js"></script>
+    if (story.status === "finished") {
+      return `Закончен с ${first} по ${last}`;
+    }
+
+    return `Выходит с ${first} по —`;
+  }
+
+  renderCharacters(chars = []) {
+    if (!chars.length) return `<div style="color:#777;">Нет персонажей</div>`;
+
+    return chars.map(c => `
+      <div class="char-card">
+        <img src="${c.avatar}" class="char-img" onerror="this.src='assets/images/default-avatar.png'">
+        <div class="char-name">${c.name}</div>
+        <div class="char-role">${c.role}</div>
+      </div>
+    `).join("");
+  }
+
+  renderEpisodes(episodes) {
+    if (!episodes.length) return `<div style="color:#777;">Эпизодов пока нет</div>`;
+
+    const lastId = episodes[episodes.length - 1].id;
+
+    return episodes.map(ep => `
+      <div class="episode" onclick="location.href='reader.html?episode=${ep.id}&story=${this.storyId}'">
+        ${ep.id === lastId ? `<div class="new-badge">Новый</div>` : ""}
+        <div class="episode-title">Эпизод ${ep.episodeNumber}: ${ep.title}</div>
+        <div class="episode-date">${this.formatDate(ep.publishDate)}</div>
+      </div>
+    `).join("");
+  }
+
+  render(story, episodes) {
+    const chars = story.characters || [];
+
+    return `
+      <div class="story-top">
+        <img class="cover" src="${story.cover}" onerror="this.src='assets/images/default-cover.jpg'">
+
+        <div class="info">
+          <div class="title">${story.title}</div>
+
+          <div class="status">${this.getStatus(story, episodes)}</div>
+
+          <p class="desc">${story.description || "Описание отсутствует"}</p>
+        </div>
+      </div>
+
+      <h2 class="block-title">Персонажи</h2>
+      <div class="characters">${this.renderCharacters(chars)}</div>
+
+      <h2 class="block-title">Эпизоды</h2>
+      <div class="episodes-list">${this.renderEpisodes(episodes)}</div>
+    `;
+  }
+
+  error(msg) {
+    document.getElementById("content").innerHTML =
+      `<div style="text-align:center;padding:100px;color:#f55;">${msg}</div>`;
+  }
+}
+
+new StoryInfo();
+</script>
+
 </body>
 </html>
