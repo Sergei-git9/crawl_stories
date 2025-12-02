@@ -539,6 +539,56 @@
       color: var(--text-secondary);
     }
 
+    /* DATE INPUT STYLES */
+    .date-input {
+      padding: 8px;
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      margin-right: 8px;
+    }
+
+    .date-time-input {
+      padding: 8px;
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      min-width: 180px;
+    }
+
+    .time-input {
+      padding: 8px;
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      margin-left: 8px;
+      min-width: 90px;
+    }
+
+    .schedule-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .schedule-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 120px;
+    }
+
     @media (max-width: 768px) {
       .header-content {
         flex-direction: column;
@@ -560,7 +610,7 @@
       .schedule-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
+        gap: 15px;
       }
 
       .schedule-date {
@@ -570,6 +620,17 @@
 
       .theme-controls {
         grid-template-columns: 1fr;
+      }
+      
+      .schedule-controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .date-time-input,
+      .time-input {
+        width: 100%;
+        margin: 5px 0;
       }
     }
   </style>
@@ -877,7 +938,6 @@
 
       async loadSettings() {
         try {
-          // Пытаемся загрузить из localStorage
           const saved = localStorage.getItem('themeSettings');
           if (saved) {
             const settings = JSON.parse(saved);
@@ -885,7 +945,6 @@
             this.manualTheme = settings.manualTheme || null;
             this.manualThemeExpiry = settings.manualThemeExpiry || null;
             
-            // Проверяем не истекла ли ручная тема
             if (this.manualThemeExpiry && new Date() > new Date(this.manualThemeExpiry)) {
               this.manualTheme = null;
               this.manualThemeExpiry = null;
@@ -908,7 +967,6 @@
           };
           localStorage.setItem('themeSettings', JSON.stringify(settings));
           
-          // Также сохраняем в Firestore если доступно
           if (window.adminPanel?.db) {
             await window.adminPanel.db.collection('settings').doc('theme').set(settings);
           }
@@ -955,7 +1013,6 @@
           }
         }
         
-        // Приоритет: праздничные > сезонные > обычные
         const holidayThemes = ['new_year', 'christmas', 'halloween', 'birthday'];
         const seasonalThemes = ['spring', 'summer', 'autumn', 'winter'];
         
@@ -991,8 +1048,6 @@
         this.updateDecorations(theme);
         this.showBanner(theme);
         this.createEffects(theme);
-        
-        console.log(`✅ Применена тема: ${theme.name}`);
       }
 
       updateCSSVariables(theme) {
@@ -1008,7 +1063,6 @@
           logo.innerHTML = `${theme.decorations.logoEmoji} АДМИН-ПАНЕЛЬ CRAWL.STORIES`;
         }
         
-        // Обновляем углы карточек историй
         document.querySelectorAll('.story-card').forEach(card => {
           let corner = card.querySelector('.story-card-corner');
           if (!corner) {
@@ -1147,7 +1201,6 @@
 
       clearEffects() {
         this.effectsContainer.innerHTML = '';
-        // Удаляем туман если есть
         const fog = document.querySelector('div[style*="linear-gradient(transparent, rgba(128, 128, 128, 0.3)"]');
         if (fog) fog.remove();
       }
@@ -1156,11 +1209,9 @@
         this.currentTheme = null;
         this.clearEffects();
         
-        // Восстанавливаем стандартные CSS переменные
         const root = document.documentElement;
         root.style.setProperty('--accent-primary', '#ffe81f');
         
-        // Убираем декор
         const logo = document.getElementById('siteLogo');
         if (logo) logo.innerHTML = '⚙️ АДМИН-ПАНЕЛЬ CRAWL.STORIES';
         
@@ -1302,7 +1353,6 @@
         document.getElementById("adminInterface").style.display = "block";
         this.loadStories();
         
-        // Ждем пока themes-system.js загрузится и инициализируется
         const waitForThemes = () => {
           if (window.themesSystem) {
             this.loadThemeControls();
@@ -1314,13 +1364,11 @@
       }
 
       setupEventListeners() {
-        // Логин
         document.getElementById("loginForm").addEventListener("submit", (e) => {
           e.preventDefault();
           this.handleLogin();
         });
 
-        // Навигация
         document.getElementById("btnCreateStory").addEventListener("click", () => {
           this.showCreateStoryModal();
         });
@@ -1345,19 +1393,15 @@
           this.showLoginScreen();
         });
 
-        // Авто-режим тем
         if (document.getElementById('autoThemeMode')) {
           document.getElementById('autoThemeMode').addEventListener('change', (e) => {
             if (e.target.checked) {
               window.themesSystem?.disableManualMode();
-            } else {
-              // Остаемся в ручном режиме
             }
             this.loadThemeControls();
           });
         }
 
-        // Модальное окно создания истории
         document.getElementById("createStoryForm").addEventListener("submit", (e) => {
           e.preventDefault();
           this.createStory();
@@ -1371,7 +1415,6 @@
           this.hideModal('createStoryModal');
         });
 
-        // Drag & drop для обложки
         const dropZone = document.getElementById('coverDropZone');
         const fileInput = document.getElementById('coverFile');
 
@@ -1401,7 +1444,6 @@
           }
         });
 
-        // Определение точности даты
         document.getElementById('publishDate').addEventListener('input', (e) => {
           this.updateDatePrecision(e.target.value);
         });
@@ -1417,17 +1459,14 @@
       }
 
       showView(viewName) {
-        // Скрыть все вью
         document.getElementById('storiesView').style.display = 'none';
         document.getElementById('scheduleView').style.display = 'none';
         document.getElementById('importView').style.display = 'none';
         document.getElementById('settingsView').style.display = 'none';
 
-        // Показать выбранную вью
         document.getElementById(viewName + 'View').style.display = 'block';
         this.currentView = viewName;
 
-        // Загрузить данные если нужно
         if (viewName === 'stories') {
           this.loadStories();
         } else if (viewName === 'schedule') {
@@ -1442,25 +1481,21 @@
         const tabs = document.querySelectorAll('#scheduleView .tab');
         tabs.forEach(tab => {
           tab.addEventListener('click', () => {
-            // Убрать активный класс
             tabs.forEach(t => {
               t.style.background = 'transparent';
               t.style.color = 'var(--text-secondary)';
               t.style.border = '1px solid var(--border-light)';
             });
             
-            // Добавить активный класс
             tab.style.background = 'var(--accent-primary)';
             tab.style.color = 'var(--bg-primary)';
             tab.style.border = 'none';
             
-            // Переключить контент
             const tabName = tab.dataset.tab;
             document.getElementById('episodesSchedule').style.display = 'none';
             document.getElementById('storiesSchedule').style.display = 'none';
             document.getElementById(tabName + 'Schedule').style.display = 'block';
             
-            // Загрузить данные
             if (tabName === 'episodes') {
               this.loadEpisodesSchedule();
             } else {
@@ -1482,6 +1517,7 @@
           
           const episodesSnapshot = await this.db.collection('episodes')
             .where('status', 'in', ['scheduled', 'published'])
+            .orderBy('publishDate')
             .get();
           
           if (episodesSnapshot.empty) {
@@ -1494,7 +1530,13 @@
               const episode = { id: doc.id, ...doc.data() };
               try {
                 const storyDoc = await this.db.collection('stories').doc(episode.storyId).get();
-                episode.storyTitle = storyDoc.exists ? storyDoc.data().title : 'Неизвестная история';
+                if (storyDoc.exists) {
+                  const storyData = storyDoc.data();
+                  episode.storyTitle = storyData.title;
+                  episode.storyStatus = storyData.status;
+                } else {
+                  episode.storyTitle = 'Неизвестная история';
+                }
               } catch (e) {
                 episode.storyTitle = 'Ошибка загрузки';
               }
@@ -1503,22 +1545,61 @@
           );
           
           container.innerHTML = episodesWithStories.map(episode => {
-            const publishDate = episode.publishDate ? 
-              (episode.publishDate.toDate ? episode.publishDate.toDate() : new Date(episode.publishDate)) : 
-              new Date();
+            let publishDate = new Date();
+            let dateValue = '';
+            let timeValue = '12:00';
+            
+            if (episode.publishDate) {
+              if (episode.publishDate.toDate) {
+                publishDate = episode.publishDate.toDate();
+              } else if (episode.publishDate instanceof Date) {
+                publishDate = episode.publishDate;
+              } else {
+                publishDate = new Date(episode.publishDate);
+              }
+              
+              dateValue = publishDate.toISOString().split('T')[0];
+              timeValue = publishDate.toTimeString().slice(0, 5);
+            } else {
+              dateValue = new Date().toISOString().split('T')[0];
+            }
             
             return `
-              <div class="schedule-item">
+              <div class="schedule-item" id="episode-${episode.id}">
                 <div class="schedule-info">
                   <h4>${episode.storyTitle} #${episode.episodeNumber} - ${episode.title}</h4>
                   <p>${episode.description || 'Без описания'}</p>
+                  <div class="schedule-controls">
+                    <div>
+                      <input type="date" 
+                             value="${dateValue}"
+                             class="date-input"
+                             id="date-${episode.id}"
+                             onchange="adminPanel.updateEpisodeDateInput('${episode.id}')">
+                      <input type="time" 
+                             value="${timeValue}"
+                             class="time-input"
+                             id="time-${episode.id}"
+                             onchange="adminPanel.updateEpisodeTime('${episode.id}')">
+                    </div>
+                    <div class="schedule-actions">
+                      <button onclick="adminPanel.saveEpisodeDate('${episode.id}')" 
+                              class="btn-small btn-success" style="padding: 6px 12px;">
+                        💾 Сохранить
+                      </button>
+                      <button onclick="adminPanel.publishNow('${episode.id}')" 
+                              class="btn-small btn-info" style="padding: 6px 12px;">
+                        🚀 Опубликовать сейчас
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <div class="schedule-date">
-                  <input type="datetime-local" 
-                         value="${publishDate.toISOString().slice(0, 16)}"
-                         onchange="adminPanel.updateEpisodeDate('${episode.id}', this.value)"
-                         style="padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);">
-                  <div class="publish-status">${episode.status === 'published' ? '✅ Опубликован' : '⏳ Запланирован'}</div>
+                  <div class="publish-date">${this.formatDateTime(publishDate)}</div>
+                  <div class="publish-status">
+                    ${episode.status === 'published' ? '✅ Опубликован' : '⏳ Запланирован'}
+                    ${episode.storyStatus === 'announcement' ? ' | 📢 Анонс' : ''}
+                  </div>
                 </div>
               </div>
             `;
@@ -1533,20 +1614,31 @@
       async loadStoriesSchedule() {
         try {
           const container = document.getElementById('storiesSchedule');
+          container.innerHTML = '<div class="loading">Загрузка историй...</div>';
           
-          // Истории без эпизодов и с статусом анонс
-          const storiesForAnnounce = this.stories.filter(story => 
-            (story.episodesCount === 0 || !story.episodesCount) && 
-            story.status === 'announcement'
-          );
+          if (!this.db) {
+            container.innerHTML = '<div class="empty-state">Firebase недоступен</div>';
+            return;
+          }
           
-          if (storiesForAnnounce.length === 0) {
+          const storiesSnapshot = await this.db.collection('stories')
+            .where('status', '==', 'announcement')
+            .get();
+          
+          if (storiesSnapshot.empty) {
             container.innerHTML = '<div class="empty-state">Нет историй для планирования анонсов</div>';
             return;
           }
           
-          container.innerHTML = storiesForAnnounce.map(story => {
+          const stories = storiesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          container.innerHTML = stories.map(story => {
             let currentDate = '';
+            let currentTime = '12:00';
+            
             if (story.publishDate) {
               try {
                 if (story.publishDate.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
@@ -1556,19 +1648,45 @@
               } catch (e) {}
             }
             
+            if (!currentDate) {
+              const nextWeek = new Date();
+              nextWeek.setDate(nextWeek.getDate() + 7);
+              currentDate = nextWeek.toISOString().split('T')[0];
+            }
+            
             return `
-              <div class="schedule-item">
+              <div class="schedule-item" id="story-${story.id}">
                 <div class="schedule-info">
                   <h4>${story.title}</h4>
                   <p>${story.description || 'Без описания'}</p>
+                  <div class="schedule-controls">
+                    <div>
+                      <input type="date" 
+                             value="${currentDate}"
+                             class="date-input"
+                             id="story-date-${story.id}"
+                             onchange="adminPanel.updateStoryDateInput('${story.id}')">
+                      <input type="time" 
+                             value="${currentTime}"
+                             class="time-input"
+                             id="story-time-${story.id}"
+                             onchange="adminPanel.updateStoryTime('${story.id}')">
+                    </div>
+                    <div class="schedule-actions">
+                      <button onclick="adminPanel.saveStoryAnnounceDate('${story.id}')" 
+                              class="btn-small btn-success" style="padding: 6px 12px;">
+                        💾 Сохранить дату
+                      </button>
+                      <button onclick="adminPanel.changeStoryStatus('${story.id}', 'draft')" 
+                              class="btn-small btn-secondary" style="padding: 6px 12px;">
+                        📝 В черновик
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <div class="schedule-date">
-                  <input type="date" 
-                         value="${currentDate}"
-                         onchange="adminPanel.updateStoryAnnounceDate('${story.id}', this.value)"
-                         style="padding: 8px; border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-primary); color: var(--text-primary);"
-                         placeholder="Задать дату анонса">
-                  <div class="publish-status">${story.publishDate ? '📅 Запланирован' : '⏳ Без даты'}</div>
+                  <div class="publish-date">${story.publishDate ? this.formatDateString(story.publishDate) : '📅 Не установлена'}</div>
+                  <div class="publish-status">📢 Анонс | 📊 ${story.episodesCount || 0} эп.</div>
                 </div>
               </div>
             `;
@@ -1580,37 +1698,180 @@
         }
       }
 
-      async updateEpisodeDate(episodeId, newDate) {
+      updateEpisodeDateInput(episodeId) {
+        const dateInput = document.getElementById(`date-${episodeId}`);
+        const timeInput = document.getElementById(`time-${episodeId}`);
+        
+        const date = new Date(`${dateInput.value}T${timeInput.value}`);
+        const episodeItem = document.getElementById(`episode-${episodeId}`);
+        const dateElement = episodeItem.querySelector('.publish-date');
+        
+        if (dateElement) {
+          dateElement.textContent = this.formatDateTime(date);
+        }
+      }
+
+      updateEpisodeTime(episodeId) {
+        this.updateEpisodeDateInput(episodeId);
+      }
+
+      async saveEpisodeDate(episodeId) {
         try {
+          const dateInput = document.getElementById(`date-${episodeId}`);
+          const timeInput = document.getElementById(`time-${episodeId}`);
+          
+          if (!dateInput.value) {
+            alert('❌ Выберите дату');
+            return;
+          }
+          
+          const publishDate = new Date(`${dateInput.value}T${timeInput.value || '12:00'}`);
+          
           await this.db.collection('episodes').doc(episodeId).update({
-            publishDate: new Date(newDate),
+            publishDate: publishDate,
             updatedAt: new Date()
           });
+          
+          this.updateEpisodeDisplay(episodeId, publishDate);
           alert('✅ Дата эпизода обновлена!');
-          this.loadEpisodesSchedule();
+          
         } catch (error) {
-          console.error('Ошибка:', error);
+          console.error('Ошибка сохранения даты:', error);
           alert('❌ Ошибка обновления даты эпизода');
         }
       }
 
-      async updateStoryAnnounceDate(storyId, newDate) {
+      updateEpisodeDisplay(episodeId, date) {
+        const episodeItem = document.getElementById(`episode-${episodeId}`);
+        if (episodeItem) {
+          const dateElement = episodeItem.querySelector('.publish-date');
+          if (dateElement) {
+            dateElement.textContent = this.formatDateTime(date);
+          }
+        }
+      }
+
+      async publishNow(episodeId) {
+        if (confirm('Опубликовать эпизод прямо сейчас? Эпизод станет доступен читателям.')) {
+          try {
+            const now = new Date();
+            
+            await this.db.collection('episodes').doc(episodeId).update({
+              publishDate: now,
+              status: 'published',
+              updatedAt: now,
+              publishedAt: now
+            });
+            
+            this.updateEpisodeDisplay(episodeId, now);
+            alert('✅ Эпизод опубликован!');
+            
+            setTimeout(() => {
+              this.loadEpisodesSchedule();
+            }, 500);
+            
+          } catch (error) {
+            console.error('Ошибка публикации:', error);
+            alert('❌ Ошибка публикации эпизода');
+          }
+        }
+      }
+
+      updateStoryDateInput(storyId) {
+        const dateInput = document.getElementById(`story-date-${storyId}`);
+        const timeInput = document.getElementById(`story-time-${storyId}`);
+        
+        const date = new Date(`${dateInput.value}T${timeInput.value}`);
+        const storyItem = document.getElementById(`story-${storyId}`);
+        const dateElement = storyItem.querySelector('.publish-date');
+        
+        if (dateElement) {
+          dateElement.textContent = this.formatDateTime(date);
+        }
+      }
+
+      updateStoryTime(storyId) {
+        this.updateStoryDateInput(storyId);
+      }
+
+      async saveStoryAnnounceDate(storyId) {
         try {
-          const date = new Date(newDate);
-          const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+          const dateInput = document.getElementById(`story-date-${storyId}`);
+          const timeInput = document.getElementById(`story-time-${storyId}`);
+          
+          if (!dateInput.value) {
+            alert('❌ Выберите дату');
+            return;
+          }
+          
+          const publishDate = new Date(`${dateInput.value}T${timeInput.value || '12:00'}`);
+          const formattedDate = `${publishDate.getDate().toString().padStart(2, '0')}.${(publishDate.getMonth() + 1).toString().padStart(2, '0')}.${publishDate.getFullYear()}`;
           
           await this.db.collection('stories').doc(storyId).update({
             publishDate: formattedDate,
             updatedAt: new Date()
           });
           
-          alert('✅ Дата анонса установлена!');
-          this.loadStoriesSchedule();
+          this.updateStoryDisplay(storyId, publishDate);
+          alert('✅ Дата анонса обновлена!');
+          
+          setTimeout(() => {
+            this.loadStoriesSchedule();
+          }, 500);
           
         } catch (error) {
-          console.error('Ошибка:', error);
-          alert('❌ Ошибка установки даты анонса');
+          console.error('Ошибка сохранения даты:', error);
+          alert('❌ Ошибка обновления даты анонса');
         }
+      }
+
+      async changeStoryStatus(storyId, newStatus) {
+        try {
+          await this.db.collection('stories').doc(storyId).update({
+            status: newStatus,
+            updatedAt: new Date()
+          });
+          
+          alert(`✅ Статус истории изменен на "${this.getStatusText(newStatus)}"`);
+          
+          setTimeout(() => {
+            this.loadStoriesSchedule();
+          }, 500);
+          
+        } catch (error) {
+          console.error('Ошибка изменения статуса:', error);
+          alert('❌ Ошибка изменения статуса истории');
+        }
+      }
+
+      updateStoryDisplay(storyId, date) {
+        const storyItem = document.getElementById(`story-${storyId}`);
+        if (storyItem) {
+          const dateElement = storyItem.querySelector('.publish-date');
+          if (dateElement) {
+            dateElement.textContent = this.formatDateTime(date);
+          }
+        }
+      }
+
+      formatDateTime(date) {
+        if (!date) return 'Не установлено';
+        
+        const d = date instanceof Date ? date : new Date(date);
+        return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+      }
+
+      formatDateString(dateString) {
+        if (!dateString) return 'Не установлено';
+        
+        if (dateString.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
+          return dateString;
+        } else if (dateString.match(/^\d{2}\.\d{4}$/)) {
+          return `Мес. ${dateString}`;
+        } else if (dateString.match(/^\d{4}$/)) {
+          return `Год ${dateString}`;
+        }
+        return dateString;
       }
 
       showCreateStoryModal() {
@@ -1644,7 +1905,6 @@
           return;
         }
 
-        // Проверяем формат даты
         if (dateString.match(/^\d{2}\.\d{2}\.\d{4}$/)) {
           precisionEl.textContent = '✅ точная дата';
         } else if (dateString.match(/^\d{2}\.\d{4}$/)) {
@@ -1667,7 +1927,6 @@
           return;
         }
 
-        // Собираем выбранные жанры
         const genres = [];
         document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
           genres.push(checkbox.value);
@@ -1691,7 +1950,6 @@
             const docRef = await this.db.collection('stories').add(storyData);
             console.log('✅ История создана:', docRef.id);
           } else {
-            // Демо-режим
             storyData.id = 'demo-' + Date.now();
             this.stories.push(storyData);
           }
@@ -1718,7 +1976,6 @@
           this.renderStories();
         } catch (error) {
           console.error('Ошибка загрузки историй:', error);
-          // Демо-данные
           this.stories = [
             {
               id: 'demo-1',
@@ -1765,7 +2022,6 @@
           </div>
         `).join('');
         
-        // БЕЗОПАСНОЕ ОБНОВЛЕНИЕ ДЕКОРАЦИЙ
         if (this.themeSystem && this.themeSystem.currentTheme) {
           this.themeSystem.updateDecorations(this.themeSystem.currentTheme);
         }
@@ -1776,52 +2032,47 @@
       }
 
       loadThemeControls() {
-        // ОБЯЗАТЕЛЬНО проверяем что window.themesSystem существует
         if (!window.themesSystem) {
           setTimeout(() => this.loadThemeControls(), 100);
           return;
         }
 
         const container = document.getElementById('themeControls');
-        const autoModeCheckbox = document.getElementById('autoThemeMode');
-        
-        // Если контейнер не найден - ждем и пробуем снова
         if (!container) {
           setTimeout(() => this.loadThemeControls(), 100);
           return;
         }
         
-        // Используем глобальную систему тем для синхронизации
-        const themes = window.themesSystem.getAvailableThemes() || {};
-        const currentTheme = window.themesSystem.getCurrentTheme();
-        const isManualMode = window.themesSystem.isManualMode();
+        const themes = window.themesSystem.themes || {};
+        const currentTheme = window.themesSystem.manualTheme || window.themesSystem.detectAutoTheme()?.id;
+        const isManualMode = !!window.themesSystem.manualTheme;
         
         container.innerHTML = Object.entries(themes).map(([themeKey, theme]) => {
           const isActive = isManualMode && currentTheme === themeKey;
-          const isManual = isManualMode && currentTheme === themeKey;
-          const showSettings = isActive;
           
           return `
             <div class="theme-control ${isActive ? 'active' : ''}" style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border-light);">
               <div class="theme-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <div>
                   <div class="theme-name" style="font-weight: bold; font-size: 16px;">${theme.name}</div>
-                  <div class="theme-dates" style="font-size: 12px; color: var(--text-secondary);">Период: ${theme.startMonth}-${theme.startDay} по ${theme.endMonth}-${theme.endDay}</div>
+                  <div class="theme-dates" style="font-size: 12px; color: var(--text-secondary);">
+                    ${theme.startDate ? `Период: ${theme.startDate} - ${theme.endDate}` : 'Без периода'}
+                  </div>
                 </div>
                 <div>
-                  ${isManual ? '<span style="color: var(--accent-primary); font-size: 12px; background: rgba(255,232,31,0.1); padding: 4px 8px; border-radius: 4px;">👆 Активна</span>' : ''}
+                  ${isActive ? '<span style="color: var(--accent-primary); font-size: 12px; background: rgba(255,232,31,0.1); padding: 4px 8px; border-radius: 4px;">👆 Активна</span>' : ''}
                 </div>
               </div>
               
               <div class="theme-controls-row" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-small ${isManual ? 'btn-success' : 'btn-secondary'}" 
+                <button class="btn btn-small ${isActive ? 'btn-success' : 'btn-secondary'}" 
                         onclick="window.themesSystem?.setManualTheme('${themeKey}'); document.getElementById('settingsView').innerHTML=''; setTimeout(() => window.adminPanel.loadThemeControls(), 100);"
                         style="flex: 1; min-width: 100px;">
-                  ${isManual ? '✅ Вкл' : '👁️ Включить'}
+                  ${isActive ? '✅ Вкл' : '👁️ Включить'}
                 </button>
                 
                 <button class="btn btn-small btn-secondary" 
-                        onclick="window.themesSystem?.disableManualMode(); setTimeout(() => window.adminPanel.loadThemeControls(), 100);"
+                        onclick="window.themesSystem?.disableManualTheme(); setTimeout(() => window.adminPanel.loadThemeControls(), 100);"
                         style="flex: 1; min-width: 100px;">
                   🔄 Авто-режим
                 </button>
@@ -1829,52 +2080,6 @@
             </div>
           `;
         }).join('');
-      }
-
-      toggleTheme(themeId) {
-        // Используем глобальную систему для синхронизации
-        if (window.themesSystem?.getCurrentTheme() === themeId) {
-          window.themesSystem.disableManualMode();
-        } else {
-          window.themesSystem?.setManualTheme(themeId);
-        }
-        this.loadThemeControls();
-      }
-
-      toggleThemeSettings(themeId) {
-        const settings = document.getElementById(`settings-${themeId}`);
-        if (settings) settings.classList.toggle('active');
-      }
-
-      previewTheme(themeId) {
-        window.themesSystem?.setManualTheme(themeId);
-        setTimeout(() => {
-          window.themesSystem?.disableManualMode();
-        }, 3000);
-      }
-
-      disableManualTheme() {
-        window.themesSystem?.disableManualMode();
-        this.loadThemeControls();
-      }
-
-      setThemeIntensity(themeId, intensity) {
-        console.log(`Установлена интенсивность ${intensity} для темы ${themeId}`);
-        // Здесь будет логика изменения интенсивности эффектов
-      }
-
-      createCustomTheme() {
-        alert('Создание пользовательской темы будет доступно в следующем обновлении');
-      }
-
-      resetThemes() {
-        if (confirm('Сбросить все настройки тем? Будут включены стандартные настройки.')) {
-          this.themeSystem.disableManualTheme();
-          this.themeSystem.setAutoMode(true);
-          localStorage.removeItem('themeSettings');
-          this.loadThemeControls();
-          alert('✅ Настройки тем сброшены');
-        }
       }
 
       getStatusText(status) {
@@ -1902,7 +2107,6 @@
       }
     }
 
-    // Инициализация админ-панели
     document.addEventListener('DOMContentLoaded', () => {
       window.adminPanel = new AdminPanel();
       window.themeSystem = window.adminPanel.themeSystem;
